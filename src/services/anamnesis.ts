@@ -16,9 +16,15 @@ export interface AnamnesisResponseInput {
 }
 
 export async function createAnamnesisSession(): Promise<AnamnesisSession | null> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return null
+
   const { data, error } = await supabase
     .from('anamnesis_sessions')
     .insert({
+      user_id: user.id,
       status: 'in_progress',
       started_at: new Date().toISOString(),
     })

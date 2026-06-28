@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/auth-context'
-import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -31,8 +30,7 @@ export default function MFA() {
     if (code.length !== 6) return
     setIsLoading(true)
     try {
-      await api.auth.verifyMfa(code)
-      verifyMfa()
+      await verifyMfa(code)
       toast({ title: 'Verificado', description: 'Acesso seguro concedido.' })
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Erro de verificação', description: error.message })
@@ -42,7 +40,6 @@ export default function MFA() {
     }
   }
 
-  // Auto-submit when 6 digits are entered
   useEffect(() => {
     if (code.length === 6) {
       handleSubmit()
@@ -52,7 +49,7 @@ export default function MFA() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-md animate-fade-in-up">
-        <Button variant="ghost" size="sm" onClick={logout} className="mb-4 text-slate-500">
+        <Button variant="ghost" size="sm" onClick={() => logout()} className="mb-4 text-slate-500">
           <ArrowLeft className="h-4 w-4 mr-2" /> Voltar ao Login
         </Button>
         <Card className="shadow-subtle border-slate-100">
@@ -60,15 +57,14 @@ export default function MFA() {
             <div className="flex justify-center mb-2">
               <div className="h-12 w-12 bg-emerald-100 rounded-full flex items-center justify-center relative">
                 <ShieldCheck className="h-6 w-6 text-emerald-600" />
-                <span className="absolute -inset-1 rounded-full border-2 border-emerald-500/20 animate-pulse-ring"></span>
+                <span className="absolute -inset-1 rounded-full border-2 border-emerald-500/20 animate-pulse-ring" />
               </div>
             </div>
             <CardTitle className="text-2xl font-display font-bold">
               Verificação em 2 Etapas
             </CardTitle>
             <CardDescription>
-              Digite o código de 6 dígitos gerado pelo seu aplicativo autenticador. (Dica: use
-              123456)
+              Digite o código de 6 dígitos do seu autenticador. (Dica: 123456)
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center space-y-6">
@@ -85,7 +81,6 @@ export default function MFA() {
                 <InputOTPSlot index={5} />
               </InputOTPGroup>
             </InputOTP>
-
             <div className="text-sm text-slate-500">
               O código expira em <span className="font-medium text-slate-800">{timeLeft}s</span>
             </div>

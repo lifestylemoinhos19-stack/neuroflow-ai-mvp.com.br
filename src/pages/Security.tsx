@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import {
   Card,
   CardContent,
@@ -9,9 +10,82 @@ import {
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
-import { Shield, Key, Smartphone, Laptop, Download } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import {
+  Shield,
+  Key,
+  Smartphone,
+  Laptop,
+  Download,
+  Lock,
+  FileText,
+  CheckCircle2,
+} from 'lucide-react'
+import { supabase } from '@/lib/supabase/client'
+import { useToast } from '@/hooks/use-toast'
+
+interface ProfileData {
+  privacy_consent: boolean | null
+  role: string | null
+  full_name: string | null
+}
 
 export default function Security() {
+  const [profile, setProfile] = useState<ProfileData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const { toast } = useToast()
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) {
+        setLoading(false)
+        return
+      }
+      const { data } = await supabase
+        .from('profiles')
+        .select('privacy_consent, role, full_name')
+        .eq('id', user.id)
+        .single()
+      if (data) setProfile(data as ProfileData)
+      setLoading(false)
+    }
+    fetchProfile()
+  }, [])
+
+  const toggleConsent = async (consent: boolean) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({
+        privacy_consent: consent,
+        privacy_consent_accepted_at: consent ? new Date().toISOString() : null,
+      })
+      .eq('id', user.id)
+      .select('privacy_consent, role, full_name')
+      .single()
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Não foi possível atualizar o consentimento.',
+      })
+      return
+    }
+    setProfile(data as ProfileData)
+    toast({
+      title: consent ? 'Consentimento ativado' : 'Consentimento revogado',
+      description: consent
+        ? 'Seus dados serão processados conforme a LGPD.'
+        : 'Seus dados não serão processados para fins analíticos.',
+    })
+  }
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div>
@@ -64,6 +138,61 @@ export default function Security() {
         </Card>
       </div>
 
+      <Card className="shadow-subtle border-indigo-100 bg-indigo-50/20">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Lock className="h-5 w-5 mr-2 text-indigo-600" /> Privacidade & LGPD
+          </CardTitle>
+          <CardDescription>Gerencie seu consentimento de tratamento de dados.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-white border border-slate-100">
+            <div className="flex items-start space-x-3">
+              <FileText className="h-5 w-5 text-indigo-500 mt-0.5" />
+              <div>
+                <p className="font-medium text-slate-900">Consentimento de Tratamento de Dados</p>
+                <p className="text-sm text-slate-500">
+                  Permite o processamento dos seus dados de saúde para análise pela IA.
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={profile?.privacy_consent ?? false}
+              disabled={loading}
+              onCheckedChange={toggleConsent}
+            />
+          </div>
+          <div className="flex items-center justify-between p-4 rounded-lg bg-white border border-slate-100">
+            <div className="flex items-start space-x-3">
+              <CheckCircle2 className="h-5 w-5 text-emerald-500 mt-0.5" />
+              <div>
+                <p className="font-medium text-slate-900">Criptografia AES-256</p>
+                <p className="text-sm text-slate-500">
+                  Seus dados PII e respostas de anamnese são criptografados em repouso.
+                </p>
+              </div>
+            </div>
+            <Badge variant="outline" className="text-emerald-600 bg-emerald-50 border-emerald-200">
+              Ativo
+            </Badge>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <Button variant="outline" className="flex-1">
+              <Download className="h-4 w-4 mr-2" /> Exportar Meus Dados
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
+            >
+              Solicitar Exclusão
+            </Button>
+          </div>
+        </CardContent>
+        <CardFooter className="text-xs text-slate-400 border-t border-slate-100 pt-4">
+          Em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).
+        </CardFooter>
+      </Card>
+
       <Card className="shadow-subtle border-slate-100">
         <CardHeader>
           <CardTitle>Sessões Ativas</CardTitle>
@@ -101,15 +230,5 @@ export default function Security() {
         </CardContent>
       </Card>
     </div>
-  )
-}
-
-function Badge({ children, className, variant }: any) {
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors ${className}`}
-    >
-      {children}
-    </span>
   )
 }

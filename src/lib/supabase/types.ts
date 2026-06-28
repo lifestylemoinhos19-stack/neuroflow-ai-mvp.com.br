@@ -9,6 +9,85 @@ export type Database = {
   }
   public: {
     Tables: {
+      anamnesis_responses: {
+        Row: {
+          created_at: string
+          id: string
+          question_key: string
+          question_label: string | null
+          response_value: Json
+          session_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          question_key: string
+          question_label?: string | null
+          response_value?: Json
+          session_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          question_key?: string
+          question_label?: string | null
+          response_value?: Json
+          session_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'anamnesis_responses_session_id_fkey'
+            columns: ['session_id']
+            isOneToOne: false
+            referencedRelation: 'anamnesis_sessions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      anamnesis_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          profile_id: string | null
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          profile_id?: string | null
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          profile_id?: string | null
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'anamnesis_sessions_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
