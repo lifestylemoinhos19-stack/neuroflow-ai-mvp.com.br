@@ -21,7 +21,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
-import { ScrollText } from 'lucide-react'
 
 const navItems = [
   { path: '/', label: 'Painel', icon: Activity },

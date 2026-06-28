@@ -16,7 +16,6 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
-import { Link } from 'react-router-dom'
 
 const steps = [
   {
