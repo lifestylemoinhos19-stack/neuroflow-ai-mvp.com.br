@@ -35,6 +35,7 @@ export default function Anamnesis() {
   const [hasAcknowledged, setHasAcknowledged] = useState(false)
   const [tmsAlertOpen, setTmsAlertOpen] = useState(false)
   const [tmsAlertMessage, setTmsAlertMessage] = useState('')
+  const [tmsAlertLevel, setTmsAlertLevel] = useState<'critical' | 'warning'>('critical')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -70,7 +71,8 @@ export default function Anamnesis() {
       setMessages((prev) => [...prev, { role: 'user', content: value }])
       const tmsRisk = checkTmsContraindication(value)
       if (tmsRisk) {
-        setTmsAlertMessage(tmsRisk)
+        setTmsAlertMessage(tmsRisk.message)
+        setTmsAlertLevel(tmsRisk.level)
         setTmsAlertOpen(true)
       }
       setIsSaving(true)
@@ -219,6 +221,11 @@ export default function Anamnesis() {
                   : 'bg-primary text-primary-foreground rounded-tr-sm',
               )}
             >
+              {msg.role === 'bot' && (
+                <span className="text-[10px] font-bold text-primary flex items-center gap-1 mb-0.5">
+                  <Brain className="h-3 w-3" /> NeuroFlow AI
+                </span>
+              )}
               <p className="text-sm leading-relaxed">{msg.content}</p>
             </div>
           </div>
@@ -229,6 +236,9 @@ export default function Anamnesis() {
               <Brain className="h-4 w-4 text-primary" />
             </div>
             <div className="bg-white border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2">
+              <span className="text-[10px] font-bold text-primary whitespace-nowrap">
+                NeuroFlow AI
+              </span>
               {[0, 150, 300].map((d) => (
                 <span
                   key={d}
@@ -307,6 +317,7 @@ export default function Anamnesis() {
         open={tmsAlertOpen}
         onOpenChange={setTmsAlertOpen}
         message={tmsAlertMessage}
+        level={tmsAlertLevel}
       />
     </div>
   )

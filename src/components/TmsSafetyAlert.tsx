@@ -46,7 +46,7 @@ export function TmsSafetyAlert({
             <DialogTitle
               className={isCritical ? 'text-red-800 text-lg' : 'text-orange-800 text-lg'}
             >
-              {isCritical ? '🚫 Alert Level: Critical' : '⚠️ Alert Level: Warning'}
+              {isCritical ? '🚫 RISCO CRÍTICO IDENTIFICADO' : '⚠️ Alerta de Segurança'}
             </DialogTitle>
           </div>
           <DialogDescription

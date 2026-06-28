@@ -15,17 +15,32 @@ import { ChartContainer } from '@/components/ui/chart'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { ClinicianOnboardingGuide } from '@/components/ClinicianOnboardingGuide'
+import { ConsentModal } from '@/components/ConsentModal'
+import { useNavigate } from 'react-router-dom'
 
 export default function Index() {
   const [data, setData] = useState<any>(null)
   const [showGuide, setShowGuide] = useState(false)
+  const [showConsent, setShowConsent] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     api.data.getDashboardMetrics().then(setData)
     if (!localStorage.getItem('neuroflow_clinician_guide_seen')) {
       setShowGuide(true)
     }
+    if (!localStorage.getItem('neuroflow_tcle_accepted')) {
+      setShowConsent(true)
+    }
   }, [])
+
+  const handleNewRecord = () => {
+    if (!localStorage.getItem('neuroflow_tcle_accepted')) {
+      setShowConsent(true)
+    } else {
+      navigate('/anamnesis')
+    }
+  }
 
   if (!data) {
     return (
@@ -56,7 +71,7 @@ export default function Index() {
           <Button variant="outline" className="rounded-full" onClick={() => setShowGuide(true)}>
             <HelpCircle className="h-4 w-4 mr-2" /> Guia
           </Button>
-          <Button className="rounded-full shadow-floating hidden sm:flex">
+          <Button className="rounded-full shadow-floating hidden sm:flex" onClick={handleNewRecord}>
             <Plus className="h-4 w-4 mr-2" /> Novo Registro
           </Button>
         </div>
@@ -205,10 +220,20 @@ export default function Index() {
       </Card>
 
       {/* Mobile FAB */}
-      <Button className="md:hidden fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-floating z-40 p-0">
+      <Button
+        className="md:hidden fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-floating z-40 p-0"
+        onClick={handleNewRecord}
+      >
         <Plus className="h-6 w-6" />
       </Button>
 
+      <ConsentModal
+        open={showConsent}
+        onOpenChange={setShowConsent}
+        onConsented={() => {
+          localStorage.setItem('neuroflow_tcle_accepted', 'true')
+        }}
+      />
       <ClinicianOnboardingGuide
         open={showGuide}
         onOpenChange={(open) => {
