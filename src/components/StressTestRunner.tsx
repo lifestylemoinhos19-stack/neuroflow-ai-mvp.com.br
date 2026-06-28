@@ -16,6 +16,7 @@ import {
   FileBarChart,
   Clock,
   Eye,
+  Database,
 } from 'lucide-react'
 import { STRESS_TEST_SCENARIOS } from '@/lib/stress-test-scenarios'
 import {
@@ -145,6 +146,22 @@ export function StressTestRunner() {
             </div>
           )}
 
+          {batchResult && (
+            <div className="flex items-center gap-2 text-sm mb-4">
+              {results.every((r) => r.logSaved) ? (
+                <span className="flex items-center gap-1 text-emerald-600">
+                  <Database className="h-4 w-4" />
+                  Log saved successfully in Supabase.
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-red-500">
+                  <XCircle className="h-4 w-4" />
+                  Alguns logs não foram salvos no Supabase.
+                </span>
+              )}
+            </div>
+          )}
+
           {categoryStats.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-2">
@@ -254,7 +271,7 @@ function ScenarioResultCard({
   index: number
   onViewDetail: () => void
 }) {
-  const { scenario, passed, actualOutput, failures, durationMs } = result
+  const { scenario, passed, actualOutput, failures, durationMs, logSaved } = result
   const isSafety = scenario.category === 'EMT_SAFETY'
 
   return (
@@ -298,11 +315,28 @@ function ScenarioResultCard({
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1 text-[10px] text-slate-400">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span
+            className={cn(
+              'flex items-center gap-1 text-[10px]',
+              durationMs > 5000 ? 'text-red-600 font-bold' : 'text-slate-400',
+            )}
+          >
             <Clock className="h-3 w-3" />
             {durationMs}ms
+            {durationMs > 5000 && <span className="text-red-500">⚠</span>}
           </span>
+          {logSaved ? (
+            <span className="flex items-center gap-1 text-[10px] text-emerald-600">
+              <Database className="h-3 w-3" />
+              Log salvo no Supabase
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-[10px] text-red-500">
+              <XCircle className="h-3 w-3" />
+              Log falhou
+            </span>
+          )}
           <Button variant="ghost" size="sm" onClick={onViewDetail} className="h-6 px-2 text-[10px]">
             <Eye className="h-3 w-3 mr-1" />
             Detalhes

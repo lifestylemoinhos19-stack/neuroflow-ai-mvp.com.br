@@ -8,6 +8,7 @@ export interface ScenarioResult {
   actualOutput: ValidationResult | null
   failures: string[]
   durationMs: number
+  logSaved: boolean
 }
 
 export interface BatchResult {
@@ -106,13 +107,20 @@ export async function runSingleScenario(scenario: StressTestScenario): Promise<S
       actualOutput: null,
       failures: ['Falha ao executar validação: sem resposta do motor'],
       durationMs,
+      logSaved: false,
     }
   }
 
   const { passed, failures } = validateScenario(scenario, response.result)
-  await logStressTestResult(scenario, response.result, passed, failures, durationMs)
+  const logSaved = await logStressTestResult(
+    scenario,
+    response.result,
+    passed,
+    failures,
+    durationMs,
+  )
 
-  return { scenario, passed, actualOutput: response.result, failures, durationMs }
+  return { scenario, passed, actualOutput: response.result, failures, durationMs, logSaved }
 }
 
 export async function logStressTestResult(
@@ -121,7 +129,7 @@ export async function logStressTestResult(
   passed: boolean,
   failures: string[],
   durationMs: number,
-): Promise<void> {
+): Promise<boolean> {
   try {
     const { data: userData } = await supabase.auth.getUser()
     const userId = userData.user?.id ?? null
@@ -181,8 +189,11 @@ export async function logStressTestResult(
       rag_sources: ragSources,
       latency_ms: durationMs,
     })
+
+    return true
   } catch (err) {
     console.error('Failed to log stress test result:', err)
+    return false
   }
 }
 

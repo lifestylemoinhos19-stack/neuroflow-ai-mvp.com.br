@@ -39,7 +39,11 @@ export function StressTestDetailDialog({
           </div>
           <DialogDescription className="flex items-center gap-2">
             <Clock className="h-3 w-3" />
-            {durationMs}ms · {scenario.id}
+            <span className={durationMs > 5000 ? 'text-red-600 font-bold' : ''}>
+              {durationMs}ms
+            </span>
+            {durationMs > 5000 && <span className="text-red-500 text-xs">⚠ Alta latência</span>}·{' '}
+            {scenario.id}
           </DialogDescription>
         </DialogHeader>
 

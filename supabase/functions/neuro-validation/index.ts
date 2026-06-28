@@ -603,7 +603,9 @@ Deno.serve(async (req) => {
       })
     }
 
+    const requestStart = Date.now()
     const result = classifyInput(message)
+    const latencyMs = Date.now() - requestStart
 
     const authHeader = req.headers.get('Authorization')
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
@@ -678,7 +680,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    return new Response(JSON.stringify({ result, input: message }), {
+    return new Response(JSON.stringify({ result, input: message, latencyMs }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error: any) {

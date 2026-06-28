@@ -31,6 +31,7 @@ export interface ValidationResult {
 export interface ValidationResponse {
   result: ValidationResult
   input: string
+  latencyMs?: number
 }
 
 export async function runNeuroValidation(
