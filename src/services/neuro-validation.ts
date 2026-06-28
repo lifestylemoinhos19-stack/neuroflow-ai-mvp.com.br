@@ -5,6 +5,7 @@ export type SafetyFlag =
   | 'absolute_contraindication'
   | 'relative_contraindication'
   | 'out_of_scope'
+  | 'adaptive_anamnesis'
 export type NeuroCategory = 'TEA' | 'TDAH' | 'DI' | 'SAFETY_ALERT' | 'OUT_OF_SCOPE' | 'GENERAL'
 export type ScaleSuggestion = 'M-CHAT-R' | 'SNAP-IV' | 'NONE'
 

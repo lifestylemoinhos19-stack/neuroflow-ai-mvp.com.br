@@ -7,6 +7,7 @@ type SafetyFlag =
   | 'absolute_contraindication'
   | 'relative_contraindication'
   | 'out_of_scope'
+  | 'adaptive_anamnesis'
 type Category = 'TEA' | 'TDAH' | 'DI' | 'SAFETY_ALERT' | 'OUT_OF_SCOPE' | 'GENERAL'
 type ScaleSuggestion = 'M-CHAT-R' | 'SNAP-IV' | 'NONE'
 
@@ -145,6 +146,48 @@ const DEPRESSION_PATTERNS = [
   'depressao resistente',
   'transtorno depressivo',
   'depressivo',
+]
+
+const MEDICATION_DOSAGE_PATTERNS = [
+  'dosagem',
+  'dose de',
+  'doses de',
+  'quantos mg',
+  'quantas mg',
+  'mg de',
+  'miligramas',
+  'ritalina',
+  'ritalin',
+  'concerta',
+  'metilfenidato',
+  'clonidina',
+  'guanfacina',
+  'atomoxetina',
+  'antipsicótico',
+  'antipsicotico',
+  'estimulante',
+  'prescrição',
+  'prescricao',
+  'quanto dar de',
+  'receitar',
+  'receita de',
+]
+
+const VAGUE_PATTERNS = [
+  'difícil',
+  'dificil',
+  'diferente',
+  'estranho',
+  'complicado',
+  'problema',
+  'preocupante',
+  'incomum',
+  'não é normal',
+  'nao e normal',
+  'algo errado',
+  'me preocupa',
+  'rebelde',
+  'desafiador',
 ]
 
 const OUT_OF_SCOPE_PATTERNS = [
@@ -328,6 +371,24 @@ function classifyInput(message: string): ValidationResult {
     }
   }
 
+  const medDosageMatches = matchPatterns(lower, MEDICATION_DOSAGE_PATTERNS)
+  if (medDosageMatches.length > 0) {
+    return {
+      category: 'OUT_OF_SCOPE',
+      riskLevel: null,
+      scaleSuggestion: 'NONE',
+      safetyFlag: 'out_of_scope',
+      safetyMessage:
+        '⚠️ FORA DO ESCOPO CLÍNICO: O NeuroFlow AI não pode fornecer dosagens ou prescrições de medicamentos. Esta solicitação extrapola os limites de segurança clínica e legal. A prescrição de psicoestimulantes como Ritalina (metilfenidato) é responsabilidade exclusiva de um médico especialista.',
+      clinicalRationale:
+        'Identificada solicitação de dosagem ou prescrição de medicação. O sistema não está autorizado a fornecer recomendações farmacológicas, conforme Resolução CFM nº 2.314/2022 e princípios de segurança clínica.',
+      suggestedAction:
+        'Consulte um médico especialista (neuropediatra, psiquiatra infantil ou neurologista) para avaliação e prescrição adequada. Nunca ajuste ou inicie medicação sem orientação de um profissional de saúde qualificado.',
+      clinicalCitations: [CFM_ART4_CITATION],
+      telemedicineDisclaimer: false,
+    }
+  }
+
   const outOfScopeMatches = matchPatterns(lower, OUT_OF_SCOPE_PATTERNS)
   const hasNeurodevKeywords =
     matchPatterns(lower, [...TEA_PATTERNS, ...TDAH_PATTERNS, ...DI_PATTERNS]).length > 0
@@ -482,6 +543,28 @@ function classifyInput(message: string): ValidationResult {
         'Recomenda-se aplicação da escala SNAP-IV como triagem preventiva e acompanhamento do comportamento.',
       clinicalCitations: [DSM5_TDAH_INATT_CITATION, SNAP_IV_CITATION],
       telemedicineDisclaimer: true,
+    }
+  }
+
+  const vagueMatches = matchPatterns(lower, VAGUE_PATTERNS)
+  if (
+    teaMatches.length === 0 &&
+    tdahMatches.length === 0 &&
+    diMatches.length === 0 &&
+    vagueMatches.length > 0 &&
+    message.length < 120
+  ) {
+    return {
+      category: 'GENERAL',
+      riskLevel: null,
+      scaleSuggestion: 'NONE',
+      safetyFlag: 'adaptive_anamnesis',
+      safetyMessage: null,
+      clinicalRationale: `Entrada curta e não específica detectada (termos vagos: ${vagueMatches.join(', ')}). Sem indicadores claros de TEA, TDAH ou DI. Anamnese adaptativa iniciada para coletar contexto clínico adicional antes de qualquer direcionamento diagnóstico.`,
+      suggestedAction:
+        'Para uma avaliação adequada, preciso fazer algumas perguntas para entender melhor: 1) Quais comportamentos específicos você considera preocupantes? 2) Há dificuldades na escola, com amigos ou em casa? 3) Como é a comunicação e o desenvolvimento da fala? 4) Há algum atraso nos marcos de desenvolvimento? Essas informações me ajudarão a direcionar a triagem corretamente.',
+      clinicalCitations: [],
+      telemedicineDisclaimer: false,
     }
   }
 

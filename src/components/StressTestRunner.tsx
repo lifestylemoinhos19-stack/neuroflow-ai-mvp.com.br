@@ -34,6 +34,7 @@ const categoryLabels: Record<string, string> = {
   EMT_SAFETY: 'Segurança EMT/TMS',
   OUT_OF_SCOPE: 'Fora de Escopo',
   NORMAL_DEVELOPMENT: 'Desenvolvimento Normal',
+  AMBIGUITY: 'Anamnese Adaptativa',
 }
 
 const categoryColors: Record<string, string> = {
@@ -42,6 +43,7 @@ const categoryColors: Record<string, string> = {
   EMT_SAFETY: 'bg-red-100 text-red-700 border-red-200',
   OUT_OF_SCOPE: 'bg-amber-100 text-amber-700 border-amber-200',
   NORMAL_DEVELOPMENT: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  AMBIGUITY: 'bg-cyan-100 text-cyan-700 border-cyan-200',
 }
 
 export function StressTestRunner() {
@@ -289,6 +291,12 @@ function ScenarioResultCard({
                 Elegibilidade
               </Badge>
             )}
+          {scenario.expected.safetyFlag === 'adaptive_anamnesis' && (
+            <Badge className="text-[10px] bg-cyan-100 text-cyan-700 border-cyan-300">
+              <Brain className="h-2.5 w-2.5 mr-0.5" />
+              Anamnese Adaptativa
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1 text-[10px] text-slate-400">
@@ -325,7 +333,9 @@ function ScenarioResultCard({
               variant="secondary"
               className={cn(
                 'text-[10px]',
-                scenario.expected.safetyFlag !== 'none' && 'bg-red-50 text-red-600',
+                scenario.expected.safetyFlag !== 'none' &&
+                  scenario.expected.safetyFlag !== 'adaptive_anamnesis' &&
+                  'bg-red-50 text-red-600',
               )}
             >
               Safety: {scenario.expected.safetyFlag}

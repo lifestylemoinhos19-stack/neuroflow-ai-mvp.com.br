@@ -69,7 +69,9 @@ export function StressTestDetailDialog({
                     variant="secondary"
                     className={cn(
                       'text-xs',
-                      actualOutput.safetyFlag !== 'none' && 'bg-red-50 text-red-600',
+                      actualOutput.safetyFlag !== 'none' &&
+                        actualOutput.safetyFlag !== 'adaptive_anamnesis' &&
+                        'bg-red-50 text-red-600',
                     )}
                   >
                     Safety: {actualOutput.safetyFlag}

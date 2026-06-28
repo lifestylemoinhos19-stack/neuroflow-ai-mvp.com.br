@@ -65,11 +65,17 @@ export function validateScenario(
   if (
     scenario.expected.safetyFlag !== 'none' &&
     scenario.expected.safetyFlag !== 'out_of_scope' &&
+    scenario.expected.safetyFlag !== 'adaptive_anamnesis' &&
     !actual.safetyMessage
   ) {
     failures.push('Mensagem de segurança ausente para alerta de segurança')
   }
-  if (scenario.expected.safetyFlag !== 'none' && !actual.telemedicineDisclaimer) {
+  if (
+    scenario.expected.safetyFlag !== 'none' &&
+    scenario.expected.safetyFlag !== 'out_of_scope' &&
+    scenario.expected.safetyFlag !== 'adaptive_anamnesis' &&
+    !actual.telemedicineDisclaimer
+  ) {
     failures.push('Aviso de telemedicina deveria estar presente para alerta de segurança')
   }
 
