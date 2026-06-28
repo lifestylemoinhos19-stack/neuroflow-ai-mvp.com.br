@@ -12,6 +12,7 @@ import {
   ClipboardList,
   ClipboardCheck,
   LayoutDashboard,
+  FlaskConical,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { Link as RouterLink } from 'react-router-dom'
@@ -25,6 +26,7 @@ const navItems = [
   { path: '/anamnesis', label: 'Anamnese', icon: ClipboardList },
   { path: '/scales', label: 'Escalas', icon: ClipboardCheck },
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/stress-test', label: 'Testes', icon: FlaskConical },
   { path: '/security', label: 'Segurança', icon: Shield },
 ]
 
