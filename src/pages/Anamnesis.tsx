@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Brain, Send, CheckCircle2, Loader2, Scale, Sparkles } from 'lucide-react'
+import { Brain, Send, CheckCircle2, Loader2, Scale, Sparkles, Shield } from 'lucide-react'
 import { TELEMEDICINE_DISCLAIMER } from '@/lib/clinical-references'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,6 +10,8 @@ import { anamnesisQuestions } from '@/lib/anamnesis-questions'
 import { createAnamnesisSession, completeAnamnesisSession } from '@/services/anamnesis'
 import { saveSingleResponse, logAuditAction } from '@/services/scales'
 import { useToast } from '@/hooks/use-toast'
+import { TmsSafetyAlert } from '@/components/TmsSafetyAlert'
+import { checkTmsContraindication } from '@/lib/tms-safety'
 
 interface ChatMessage {
   role: 'bot' | 'user'
@@ -30,9 +32,13 @@ export default function Anamnesis() {
   const [isSaving, setIsSaving] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [isComplete, setIsComplete] = useState(false)
+  const [hasAcknowledged, setHasAcknowledged] = useState(false)
+  const [tmsAlertOpen, setTmsAlertOpen] = useState(false)
+  const [tmsAlertMessage, setTmsAlertMessage] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (!hasAcknowledged) return
     createAnamnesisSession().then((session) => {
       if (session) {
         setSessionId(session.id)
@@ -49,7 +55,7 @@ export default function Anamnesis() {
         }, 800)
       }
     })
-  }, [])
+  }, [hasAcknowledged])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -62,6 +68,11 @@ export default function Anamnesis() {
       if (!value.trim() || !sessionId || !currentQuestion) return
       setInputValue('')
       setMessages((prev) => [...prev, { role: 'user', content: value }])
+      const tmsRisk = checkTmsContraindication(value)
+      if (tmsRisk) {
+        setTmsAlertMessage(tmsRisk)
+        setTmsAlertOpen(true)
+      }
       setIsSaving(true)
       await saveSingleResponse(sessionId, currentQuestion.key, currentQuestion.label, value)
       setIsSaving(false)
@@ -128,6 +139,33 @@ export default function Anamnesis() {
                 Ver Dashboard
               </Button>
             </div>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!hasAcknowledged) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <Card className="shadow-subtle border-amber-200 bg-amber-50">
+          <div className="flex flex-col items-center justify-center py-12 text-center px-6">
+            <div className="h-16 w-16 rounded-full bg-amber-100 flex items-center justify-center mb-4">
+              <Shield className="h-8 w-8 text-amber-600" />
+            </div>
+            <h2 className="text-xl font-display font-bold text-slate-900 mb-3">Aviso Importante</h2>
+            <p className="text-slate-600 mb-2 max-w-md">
+              <strong>
+                NeuroFlow AI é uma ferramenta de triagem e NÃO substitui uma consulta médica formal.
+              </strong>
+            </p>
+            <p className="text-sm text-slate-500 mb-6 max-w-md">
+              Os resultados desta anamnese servem como apoio inicial e devem ser validados por um
+              profissional de saúde qualificado.
+            </p>
+            <Button onClick={() => setHasAcknowledged(true)} className="rounded-full">
+              Entendi, iniciar anamnese
+            </Button>
           </div>
         </Card>
       </div>
@@ -265,6 +303,11 @@ export default function Anamnesis() {
           )}
         </div>
       )}
+      <TmsSafetyAlert
+        open={tmsAlertOpen}
+        onOpenChange={setTmsAlertOpen}
+        message={tmsAlertMessage}
+      />
     </div>
   )
 }

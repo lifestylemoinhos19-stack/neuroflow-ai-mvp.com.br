@@ -120,6 +120,16 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
+      <Card className="border-red-200 bg-red-50">
+        <CardContent className="p-3 flex items-start gap-2">
+          <AlertTriangle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+          <p className="text-sm font-bold text-red-800">
+            A soberania médica é absoluta. Todos os escores e insights gerados por IA devem ser
+            clinicamente validados por um profissional qualificado.
+          </p>
+        </CardContent>
+      </Card>
+
       <Card className="shadow-subtle border-slate-100 overflow-hidden">
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row items-center gap-6">

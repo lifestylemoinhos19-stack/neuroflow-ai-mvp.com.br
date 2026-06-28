@@ -18,6 +18,7 @@ import Onboarding from '@/pages/Onboarding'
 import Scales from '@/pages/Scales'
 import Dashboard from '@/pages/Dashboard'
 import Ethics from '@/pages/Ethics'
+import EthicalAuditDashboard from '@/pages/EthicalAuditDashboard'
 import TermsOfUse from '@/pages/TermsOfUse'
 import NotFound from '@/pages/NotFound'
 
@@ -56,8 +57,6 @@ const App = () => (
               </AuthGuard>
             }
           />
-          <Route path="/terms" element={<TermsOfUse />} />
-          <Route path="/terms" element={<TermsOfUse />} />
 
           {/* Protected Routes (require Auth + MFA + Onboarding) */}
           <Route
@@ -74,7 +73,7 @@ const App = () => (
             <Route path="/insights" element={<Insights />} />
             <Route path="/logs" element={<HealthLogs />} />
             <Route path="/ethics" element={<Ethics />} />
-            <Route path="/ethics" element={<Ethics />} />
+            <Route path="/about" element={<Ethics />} />
             <Route path="/security" element={<Security />} />
             <Route path="/neuro-validation" element={<NeuroValidationPage />} />
             <Route path="/stress-test" element={<StressTestDashboard />} />
@@ -83,6 +82,14 @@ const App = () => (
               element={
                 <AuthGuard requireAdmin>
                   <StressTestDashboard />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/admin/ethical-audit"
+              element={
+                <AuthGuard requireAdmin>
+                  <EthicalAuditDashboard />
                 </AuthGuard>
               }
             />

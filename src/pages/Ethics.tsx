@@ -18,7 +18,7 @@ import {
   Brain,
   ScrollText,
 } from 'lucide-react'
-import { getEthicsCode, EthicsCode } from '@/services/ethics'
+import { getCodeOfEthics, EthicsCode } from '@/services/ethics'
 import { TELEMEDICINE_DISCLAIMER } from '@/lib/clinical-references'
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -35,7 +35,7 @@ export default function Ethics() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getEthicsCode().then((data) => {
+    getCodeOfEthics().then((data) => {
       setEthics(data)
       setLoading(false)
     })

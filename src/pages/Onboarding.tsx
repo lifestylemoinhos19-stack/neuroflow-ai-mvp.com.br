@@ -117,6 +117,11 @@ export default function Onboarding() {
                       <Check className="h-3 w-3 text-emerald-600 mt-0.5 shrink-0" /> Auditoria
                       completa de acessos e alterações
                     </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="h-3 w-3 text-emerald-600 mt-0.5 shrink-0" /> Dados coletados
+                      serão anonimizados para refinamento do modelo e treinamento clínico, seguindo
+                      as melhores práticas da LGPD
+                    </li>
                   </ul>
                 </div>
               )}

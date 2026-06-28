@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   FlaskConical,
   ScrollText,
+  FileSearch,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { Link as RouterLink } from 'react-router-dom'
@@ -22,7 +23,7 @@ import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 
-const navItems = [
+const baseNavItems = [
   { path: '/', label: 'Painel', icon: Activity },
   { path: '/anamnesis', label: 'Anamnese', icon: ClipboardList },
   { path: '/scales', label: 'Escalas', icon: ClipboardCheck },
@@ -33,9 +34,12 @@ const navItems = [
 ]
 
 export default function Layout() {
-  const { logout, user } = useAuth()
+  const { logout, user, isAdmin } = useAuth()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const navItems = isAdmin
+    ? [...baseNavItems, { path: '/admin/ethical-audit', label: 'Auditoria', icon: FileSearch }]
+    : baseNavItems
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -118,6 +122,14 @@ export default function Layout() {
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 relative">
           <div className="animate-fade-in-up max-w-6xl mx-auto pb-20 md:pb-0">
             <Outlet />
+            <footer className="mt-12 pt-6 border-t border-slate-100 text-center">
+              <Link
+                to="/ethics"
+                className="text-sm text-slate-400 hover:text-primary transition-colors"
+              >
+                Código de Ética do NeuroFlow AI
+              </Link>
+            </footer>
           </div>
         </main>
       </div>

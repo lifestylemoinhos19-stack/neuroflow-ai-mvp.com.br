@@ -35,6 +35,17 @@ export async function getEthicsCode(): Promise<EthicsCode | null> {
   return data.value as unknown as EthicsCode
 }
 
+export async function getCodeOfEthics(): Promise<EthicsCode | null> {
+  const { data, error } = await supabase
+    .from('system_settings')
+    .select('value')
+    .eq('key', 'code_of_ethics')
+    .single()
+
+  if (error || !data) return getEthicsCode()
+  return data.value as unknown as EthicsCode
+}
+
 export async function getTermsOfUse(): Promise<TermsOfUse | null> {
   const { data, error } = await supabase
     .from('system_settings')

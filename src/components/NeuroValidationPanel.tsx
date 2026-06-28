@@ -26,6 +26,7 @@ import {
 } from '@/services/neuro-validation'
 import { TELEMEDICINE_DISCLAIMER, formatCitation } from '@/lib/clinical-references'
 import { cn } from '@/lib/utils'
+import { TmsSafetyAlert } from '@/components/TmsSafetyAlert'
 
 const EXAMPLE_SCENARIOS = [
   { label: 'TEA - Risco Alto', text: 'Criança de 2 anos sem contato visual e sem apontar' },
@@ -67,6 +68,7 @@ export function NeuroValidationPanel() {
   const [isLoading, setIsLoading] = useState(false)
   const [history, setHistory] = useState<AuditLogEntry[]>([])
   const [showHistory, setShowHistory] = useState(false)
+  const [tmsAlertOpen, setTmsAlertOpen] = useState(false)
 
   const loadHistory = useCallback(async () => {
     const h = await getValidationHistory()
@@ -83,6 +85,9 @@ export function NeuroValidationPanel() {
     const response = await runNeuroValidation(input.trim())
     if (response) {
       setResult(response.result)
+      if (response.result.safetyFlag === 'absolute_contraindication') {
+        setTmsAlertOpen(true)
+      }
       await loadHistory()
     }
     setIsLoading(false)
@@ -398,6 +403,13 @@ export function NeuroValidationPanel() {
           </CardContent>
         )}
       </Card>
+
+      <TmsSafetyAlert
+        open={tmsAlertOpen}
+        onOpenChange={setTmsAlertOpen}
+        message={result?.safetyMessage || 'Contraindicação absoluta detectada para EMT/TMS.'}
+        level="critical"
+      />
     </div>
   )
 }
