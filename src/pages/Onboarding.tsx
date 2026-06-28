@@ -1,159 +1,140 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '@/contexts/auth-context'
+import { useNavigate } from 'react-router-dom'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import {
-  Brain,
-  Shield,
-  MessageSquare,
-  ClipboardCheck,
-  Check,
-  Loader2,
-  ArrowRight,
-  ArrowLeft,
-} from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Shield, FileText, Lock, Database, UserCheck, AlertTriangle, Loader2 } from 'lucide-react'
+import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/hooks/use-toast'
-import { cn } from '@/lib/utils'
 
-const steps = [
+const tclePillars = [
   {
-    icon: Brain,
-    title: 'Bem-vindo ao NeuroFlow AI',
-    desc: 'Sua plataforma de avaliação neurológica adaptativa com IA.',
+    icon: FileText,
+    title: 'Finalidade',
+    content:
+      'Ferramenta de triagem e suporte, não substitui diagnóstico médico. O NeuroFlow AI serve como apoio à decisão clínica, sendo a avaliação e o diagnóstico finais de responsabilidade exclusiva do profissional de saúde qualificado.',
   },
   {
-    icon: MessageSquare,
-    title: 'Entrevista Adaptativa',
-    desc: 'Responda perguntas em formato de conversa. A IA adapta o fluxo conforme suas respostas.',
+    icon: Lock,
+    title: 'Privacidade (LGPD)',
+    content:
+      'Dados sensíveis criptografados e armazenados com segurança. Em conformidade com a Lei nº 13.709/2018 (LGPD), seus dados de saúde são classificados como dados sensíveis e protegidos com criptografia AES-256 em repouso.',
   },
   {
-    icon: ClipboardCheck,
-    title: 'Escalas Clínicas',
-    desc: 'Avaliações especializadas M-CHAT-R (autismo) e SNAP-IV (TDAH) com scoring automatizado.',
+    icon: Database,
+    title: 'Uso de Dados',
+    content:
+      'Anonimização para aprimoramento do modelo de IA. Os dados coletados são anonimizados para refinamento do modelo e treinamento clínico, garantindo que não possam ser rastreados de volta a indivíduos específicos.',
   },
   {
-    icon: Shield,
-    title: 'Privacidade & LGPD',
-    desc: 'Seus dados são criptografados (AES-256) e tratados conforme a Lei Geral de Proteção de Dados.',
+    icon: UserCheck,
+    title: 'Direitos',
+    content:
+      'Direito à interrupção e exclusão de dados a qualquer momento. Como titular dos dados, você tem direito de acesso, retificação e exclusão, podendo revogar este consentimento sempre que desejar.',
+  },
+  {
+    icon: AlertTriangle,
+    title: 'Segurança',
+    content:
+      'Não prescreve medicamentos. Emergências devem buscar atendimento presencial. A plataforma não realiza prescrições farmacêuticas nem substitui atendimento de urgência ou emergência médica.',
   },
 ]
 
 export default function Onboarding() {
-  const [step, setStep] = useState(0)
-  const [isAccepting, setIsAccepting] = useState(false)
-  const { completeOnboarding } = useAuth()
   const navigate = useNavigate()
+  const { completeOnboarding, logout } = useAuth()
   const { toast } = useToast()
+  const [agreed, setAgreed] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const isLastStep = step === steps.length - 1
-  const progress = ((step + 1) / steps.length) * 100
-
-  const handleAccept = async () => {
-    setIsAccepting(true)
+  const handleConfirm = async () => {
+    if (!agreed) return
+    setLoading(true)
     await completeOnboarding()
-    setIsAccepting(false)
-    toast({ title: 'Bem-vindo!', description: 'Termos aceitos. Sua conta está pronta.' })
+    setLoading(false)
+    toast({
+      title: 'Consentimento registrado!',
+      description: 'Bem-vindo ao NeuroFlow AI. Você já pode iniciar a triagem.',
+    })
     navigate('/')
   }
 
-  const StepIcon = steps[step].icon
+  const handleCancel = async () => {
+    await logout()
+    navigate('/login')
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-lg">
-        <div className="flex justify-center mb-6">
-          <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center">
-            <Brain className="h-8 w-8 text-primary" />
-          </div>
-        </div>
-
-        <div className="mb-6">
-          <div className="flex items-center justify-between text-sm mb-2">
-            <span className="font-medium text-slate-600">
-              Passo {step + 1} de {steps.length}
-            </span>
-            <span className="font-bold text-primary">{Math.round(progress)}%</span>
-          </div>
-          <Progress value={progress} className="h-2" />
-        </div>
-
-        <Card className="shadow-subtle border-slate-100 animate-fade-in-up" key={step}>
-          <CardContent className="p-8">
-            <div className="flex flex-col items-center text-center">
-              <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                <StepIcon className="h-7 w-7 text-primary" />
-              </div>
-              <h2 className="text-xl font-display font-bold text-slate-900 mb-2">
-                {steps[step].title}
-              </h2>
-              <p className="text-slate-500 leading-relaxed">{steps[step].desc}</p>
-
-              {isLastStep && (
-                <div className="mt-6 w-full text-left bg-slate-50 rounded-xl p-4 border border-slate-100">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-medium text-slate-700">
-                      Termos da LGPD (Lei nº 13.709/2018):
-                    </p>
-                    <Link to="/terms" className="text-xs font-medium text-primary hover:underline">
-                      Ver Termos de Uso completos →
-                    </Link>
-                  </div>
-                  <ul className="text-xs text-slate-500 space-y-1">
-                    <li className="flex items-start gap-1.5">
-                      <Check className="h-3 w-3 text-emerald-600 mt-0.5 shrink-0" /> Dados de saúde
-                      criptografados com AES-256
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <Check className="h-3 w-3 text-emerald-600 mt-0.5 shrink-0" /> Acesso restrito
-                      ao titular e profissionais autorizados
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <Check className="h-3 w-3 text-emerald-600 mt-0.5 shrink-0" /> Direito de
-                      revogação e exclusão a qualquer momento
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <Check className="h-3 w-3 text-emerald-600 mt-0.5 shrink-0" /> Auditoria
-                      completa de acessos e alterações
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <Check className="h-3 w-3 text-emerald-600 mt-0.5 shrink-0" /> Dados coletados
-                      serão anonimizados para refinamento do modelo e treinamento clínico, seguindo
-                      as melhores práticas da LGPD
-                    </li>
-                  </ul>
-                </div>
-              )}
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <Card className="max-w-2xl w-full shadow-subtle border-slate-200">
+        <CardHeader className="text-center pb-4">
+          <div className="flex justify-center mb-3">
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <Shield className="h-8 w-8 text-primary" />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          <CardTitle className="text-2xl font-display font-bold text-slate-900">
+            Termo de Consentimento Livre e Esclarecido
+          </CardTitle>
+          <p className="text-sm text-slate-500 mt-1">
+            Antes de iniciar a triagem neurológica, leia atentamente o termo abaixo.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <ScrollArea className="h-[320px] rounded-lg border border-slate-200 p-4 bg-slate-50">
+            <div className="space-y-4 pr-3">
+              {tclePillars.map((pillar, idx) => {
+                const Icon = pillar.icon
+                return (
+                  <div key={idx} className="flex items-start gap-3">
+                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Icon className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="font-semibold text-slate-900 text-sm">{pillar.title}</h4>
+                      <p className="text-sm text-slate-600 leading-relaxed">{pillar.content}</p>
+                    </div>
+                  </div>
+                )
+              })}
+              <div className="pt-3 border-t border-slate-200">
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Ao marcar a caixa de concordância e clicar em "Confirmar e Iniciar Triagem", você
+                  declara ter lido, compreendido e concordado com todos os termos descritos acima.
+                  Este consentimento será registrado eletronicamente com data e hora, em
+                  conformidade com a LGPD (Lei nº 13.709/2018).
+                </p>
+              </div>
+            </div>
+          </ScrollArea>
 
-        <div className="flex items-center justify-between mt-6">
-          <Button
-            variant="outline"
-            onClick={() => setStep(Math.max(0, step - 1))}
-            disabled={step === 0}
-            className="rounded-full"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
-          </Button>
-          {isLastStep ? (
-            <Button onClick={handleAccept} disabled={isAccepting} className="rounded-full">
-              {isAccepting ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Shield className="h-4 w-4 mr-2" />
-              )}
-              Aceitar Termos
+          <div className="flex items-start gap-2.5 pt-1">
+            <Checkbox
+              id="tcle-agree"
+              checked={agreed}
+              onCheckedChange={(checked) => setAgreed(checked === true)}
+              className="mt-0.5"
+            />
+            <label
+              htmlFor="tcle-agree"
+              className="text-sm text-slate-700 cursor-pointer select-none leading-relaxed"
+            >
+              Li e concordo com os termos do TCLE para utilização da plataforma NeuroFlow AI.
+            </label>
+          </div>
+
+          <div className="flex gap-3 justify-end pt-2">
+            <Button variant="outline" onClick={handleCancel} disabled={loading}>
+              Cancelar
             </Button>
-          ) : (
-            <Button onClick={() => setStep(step + 1)} className="rounded-full">
-              Continuar <ArrowRight className="h-4 w-4 ml-2" />
+            <Button onClick={handleConfirm} disabled={!agreed || loading} className="min-w-[200px]">
+              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Confirmar e Iniciar Triagem
             </Button>
-          )}
-        </div>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
