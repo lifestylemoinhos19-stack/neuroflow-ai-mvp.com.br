@@ -13,6 +13,7 @@ export interface AnamnesisQuestion {
   likertMinLabel?: string
   likertMaxLabel?: string
   protocol?: string
+  quickReplies?: string[]
 }
 
 export const anamnesisQuestions: AnamnesisQuestion[] = [
@@ -25,6 +26,7 @@ export const anamnesisQuestions: AnamnesisQuestion[] = [
     placeholder: 'Ex: Dificuldade de concentração na escola há aproximadamente 6 meses...',
     maxLength: 1000,
     protocol: 'Anamnese Geral',
+    quickReplies: ['Dificuldade de concentração', 'Atraso de fala', 'Comportamento repetitivo'],
   },
   {
     key: 'developmental_history',
@@ -36,6 +38,7 @@ export const anamnesisQuestions: AnamnesisQuestion[] = [
       'Ex: A criança começou a andar aos 14 meses, falou primeiras palavras aos 18 meses...',
     maxLength: 1000,
     protocol: 'Anamnese Geral',
+    quickReplies: ['Desenvolvimento típico', 'Atraso motor', 'Atraso de fala'],
   },
   {
     key: 'mchat_q1',
@@ -123,5 +126,6 @@ export const anamnesisQuestions: AnamnesisQuestion[] = [
       'Ex: A criança apresenta sensibilidade a sons altos e prefere rotinas estruturadas...',
     maxLength: 500,
     protocol: 'Anamnese Geral',
+    quickReplies: ['Sem observações adicionais'],
   },
 ]

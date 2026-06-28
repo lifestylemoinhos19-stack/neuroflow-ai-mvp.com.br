@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Brain, Send, CheckCircle2, Loader2, Scale } from 'lucide-react'
+import { Brain, Send, CheckCircle2, Loader2, Scale, Sparkles } from 'lucide-react'
 import { TELEMEDICINE_DISCLAIMER } from '@/lib/clinical-references'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -65,7 +65,6 @@ export default function Anamnesis() {
       setIsSaving(true)
       await saveSingleResponse(sessionId, currentQuestion.key, currentQuestion.label, value)
       setIsSaving(false)
-
       const nextIndex = currentIndex + 1
       if (nextIndex < chatQuestions.length) {
         setIsTyping(true)
@@ -95,8 +94,6 @@ export default function Anamnesis() {
     },
     [currentIndex, currentQuestion, sessionId, toast],
   )
-
-  const handleChoice = (choice: string) => handleSend(choice)
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -143,7 +140,7 @@ export default function Anamnesis() {
         <div className="flex items-center gap-2 mb-1">
           <Brain className="h-5 w-5 text-primary" />
           <h1 className="text-xl sm:text-2xl font-display font-bold text-slate-900">
-            Entrevista Adaptativa de Neurodesenvolvimento
+            Entrevista Adaptativa
           </h1>
         </div>
         <p className="text-sm text-slate-500">
@@ -154,13 +151,14 @@ export default function Anamnesis() {
           <p className="text-[11px] text-blue-700 leading-snug">{TELEMEDICINE_DISCLAIMER.text}</p>
         </div>
       </div>
+
       <div className="flex-1 overflow-y-auto space-y-3 pb-4">
         {messages.map((msg, i) => (
           <div
             key={i}
             className={cn(
               'flex gap-2.5 animate-fade-in-up',
-              msg.role === 'user' ? 'flex-row-reverse' : '',
+              msg.role === 'user' && 'flex-row-reverse',
             )}
           >
             <div
@@ -177,10 +175,10 @@ export default function Anamnesis() {
             </div>
             <div
               className={cn(
-                'rounded-2xl px-4 py-2.5 max-w-[80%]',
+                'rounded-2xl px-4 py-2.5 max-w-[75%]',
                 msg.role === 'bot'
-                  ? 'bg-white border border-slate-100 text-slate-700'
-                  : 'bg-primary text-primary-foreground',
+                  ? 'bg-white border border-slate-100 text-slate-700 rounded-tl-sm'
+                  : 'bg-primary text-primary-foreground rounded-tr-sm',
               )}
             >
               <p className="text-sm leading-relaxed">{msg.content}</p>
@@ -192,7 +190,7 @@ export default function Anamnesis() {
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <Brain className="h-4 w-4 text-primary" />
             </div>
-            <div className="bg-white border border-slate-100 rounded-2xl px-4 py-3 flex gap-1">
+            <div className="bg-white border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2">
               {[0, 150, 300].map((d) => (
                 <span
                   key={d}
@@ -200,6 +198,7 @@ export default function Anamnesis() {
                   style={{ animationDelay: `${d}ms` }}
                 />
               ))}
+              <span className="text-xs text-slate-400 ml-1">IA processando...</span>
             </div>
           </div>
         )}
@@ -207,43 +206,62 @@ export default function Anamnesis() {
       </div>
 
       {!isComplete && currentQuestion && (
-        <div className="border-t border-slate-100 pt-4">
+        <div className="border-t border-slate-100 pt-4 space-y-2">
           {currentQuestion.type === 'multiple-choice' && currentQuestion.choices ? (
-            <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
               {currentQuestion.choices.map((choice) => (
                 <Button
                   key={choice}
                   variant="outline"
-                  onClick={() => handleChoice(choice)}
+                  onClick={() => handleSend(choice)}
                   disabled={isSaving || isTyping}
-                  className="w-full justify-start rounded-xl text-sm h-auto py-3 px-4"
+                  className="rounded-full text-sm h-auto py-2.5 px-4 hover:bg-primary/5 hover:border-primary/30"
                 >
                   {choice}
                 </Button>
               ))}
             </div>
           ) : (
-            <div className="flex gap-2">
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Digite sua resposta..."
-                disabled={isSaving || isTyping}
-                className="rounded-full bg-slate-50"
-              />
-              <Button
-                onClick={() => handleSend(inputValue)}
-                disabled={!inputValue.trim() || isSaving || isTyping}
-                className="rounded-full h-10 w-10 p-0 shrink-0"
-              >
-                {isSaving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
+            <>
+              {currentQuestion.quickReplies && currentQuestion.quickReplies.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {currentQuestion.quickReplies.map((reply) => (
+                    <Button
+                      key={reply}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSend(reply)}
+                      disabled={isSaving || isTyping}
+                      className="rounded-full text-xs h-auto py-2 px-3 bg-slate-50 hover:bg-primary/5 hover:border-primary/30"
+                    >
+                      <Sparkles className="h-3 w-3 mr-1 text-primary/50" />
+                      {reply}
+                    </Button>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Input
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Digite sua resposta..."
+                  disabled={isSaving || isTyping}
+                  className="rounded-full bg-slate-50"
+                />
+                <Button
+                  onClick={() => handleSend(inputValue)}
+                  disabled={!inputValue.trim() || isSaving || isTyping}
+                  className="rounded-full h-10 w-10 p-0 shrink-0"
+                >
+                  {isSaving ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </>
           )}
         </div>
       )}

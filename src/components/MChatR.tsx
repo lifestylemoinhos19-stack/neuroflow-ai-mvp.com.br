@@ -1,11 +1,21 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
-import { CheckCircle2, Save, Loader2, FileText, ArrowRight, BookOpen } from 'lucide-react'
+import {
+  CheckCircle2,
+  Save,
+  Loader2,
+  FileText,
+  ArrowRight,
+  ArrowLeft,
+  BookOpen,
+  HelpCircle,
+} from 'lucide-react'
 import { mchatQuestions, getMChatRiskLevel } from '@/lib/scales-data'
+import { mchatHelpTexts } from '@/lib/scale-help-texts'
 import { saveScaleResponses, logAuditAction } from '@/services/scales'
 import { completeAnamnesisSession } from '@/services/anamnesis'
 import {
@@ -22,8 +32,10 @@ interface MChatRProps {
 
 export function MChatR({ sessionId }: MChatRProps) {
   const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [currentIndex, setCurrentIndex] = useState(0)
   const [isSaving, setIsSaving] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   const { toast } = useToast()
 
   const answeredCount = Object.keys(answers).length
@@ -31,6 +43,22 @@ export function MChatR({ sessionId }: MChatRProps) {
   const score = mchatQuestions.filter((q) => answers[q.key] === q.riskAnswer).length
   const riskLevel = getMChatRiskLevel(score)
   const flowchart = getMChatFlowchartResult(score).flowchart
+  const currentQ = mchatQuestions[currentIndex]
+
+  const handleAnswer = (answer: string) => {
+    setAnswers((prev) => ({ ...prev, [currentQ.key]: answer }))
+    setShowHelp(false)
+    if (currentIndex < mchatQuestions.length - 1) {
+      setTimeout(() => setCurrentIndex((i) => i + 1), 300)
+    }
+  }
+
+  const handlePrev = () => {
+    if (currentIndex > 0) {
+      setShowHelp(false)
+      setCurrentIndex((i) => i - 1)
+    }
+  }
 
   const handleSave = async () => {
     if (!sessionId || answeredCount < mchatQuestions.length) return
@@ -60,8 +88,6 @@ export function MChatR({ sessionId }: MChatRProps) {
     setIsSaving(false)
   }
 
-  const riskLabel = (l: string) =>
-    l === 'high' ? 'Alto Risco' : l === 'medium' ? 'Risco Médio' : 'Baixo Risco'
   const riskColor = (l: string) =>
     l === 'high'
       ? 'bg-red-100 text-red-700'
@@ -80,7 +106,6 @@ export function MChatR({ sessionId }: MChatRProps) {
           >
             {flowchart.label} — Pontuação {score}/20
           </div>
-
           <Alert
             className={cn(
               'text-left mb-4 w-full max-w-lg',
@@ -93,7 +118,7 @@ export function MChatR({ sessionId }: MChatRProps) {
           >
             <FileText className="h-4 w-4 text-slate-600" />
             <AlertTitle className="text-sm font-semibold text-slate-800">
-              Fluxograma de Seguimento M-CHAT-R/F — Passo Recomendado
+              Fluxograma M-CHAT-R/F — Passo Recomendado
             </AlertTitle>
             <AlertDescription className="text-sm text-slate-700 mt-1">
               {flowchart.action}
@@ -105,7 +130,6 @@ export function MChatR({ sessionId }: MChatRProps) {
               </div>
             )}
           </Alert>
-
           <div className="w-full max-w-lg space-y-2 mb-4">
             <div className="flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-slate-600" />
@@ -123,7 +147,6 @@ export function MChatR({ sessionId }: MChatRProps) {
               ))}
             </div>
           </div>
-
           <p className="text-sm text-slate-500 max-w-md">
             {riskLevel === 'high' &&
               'Encaminhamento imediato para avaliação diagnóstica (neuropediatra/psiquiatra infantil).'}
@@ -136,72 +159,101 @@ export function MChatR({ sessionId }: MChatRProps) {
     )
   }
 
+  const isLastQuestion = currentIndex === mchatQuestions.length - 1
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-display font-bold text-slate-900">M-CHAT-R</h3>
           <p className="text-sm text-slate-500">
-            {answeredCount}/{mchatQuestions.length} respondidas
+            {currentIndex + 1} de {mchatQuestions.length}
           </p>
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={answeredCount < mchatQuestions.length || isSaving || !sessionId}
-          className="rounded-full"
-        >
-          {isSaving ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4 mr-2" />
-          )}
-          Salvar & Continuar
-        </Button>
+        {isLastQuestion && answeredCount === mchatQuestions.length && (
+          <Button onClick={handleSave} disabled={isSaving || !sessionId} className="rounded-full">
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
+            Salvar & Continuar
+          </Button>
+        )}
       </div>
       <Progress value={progress} className="h-2" />
 
-      <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2">
-        {mchatQuestions.map((q) => (
-          <Card
-            key={q.id}
-            className={cn('border-slate-100 transition-all', answers[q.key] && 'shadow-subtle')}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-bold text-slate-400">Q{q.id}</span>
-                    {q.isCritical && (
-                      <Badge variant="secondary" className="text-[10px] bg-amber-50 text-amber-600">
-                        Crítica
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-slate-700">{q.question}</p>
-                </div>
+      <div key={currentIndex} className="animate-fade-in-up">
+        <Card
+          className={cn(
+            'border-slate-100 transition-all',
+            answers[currentQ.key] && 'shadow-subtle',
+          )}
+        >
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs font-bold text-slate-400">Q{currentQ.id}</span>
+              {currentQ.isCritical && (
+                <Badge variant="secondary" className="text-[10px] bg-amber-50 text-amber-600">
+                  Crítica
+                </Badge>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowHelp(!showHelp)}
+                className="ml-auto text-xs text-slate-500"
+              >
+                <HelpCircle className="h-3.5 w-3.5 mr-1" /> Dúvida
+              </Button>
+            </div>
+            <p className="text-base text-slate-800 mb-4 leading-relaxed">{currentQ.question}</p>
+
+            {showHelp && (
+              <div className="mb-4 p-3 rounded-lg bg-blue-50 border border-blue-100 animate-fade-in-up">
+                <p className="text-xs text-blue-700 leading-relaxed">
+                  {mchatHelpTexts[currentQ.key]}
+                </p>
               </div>
-              <div className="flex gap-2">
-                {['Sim', 'Não'].map((opt) => (
-                  <Button
-                    key={opt}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setAnswers((prev) => ({ ...prev, [q.key]: opt }))}
-                    className={cn(
-                      'rounded-full flex-1',
-                      answers[q.key] === opt &&
-                        (opt === 'Sim'
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : 'bg-slate-700 text-white border-slate-700'),
-                    )}
-                  >
-                    {opt}
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+            )}
+
+            <div className="flex gap-3">
+              {['Sim', 'Não'].map((opt) => (
+                <Button
+                  key={opt}
+                  variant="outline"
+                  onClick={() => handleAnswer(opt)}
+                  className={cn(
+                    'rounded-xl flex-1 h-12 text-sm font-medium transition-all',
+                    answers[currentQ.key] === opt &&
+                      (opt === 'Sim'
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-slate-700 text-white border-slate-700'),
+                  )}
+                >
+                  {opt}
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handlePrev}
+          disabled={currentIndex === 0}
+          className="rounded-full"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" /> Anterior
+        </Button>
+        {answers[currentQ.key] && !isLastQuestion && (
+          <span className="text-xs text-emerald-600 flex items-center gap-1">
+            <CheckCircle2 className="h-3 w-3" /> Respondida
+          </span>
+        )}
       </div>
     </div>
   )

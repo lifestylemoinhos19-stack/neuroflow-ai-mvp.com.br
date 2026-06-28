@@ -168,6 +168,48 @@ export type Database = {
           },
         ]
       }
+      clinical_references: {
+        Row: {
+          category: string
+          code: string | null
+          content: string
+          created_at: string
+          id: string
+          keywords: string[] | null
+          metadata: Json | null
+          section: string
+          source: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          code?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          keywords?: string[] | null
+          metadata?: Json | null
+          section: string
+          source: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          code?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          keywords?: string[] | null
+          metadata?: Json | null
+          section?: string
+          source?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       disponibilidade: {
         Row: {
           bloqueado: boolean

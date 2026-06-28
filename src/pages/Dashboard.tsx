@@ -19,6 +19,7 @@ import {
   Clock,
   Activity,
   Scale,
+  FileDown,
 } from 'lucide-react'
 import { TELEMEDICINE_DISCLAIMER } from '@/lib/clinical-references'
 import { getUserSessions, SessionWithRisk } from '@/services/sessions'
@@ -39,7 +40,11 @@ export default function Dashboard() {
 
   const completedCount = sessions.filter((s) => s.status === 'completed').length
   const highRiskCount = sessions.filter((s) => s.riskLevel === 'high').length
+  const mediumRiskCount = sessions.filter((s) => s.riskLevel === 'medium').length
+  const lowRiskCount = sessions.filter((s) => s.riskLevel === 'low').length
   const inProgressCount = sessions.filter((s) => s.status === 'in_progress').length
+  const overallRisk =
+    highRiskCount > 0 ? 'high' : mediumRiskCount > 0 ? 'medium' : lowRiskCount > 0 ? 'low' : null
 
   const handleExport = () => {
     setExporting(true)
@@ -94,14 +99,14 @@ export default function Dashboard() {
         <Button
           onClick={handleExport}
           disabled={exporting || sessions.length === 0}
-          className="rounded-full"
+          className="rounded-full h-11 px-6 text-base font-semibold shadow-floating"
         >
           {exporting ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
           ) : (
-            <Download className="h-4 w-4 mr-2" />
+            <FileDown className="h-5 w-5 mr-2" />
           )}
-          Exportar Relatório
+          Exportar Relatório PDF
         </Button>
       </div>
 
@@ -112,8 +117,59 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
+      <Card className="shadow-subtle border-slate-100 overflow-hidden">
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            <div className="flex items-center gap-4">
+              {(['high', 'medium', 'low'] as const).map((risk) => (
+                <div key={risk} className="flex flex-col items-center gap-2">
+                  <div
+                    className={cn(
+                      'h-14 w-14 rounded-full transition-all duration-300',
+                      overallRisk === risk
+                        ? cn(
+                            risk === 'high'
+                              ? 'bg-red-500 shadow-lg shadow-red-500/50 scale-110'
+                              : risk === 'medium'
+                                ? 'bg-amber-500 shadow-lg shadow-amber-500/50 scale-110'
+                                : 'bg-emerald-500 shadow-lg shadow-emerald-500/50 scale-110',
+                          )
+                        : 'bg-slate-100',
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      'text-[10px] font-bold',
+                      overallRisk === risk ? 'text-slate-800' : 'text-slate-300',
+                    )}
+                  >
+                    {risk === 'high' ? 'Alto' : risk === 'medium' ? 'Médio' : 'Baixo'}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="flex-1 text-center sm:text-left">
+              <p className="text-sm text-slate-500">Risco Geral do Paciente</p>
+              <p className="text-xl font-display font-bold text-slate-900">
+                {overallRisk === 'high'
+                  ? '⚠️ Atenção — Risco Alto'
+                  : overallRisk === 'medium'
+                    ? '🔔 Alerta — Risco Médio'
+                    : overallRisk === 'low'
+                      ? '✅ Risco Baixo'
+                      : 'Sem dados suficientes'}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                {highRiskCount > 0 && `${highRiskCount} sessão(ões) com risco alto. `}
+                {mediumRiskCount > 0 && `${mediumRiskCount} com risco médio. `}
+                {lowRiskCount > 0 && `${lowRiskCount} com risco baixo.`}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {' '}
         <Card className="shadow-subtle border-slate-100">
           <CardContent className="p-5 flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-emerald-50 flex items-center justify-center">

@@ -4,8 +4,17 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
-import { CheckCircle2, Save, Loader2, BookOpen, ArrowRight } from 'lucide-react'
+import {
+  CheckCircle2,
+  Save,
+  Loader2,
+  BookOpen,
+  ArrowRight,
+  ArrowLeft,
+  HelpCircle,
+} from 'lucide-react'
 import { snapivQuestions, snapivScaleLabels, getSnapivRiskLevel } from '@/lib/scales-data'
+import { snapivHelpTexts } from '@/lib/scale-help-texts'
 import { saveScaleResponses, logAuditAction } from '@/services/scales'
 import { completeAnamnesisSession } from '@/services/anamnesis'
 import {
@@ -20,10 +29,26 @@ interface SNAPIVProps {
   sessionId: string | null
 }
 
+const scaleColors = [
+  'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100',
+  'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100',
+  'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100',
+  'bg-red-50 text-red-600 border-red-200 hover:bg-red-100',
+]
+
+const scaleSelectedColors = [
+  'bg-blue-500 text-white border-blue-500 shadow-md shadow-blue-500/30',
+  'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/30',
+  'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/30',
+  'bg-red-500 text-white border-red-500 shadow-md shadow-red-500/30',
+]
+
 export function SNAPIV({ sessionId }: SNAPIVProps) {
   const [answers, setAnswers] = useState<Record<string, number>>({})
+  const [currentIndex, setCurrentIndex] = useState(0)
   const [isSaving, setIsSaving] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   const { toast } = useToast()
 
   const answeredCount = Object.keys(answers).length
@@ -37,6 +62,22 @@ export function SNAPIV({ sessionId }: SNAPIVProps) {
   const inattInterp = getSnapivInterpretation(inattAvg).interpretation
   const hyperInterp = getSnapivInterpretation(hyperAvg).interpretation
   const combinedType = inattAvg >= 1.5 && hyperAvg >= 1.5
+  const currentQ = snapivQuestions[currentIndex]
+
+  const handleAnswer = (value: number) => {
+    setAnswers((prev) => ({ ...prev, [currentQ.key]: value }))
+    setShowHelp(false)
+    if (currentIndex < snapivQuestions.length - 1) {
+      setTimeout(() => setCurrentIndex((i) => i + 1), 300)
+    }
+  }
+
+  const handlePrev = () => {
+    if (currentIndex > 0) {
+      setShowHelp(false)
+      setCurrentIndex((i) => i - 1)
+    }
+  }
 
   const handleSave = async () => {
     if (!sessionId || answeredCount < snapivQuestions.length) return
@@ -67,14 +108,14 @@ export function SNAPIV({ sessionId }: SNAPIVProps) {
     setIsSaving(false)
   }
 
-  const riskLabel = (l: string) =>
-    l === 'high' ? 'Alto Risco' : l === 'medium' ? 'Risco Moderado' : 'Baixo Risco'
   const riskColor = (l: string) =>
     l === 'high'
       ? 'bg-red-100 text-red-700'
       : l === 'medium'
         ? 'bg-amber-100 text-amber-700'
         : 'bg-emerald-100 text-emerald-700'
+  const riskLabel = (l: string) =>
+    l === 'high' ? 'Alto Risco' : l === 'medium' ? 'Risco Moderado' : 'Baixo Risco'
 
   if (isComplete) {
     const allCitations = [
@@ -82,10 +123,8 @@ export function SNAPIV({ sessionId }: SNAPIVProps) {
       ...(hyperInterp.citations as ClinicalCitation[]),
     ]
     const uniqueCitations = allCitations.filter(
-      (cite, idx, self) =>
-        idx === self.findIndex((c) => c.code === cite.code && c.source === cite.source),
+      (c, i, s) => i === s.findIndex((x) => x.code === c.code && x.source === c.source),
     )
-
     return (
       <Card className="shadow-subtle border-slate-100">
         <CardContent className="flex flex-col items-center py-12 text-center">
@@ -119,19 +158,16 @@ export function SNAPIV({ sessionId }: SNAPIVProps) {
               </div>
             </div>
           </div>
-
           {combinedType && (
             <Badge className="mb-4 bg-purple-100 text-purple-700 border border-purple-200">
               Subtipo Sugerido: TDAH Tipo Combinado
             </Badge>
           )}
-
           <div
             className={cn('px-4 py-2 rounded-full text-sm font-bold mb-4', riskColor(riskLevel))}
           >
             Risco Geral: {riskLabel(riskLevel)}
           </div>
-
           <Alert
             className={cn(
               'text-left mb-4 w-full max-w-lg',
@@ -147,27 +183,22 @@ export function SNAPIV({ sessionId }: SNAPIVProps) {
               Interpretação conforme protocolo SNAP-IV oficial
             </AlertTitle>
             <AlertDescription className="text-sm text-slate-700 mt-1">
-              {riskLevel === 'high'
-                ? inattInterp.action
-                : riskLevel === 'medium'
-                  ? inattInterp.action
-                  : inattInterp.action}
+              {inattInterp.action}
             </AlertDescription>
           </Alert>
-
           <div className="w-full max-w-lg space-y-2 mb-4">
             <div className="flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-slate-600" />
               <p className="text-xs font-semibold text-slate-700">Referências Clínicas</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              {uniqueCitations.map((cite, i) => (
+              {uniqueCitations.map((c, i) => (
                 <Badge
                   key={i}
                   variant="secondary"
                   className="text-[10px] bg-slate-100 text-slate-600"
                 >
-                  {formatCitation(cite)}
+                  {formatCitation(c)}
                 </Badge>
               ))}
             </div>
@@ -177,64 +208,100 @@ export function SNAPIV({ sessionId }: SNAPIVProps) {
     )
   }
 
+  const isLastQuestion = currentIndex === snapivQuestions.length - 1
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-display font-bold text-slate-900">SNAP-IV</h3>
           <p className="text-sm text-slate-500">
-            {answeredCount}/{snapivQuestions.length} respondidas
+            {currentIndex + 1} de {snapivQuestions.length}
           </p>
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={answeredCount < snapivQuestions.length || isSaving || !sessionId}
-          className="rounded-full"
-        >
-          {isSaving ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4 mr-2" />
-          )}
-          Salvar & Continuar
-        </Button>
+        {isLastQuestion && answeredCount === snapivQuestions.length && (
+          <Button onClick={handleSave} disabled={isSaving || !sessionId} className="rounded-full">
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
+            Salvar & Continuar
+          </Button>
+        )}
       </div>
       <Progress value={progress} className="h-2" />
 
-      <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2">
-        {snapivQuestions.map((q) => (
-          <Card
-            key={q.id}
-            className={cn('border-slate-100', answers[q.key] !== undefined && 'shadow-subtle')}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-bold text-slate-400">Q{q.id}</span>
-                <Badge variant="secondary" className="text-[10px]">
-                  {q.subscale === 'inattention' ? 'Desatenção' : 'Hiperatividade/Impulsividade'}
-                </Badge>
+      <div key={currentIndex} className="animate-fade-in-up">
+        <Card
+          className={cn(
+            'border-slate-100 transition-all',
+            answers[currentQ.key] !== undefined && 'shadow-subtle',
+          )}
+        >
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs font-bold text-slate-400">Q{currentQ.id}</span>
+              <Badge variant="secondary" className="text-[10px]">
+                {currentQ.subscale === 'inattention'
+                  ? 'Desatenção'
+                  : 'Hiperatividade/Impulsividade'}
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowHelp(!showHelp)}
+                className="ml-auto text-xs text-slate-500"
+              >
+                <HelpCircle className="h-3.5 w-3.5 mr-1" /> Dúvida
+              </Button>
+            </div>
+            <p className="text-base text-slate-800 mb-4 leading-relaxed">{currentQ.question}</p>
+
+            {showHelp && (
+              <div className="mb-4 p-3 rounded-lg bg-blue-50 border border-blue-100 animate-fade-in-up">
+                <p className="text-xs text-blue-700 leading-relaxed">
+                  {snapivHelpTexts[currentQ.key]}
+                </p>
               </div>
-              <p className="text-sm text-slate-700 mb-3">{q.question}</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {snapivScaleLabels.map((scale) => (
-                  <Button
-                    key={scale.value}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setAnswers((prev) => ({ ...prev, [q.key]: scale.value }))}
-                    className={cn(
-                      'rounded-lg text-xs h-auto py-2',
-                      answers[q.key] === scale.value &&
-                        'bg-primary text-primary-foreground border-primary',
-                    )}
-                  >
-                    {scale.label}
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+            )}
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {snapivScaleLabels.map((scale, idx) => (
+                <Button
+                  key={scale.value}
+                  variant="outline"
+                  onClick={() => handleAnswer(scale.value)}
+                  className={cn(
+                    'rounded-xl h-14 text-xs font-medium border-2 transition-all',
+                    answers[currentQ.key] === scale.value
+                      ? scaleSelectedColors[idx]
+                      : scaleColors[idx],
+                  )}
+                >
+                  {scale.label}
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handlePrev}
+          disabled={currentIndex === 0}
+          className="rounded-full"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" /> Anterior
+        </Button>
+        {answers[currentQ.key] !== undefined && !isLastQuestion && (
+          <span className="text-xs text-emerald-600 flex items-center gap-1">
+            <CheckCircle2 className="h-3 w-3" /> Respondida
+          </span>
+        )}
       </div>
     </div>
   )
