@@ -17,6 +17,8 @@ import Anamnesis from '@/pages/Anamnesis'
 import Onboarding from '@/pages/Onboarding'
 import Scales from '@/pages/Scales'
 import Dashboard from '@/pages/Dashboard'
+import Ethics from '@/pages/Ethics'
+import TermsOfUse from '@/pages/TermsOfUse'
 import NotFound from '@/pages/NotFound'
 
 const App = () => (
@@ -35,6 +37,7 @@ const App = () => (
               </AuthGuard>
             }
           />
+          <Route path="/terms" element={<TermsOfUse />} />
           <Route
             path="/mfa"
             element={
@@ -53,6 +56,8 @@ const App = () => (
               </AuthGuard>
             }
           />
+          <Route path="/terms" element={<TermsOfUse />} />
+          <Route path="/terms" element={<TermsOfUse />} />
 
           {/* Protected Routes (require Auth + MFA + Onboarding) */}
           <Route
@@ -68,6 +73,8 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/insights" element={<Insights />} />
             <Route path="/logs" element={<HealthLogs />} />
+            <Route path="/ethics" element={<Ethics />} />
+            <Route path="/ethics" element={<Ethics />} />
             <Route path="/security" element={<Security />} />
             <Route path="/neuro-validation" element={<NeuroValidationPage />} />
             <Route path="/stress-test" element={<StressTestDashboard />} />

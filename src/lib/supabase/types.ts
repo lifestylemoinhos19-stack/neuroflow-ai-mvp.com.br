@@ -168,6 +168,41 @@ export type Database = {
           },
         ]
       }
+      clinical_feedback: {
+        Row: {
+          comments: string | null
+          created_at: string
+          doctor_id: string | null
+          id: string
+          is_accurate: boolean | null
+          session_id: string | null
+        }
+        Insert: {
+          comments?: string | null
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          is_accurate?: boolean | null
+          session_id?: string | null
+        }
+        Update: {
+          comments?: string | null
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          is_accurate?: boolean | null
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'clinical_feedback_session_id_fkey'
+            columns: ['session_id']
+            isOneToOne: false
+            referencedRelation: 'anamnesis_sessions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       clinical_references: {
         Row: {
           category: string

@@ -21,6 +21,7 @@ import {
   FileText,
   CheckCircle2,
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 
@@ -188,8 +189,19 @@ export default function Security() {
             </Button>
           </div>
         </CardContent>
-        <CardFooter className="text-xs text-slate-400 border-t border-slate-100 pt-4">
-          Em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).
+        <CardFooter className="text-xs text-slate-400 border-t border-slate-100 pt-4 flex flex-col gap-2 items-start">
+          <div className="flex gap-3">
+            <Link to="/terms" className="text-primary hover:underline">
+              Termos de Uso
+            </Link>
+            <span>•</span>
+            <Link to="/ethics" className="text-primary hover:underline">
+              Código de Ética
+            </Link>
+          </div>
+          <span>
+            Em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).
+          </span>
         </CardFooter>
       </Card>
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+import { Link } from 'react-router-dom'
 
 const steps = [
   {
@@ -92,9 +93,14 @@ export default function Onboarding() {
 
               {isLastStep && (
                 <div className="mt-6 w-full text-left bg-slate-50 rounded-xl p-4 border border-slate-100">
-                  <p className="text-xs font-medium text-slate-700 mb-2">
-                    Termos da LGPD (Lei nº 13.709/2018):
-                  </p>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-medium text-slate-700">
+                      Termos da LGPD (Lei nº 13.709/2018):
+                    </p>
+                    <Link to="/terms" className="text-xs font-medium text-primary hover:underline">
+                      Ver Termos de Uso completos →
+                    </Link>
+                  </div>
                   <ul className="text-xs text-slate-500 space-y-1">
                     <li className="flex items-start gap-1.5">
                       <Check className="h-3 w-3 text-emerald-600 mt-0.5 shrink-0" /> Dados de saúde
