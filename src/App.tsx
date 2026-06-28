@@ -12,6 +12,9 @@ import Insights from '@/pages/Insights'
 import HealthLogs from '@/pages/HealthLogs'
 import Security from '@/pages/Security'
 import Anamnesis from '@/pages/Anamnesis'
+import Onboarding from '@/pages/Onboarding'
+import Scales from '@/pages/Scales'
+import Dashboard from '@/pages/Dashboard'
 import NotFound from '@/pages/NotFound'
 
 const App = () => (
@@ -39,7 +42,17 @@ const App = () => (
             }
           />
 
-          {/* Protected Routes (require Auth + MFA) */}
+          {/* Onboarding Route (requires Auth + MFA, but not onboarding) */}
+          <Route
+            path="/onboarding"
+            element={
+              <AuthGuard>
+                <Onboarding />
+              </AuthGuard>
+            }
+          />
+
+          {/* Protected Routes (require Auth + MFA + Onboarding) */}
           <Route
             element={
               <AuthGuard>

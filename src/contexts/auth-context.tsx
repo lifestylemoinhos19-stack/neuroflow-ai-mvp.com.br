@@ -16,6 +16,8 @@ interface AuthContextType {
   user: AuthUser | null
   session: Session | null
   loading: boolean
+  needsOnboarding: boolean
+  profileChecked: boolean
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signUp: (
     email: string,
@@ -24,6 +26,7 @@ interface AuthContextType {
   ) => Promise<{ error: string | null }>
   verifyMfa: (code: string) => Promise<void>
   logout: () => Promise<void>
+  completeOnboarding: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -45,8 +48,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isMfaVerified, setIsMfaVerified] = useState(
     () => localStorage.getItem('neuroflow_mfa_verified') === 'true',
   )
+  const [profile, setProfile] = useState<any>(null)
+  const [profileChecked, setProfileChecked] = useState(false)
 
   const isAuthenticated = !!session && !!user
+
+  useEffect(() => {
+    if (!user) {
+      setProfile(null)
+      setProfileChecked(true)
+      return
+    }
+    setProfileChecked(false)
+    supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setProfile(data)
+        setProfileChecked(true)
+      })
+      .catch(() => setProfileChecked(true))
+  }, [user])
+
+  const needsOnboarding = isAuthenticated && isMfaVerified && (!profile || !profile.privacy_consent)
 
   useEffect(() => {
     const applySession = (s: Session | null) => {
@@ -122,6 +148,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('neuroflow_mfa_verified')
   }
 
+  const completeOnboarding = async () => {
+    if (!user) return
+    await supabase.from('profiles').upsert(
+      {
+        id: user.id,
+        privacy_consent: true,
+        privacy_consent_accepted_at: new Date().toISOString(),
+        role: 'hospede',
+        full_name: user.name,
+      },
+      { onConflict: 'id' },
+    )
+    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+    setProfile(data)
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -130,10 +172,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         session,
         loading,
+        needsOnboarding,
+        profileChecked,
         signIn,
         signUp,
         verifyMfa,
         logout,
+        completeOnboarding,
       }}
     >
       {children}
@@ -154,10 +199,10 @@ export function AuthGuard({
   children: ReactNode
   requireMfa?: boolean
 }) {
-  const { isAuthenticated, isMfaVerified, loading } = useAuth()
+  const { isAuthenticated, isMfaVerified, loading, needsOnboarding, profileChecked } = useAuth()
   const location = useLocation()
 
-  if (loading) {
+  if (loading || (isAuthenticated && isMfaVerified && !profileChecked)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -177,7 +222,16 @@ export function AuthGuard({
     return <Navigate to="/mfa" replace />
   }
 
-  if (location.pathname === '/login' || location.pathname === '/mfa') {
+  if (needsOnboarding) {
+    if (location.pathname === '/onboarding') return <>{children}</>
+    return <Navigate to="/onboarding" replace />
+  }
+
+  if (
+    location.pathname === '/login' ||
+    location.pathname === '/mfa' ||
+    location.pathname === '/onboarding'
+  ) {
     return <Navigate to="/" replace />
   }
 

@@ -10,6 +10,8 @@ import {
   Menu,
   CheckCircle2,
   ClipboardList,
+  ClipboardCheck,
+  LayoutDashboard,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { Link as RouterLink } from 'react-router-dom'
@@ -21,8 +23,8 @@ import { useState } from 'react'
 const navItems = [
   { path: '/', label: 'Painel', icon: Activity },
   { path: '/anamnesis', label: 'Anamnese', icon: ClipboardList },
-  { path: '/insights', label: 'IA Insights', icon: Brain },
-  { path: '/logs', label: 'Registros', icon: FileText },
+  { path: '/scales', label: 'Escalas', icon: ClipboardCheck },
+  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/security', label: 'Segurança', icon: Shield },
 ]
 

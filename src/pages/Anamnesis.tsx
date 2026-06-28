@@ -1,128 +1,106 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Brain, Send, CheckCircle2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
-import {
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
-  Loader2,
-  ClipboardList,
-  RotateCcw,
-} from 'lucide-react'
-import { anamnesisQuestions, AnamnesisQuestion } from '@/lib/anamnesis-questions'
-import { FreeTextInput } from '@/components/anamnesis/FreeTextInput'
-import { MultipleChoiceInput } from '@/components/anamnesis/MultipleChoiceInput'
-import { LikertScaleInput } from '@/components/anamnesis/LikertScaleInput'
-import {
-  createAnamnesisSession,
-  saveAnamnesisResponses,
-  completeAnamnesisSession,
-  AnamnesisResponseInput,
-} from '@/services/anamnesis'
+import { Input } from '@/components/ui/input'
+import { Card } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
+import { anamnesisQuestions } from '@/lib/anamnesis-questions'
+import { createAnamnesisSession, completeAnamnesisSession } from '@/services/anamnesis'
+import { saveSingleResponse, logAuditAction } from '@/services/scales'
 import { useToast } from '@/hooks/use-toast'
 
-type AnswerMap = Record<string, string | number>
+interface ChatMessage {
+  role: 'bot' | 'user'
+  content: string
+}
+
+const chatQuestions = anamnesisQuestions.filter(
+  (q) => q.type === 'free-text' || q.type === 'multiple-choice',
+)
 
 export default function Anamnesis() {
   const navigate = useNavigate()
   const { toast } = useToast()
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [answers, setAnswers] = useState<AnswerMap>({})
-  const [direction, setDirection] = useState<'forward' | 'backward'>('forward')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isComplete, setIsComplete] = useState(false)
+  const [inputValue, setInputValue] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
+  const [isComplete, setIsComplete] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const totalQuestions = anamnesisQuestions.length
-  const question = anamnesisQuestions[currentIndex]
-  const progress = Math.round((currentIndex / totalQuestions) * 100)
-
-  const currentAnswer = answers[question.key]
-
-  const isAnswerValid = useCallback((q: AnamnesisQuestion, ans: unknown): boolean => {
-    if (ans === undefined || ans === null) return false
-    if (typeof ans === 'string') return ans.trim().length > 0
-    if (typeof ans === 'number') return ans >= (q.likertMin || 1) && ans <= (q.likertMax || 5)
-    return false
+  useEffect(() => {
+    createAnamnesisSession().then((session) => {
+      if (session) {
+        setSessionId(session.id)
+        logAuditAction('session_start', 'anamnesis_sessions', session.id)
+        setMessages([
+          {
+            role: 'bot',
+            content:
+              'Olá! Vou conduzir uma anamnese neurológica adaptativa. Responda no seu ritmo.',
+          },
+        ])
+        setTimeout(() => {
+          setMessages((prev) => [...prev, { role: 'bot', content: chatQuestions[0].label }])
+        }, 800)
+      }
+    })
   }, [])
 
   useEffect(() => {
-    if (!sessionId) {
-      createAnamnesisSession().then((session) => {
-        if (session) setSessionId(session.id)
-      })
-    }
-  }, [sessionId])
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, isTyping])
 
-  const handleNext = () => {
-    if (!isAnswerValid(question, currentAnswer)) return
-    if (currentIndex < totalQuestions - 1) {
-      setDirection('forward')
-      setCurrentIndex(currentIndex + 1)
-    } else {
-      handleSubmit()
-    }
-  }
+  const currentQuestion = chatQuestions[currentIndex]
 
-  const handleBack = () => {
-    if (currentIndex > 0) {
-      setDirection('backward')
-      setCurrentIndex(currentIndex - 1)
-    }
-  }
+  const handleSend = useCallback(
+    async (value: string) => {
+      if (!value.trim() || !sessionId || !currentQuestion) return
+      setInputValue('')
+      setMessages((prev) => [...prev, { role: 'user', content: value }])
+      setIsSaving(true)
+      await saveSingleResponse(sessionId, currentQuestion.key, currentQuestion.label, value)
+      setIsSaving(false)
 
-  const setAnswer = (value: string | number) => {
-    setAnswers((prev) => ({ ...prev, [question.key]: value }))
-  }
+      const nextIndex = currentIndex + 1
+      if (nextIndex < chatQuestions.length) {
+        setIsTyping(true)
+        setTimeout(() => {
+          setIsTyping(false)
+          setCurrentIndex(nextIndex)
+          setMessages((prev) => [...prev, { role: 'bot', content: chatQuestions[nextIndex].label }])
+        }, 700)
+      } else {
+        setIsTyping(true)
+        await completeAnamnesisSession(sessionId)
+        logAuditAction('session_complete', 'anamnesis_sessions', sessionId)
+        setTimeout(() => {
+          setIsTyping(false)
+          setIsComplete(true)
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: 'bot',
+              content:
+                'Anamnese concluída! Você pode responder às escalas clínicas na aba Escalas.',
+            },
+          ])
+        }, 700)
+        toast({ title: 'Anamnese concluída!', description: 'Respostas salvas com sucesso.' })
+      }
+    },
+    [currentIndex, currentQuestion, sessionId, toast],
+  )
 
-  const handleSubmit = async () => {
-    if (!sessionId) {
-      toast({ variant: 'destructive', title: 'Erro', description: 'Sessão não iniciada.' })
-      return
-    }
-
-    setIsSubmitting(true)
-    const responses: AnamnesisResponseInput[] = anamnesisQuestions.map((q) => ({
-      question_key: q.key,
-      question_label: q.label,
-      response_value: answers[q.key],
-    }))
-
-    const saved = await saveAnamnesisResponses(sessionId, responses)
-    if (!saved) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao salvar',
-        description: 'Não foi possível salvar as respostas. Tente novamente.',
-      })
-      setIsSubmitting(false)
-      return
-    }
-
-    await completeAnamnesisSession(sessionId)
-    setIsSubmitting(false)
-    setIsComplete(true)
-    toast({
-      title: 'Anamnese concluída!',
-      description: 'Os dados foram salvos para análise.',
-    })
-  }
-
-  const handleRestart = () => {
-    setAnswers({})
-    setCurrentIndex(0)
-    setIsComplete(false)
-    setSessionId(null)
-    setDirection('forward')
-  }
+  const handleChoice = (choice: string) => handleSend(choice)
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      handleNext()
+      handleSend(inputValue)
     }
   }
 
@@ -130,7 +108,7 @@ export default function Anamnesis() {
     return (
       <div className="max-w-2xl mx-auto">
         <Card className="shadow-subtle border-slate-100">
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="h-20 w-20 rounded-full bg-emerald-100 flex items-center justify-center mb-6">
               <CheckCircle2 className="h-10 w-10 text-emerald-600" />
             </div>
@@ -138,129 +116,133 @@ export default function Anamnesis() {
               Anamnese Concluída
             </h2>
             <p className="text-slate-500 mb-8 max-w-md">
-              Suas respostas foram salvas com sucesso e serão utilizadas pela IA para gerar insights
-              personalizados.
+              Suas respostas foram salvas. Continue com as escalas clínicas especializadas.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button onClick={handleRestart} variant="outline" className="rounded-full">
-                <RotateCcw className="h-4 w-4 mr-2" /> Nova Anamnese
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="rounded-full"
+                onClick={() => navigate('/scales')}
+              >
+                Ir para Escalas
               </Button>
-              <Button onClick={() => navigate('/')} className="rounded-full">
-                Voltar ao Painel
+              <Button className="rounded-full" onClick={() => navigate('/dashboard')}>
+                Ver Dashboard
               </Button>
             </div>
-          </CardContent>
+          </div>
         </Card>
       </div>
     )
   }
 
   return (
-    <div className="max-w-3xl mx-auto" onKeyDown={handleKeyDown}>
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <ClipboardList className="h-5 w-5 text-primary" />
-          <span className="text-sm font-medium text-primary">Anamnese Adaptativa</span>
-          {question.protocol && (
-            <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">
-              {question.protocol}
-            </Badge>
-          )}
+    <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-12rem)]">
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Brain className="h-5 w-5 text-primary" />
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-slate-900">
+            Entrevista Adaptativa
+          </h1>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-display font-bold text-slate-900">
-          Avaliação Neurológica
-        </h1>
-        <p className="text-slate-500 mt-1">
-          Responda às perguntas sequencialmente. Suas respostas são salvas automaticamente.
+        <p className="text-sm text-slate-500">
+          Pergunta {Math.min(currentIndex + 1, chatQuestions.length)} de {chatQuestions.length}
         </p>
       </div>
 
-      <div className="mb-6 space-y-2">
-        <div className="flex items-center justify-between text-sm">
-          <span className="font-medium text-slate-600">
-            Pergunta {currentIndex + 1} de {totalQuestions}
-          </span>
-          <span className="font-bold text-primary">{progress}%</span>
-        </div>
-        <Progress value={progress} className="h-2" aria-label="Progresso da anamnese" />
+      <div className="flex-1 overflow-y-auto space-y-3 pb-4">
+        {messages.map((msg, i) => (
+          <div
+            key={i}
+            className={cn(
+              'flex gap-2.5 animate-fade-in-up',
+              msg.role === 'user' ? 'flex-row-reverse' : '',
+            )}
+          >
+            <div
+              className={cn(
+                'h-8 w-8 rounded-full flex items-center justify-center shrink-0',
+                msg.role === 'bot' ? 'bg-primary/10' : 'bg-indigo-100',
+              )}
+            >
+              {msg.role === 'bot' ? (
+                <Brain className="h-4 w-4 text-primary" />
+              ) : (
+                <span className="text-xs font-bold text-indigo-700">Eu</span>
+              )}
+            </div>
+            <div
+              className={cn(
+                'rounded-2xl px-4 py-2.5 max-w-[80%]',
+                msg.role === 'bot'
+                  ? 'bg-white border border-slate-100 text-slate-700'
+                  : 'bg-primary text-primary-foreground',
+              )}
+            >
+              <p className="text-sm leading-relaxed">{msg.content}</p>
+            </div>
+          </div>
+        ))}
+        {isTyping && (
+          <div className="flex gap-2.5">
+            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Brain className="h-4 w-4 text-primary" />
+            </div>
+            <div className="bg-white border border-slate-100 rounded-2xl px-4 py-3 flex gap-1">
+              {[0, 150, 300].map((d) => (
+                <span
+                  key={d}
+                  className="h-2 w-2 rounded-full bg-slate-300 animate-bounce"
+                  style={{ animationDelay: `${d}ms` }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
       </div>
 
-      <Card
-        key={currentIndex}
-        className={`shadow-subtle border-slate-100 ${
-          direction === 'forward' ? 'animate-slide-in-right' : 'animate-fade-in-up'
-        }`}
-      >
-        <CardHeader>
-          <CardTitle className="text-lg sm:text-xl text-slate-900 leading-snug">
-            {question.label}
-          </CardTitle>
-          {question.description && (
-            <CardDescription className="text-sm">{question.description}</CardDescription>
-          )}
-        </CardHeader>
-        <CardContent>
-          {question.type === 'free-text' && (
-            <FreeTextInput
-              question={question}
-              value={(currentAnswer as string) || ''}
-              onChange={setAnswer}
-            />
-          )}
-          {question.type === 'multiple-choice' && (
-            <MultipleChoiceInput
-              question={question}
-              value={(currentAnswer as string) || ''}
-              onChange={setAnswer}
-            />
-          )}
-          {question.type === 'likert-scale' && (
-            <LikertScaleInput
-              question={question}
-              value={currentAnswer != null ? (currentAnswer as number) : null}
-              onChange={setAnswer}
-            />
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="flex items-center justify-between mt-6">
-        <Button
-          variant="outline"
-          onClick={handleBack}
-          disabled={currentIndex === 0}
-          className="rounded-full"
-          aria-label="Pergunta anterior"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
-        </Button>
-        <Button
-          onClick={handleNext}
-          disabled={!isAnswerValid(question, currentAnswer) || isSubmitting}
-          className="rounded-full"
-          aria-label={
-            currentIndex === totalQuestions - 1 ? 'Concluir anamnese' : 'Próxima pergunta'
-          }
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Salvando...
-            </>
-          ) : currentIndex === totalQuestions - 1 ? (
-            <>
-              Concluir <CheckCircle2 className="h-4 w-4 ml-2" />
-            </>
+      {!isComplete && currentQuestion && (
+        <div className="border-t border-slate-100 pt-4">
+          {currentQuestion.type === 'multiple-choice' && currentQuestion.choices ? (
+            <div className="space-y-2">
+              {currentQuestion.choices.map((choice) => (
+                <Button
+                  key={choice}
+                  variant="outline"
+                  onClick={() => handleChoice(choice)}
+                  disabled={isSaving || isTyping}
+                  className="w-full justify-start rounded-xl text-sm h-auto py-3 px-4"
+                >
+                  {choice}
+                </Button>
+              ))}
+            </div>
           ) : (
-            <>
-              Próxima <ArrowRight className="h-4 w-4 ml-2" />
-            </>
+            <div className="flex gap-2">
+              <Input
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Digite sua resposta..."
+                disabled={isSaving || isTyping}
+                className="rounded-full bg-slate-50"
+              />
+              <Button
+                onClick={() => handleSend(inputValue)}
+                disabled={!inputValue.trim() || isSaving || isTyping}
+                className="rounded-full h-10 w-10 p-0 shrink-0"
+              >
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           )}
-        </Button>
-      </div>
-
-      <p className="text-center text-xs text-slate-400 mt-4">
-        Pressione Ctrl+Enter para avançar rapidamente
-      </p>
+        </div>
+      )}
     </div>
   )
 }
