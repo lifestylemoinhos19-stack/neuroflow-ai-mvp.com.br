@@ -20,8 +20,10 @@ import {
   Activity,
   Scale,
   FileDown,
+  MessageSquarePlus,
 } from 'lucide-react'
 import { TELEMEDICINE_DISCLAIMER } from '@/lib/clinical-references'
+import { ClinicalFeedbackDialog } from '@/components/ClinicalFeedbackDialog'
 import { getUserSessions, SessionWithRisk } from '@/services/sessions'
 import { exportReport } from '@/lib/pdf-export'
 import { cn } from '@/lib/utils'
@@ -30,6 +32,7 @@ export default function Dashboard() {
   const [sessions, setSessions] = useState<SessionWithRisk[]>([])
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
+  const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null)
 
   useEffect(() => {
     getUserSessions().then((data) => {
@@ -233,6 +236,7 @@ export default function Dashboard() {
                     <TableHead>M-CHAT-R</TableHead>
                     <TableHead>SNAP-IV (Desat./Hiper.)</TableHead>
                     <TableHead>Risco</TableHead>
+                    <TableHead>Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -250,7 +254,25 @@ export default function Dashboard() {
                           ? `${s.snapivInattention.toFixed(1)} / ${s.snapivHyperactivity?.toFixed(1)}`
                           : '—'}
                       </TableCell>
-                      <TableCell>{riskBadge(s.riskLevel)}</TableCell>
+                      <TableCell>
+                        {riskBadge(s.riskLevel)}
+                        {s.riskLevel === 'high' && (
+                          <p className="text-xs font-bold text-red-700 mt-1">
+                            ⚠️ Alerta EMT: Avaliar contraindicações
+                          </p>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs"
+                          onClick={() => setFeedbackSessionId(s.id)}
+                        >
+                          <MessageSquarePlus className="h-3 w-3 mr-1" />
+                          Feedback Clínico
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -259,6 +281,12 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
+
+      <ClinicalFeedbackDialog
+        sessionId={feedbackSessionId}
+        open={!!feedbackSessionId}
+        onOpenChange={(open) => !open && setFeedbackSessionId(null)}
+      />
     </div>
   )
 }

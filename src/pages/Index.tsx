@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { api } from '@/lib/api'
-import { Brain, HeartPulse, Zap, Moon, Activity, Plus, Sparkles } from 'lucide-react'
+import { Brain, HeartPulse, Zap, Moon, Activity, Plus, Sparkles, HelpCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   LineChart,
@@ -14,12 +14,17 @@ import {
 import { ChartContainer } from '@/components/ui/chart'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { ClinicianOnboardingGuide } from '@/components/ClinicianOnboardingGuide'
 
 export default function Index() {
   const [data, setData] = useState<any>(null)
+  const [showGuide, setShowGuide] = useState(false)
 
   useEffect(() => {
     api.data.getDashboardMetrics().then(setData)
+    if (!localStorage.getItem('neuroflow_clinician_guide_seen')) {
+      setShowGuide(true)
+    }
   }, [])
 
   if (!data) {
@@ -47,9 +52,14 @@ export default function Index() {
           </h1>
           <p className="text-slate-500">Resumo do seu estado neurológico hoje.</p>
         </div>
-        <Button className="rounded-full shadow-floating hidden sm:flex">
-          <Plus className="h-4 w-4 mr-2" /> Novo Registro
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" className="rounded-full" onClick={() => setShowGuide(true)}>
+            <HelpCircle className="h-4 w-4 mr-2" /> Guia
+          </Button>
+          <Button className="rounded-full shadow-floating hidden sm:flex">
+            <Plus className="h-4 w-4 mr-2" /> Novo Registro
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -198,6 +208,14 @@ export default function Index() {
       <Button className="md:hidden fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-floating z-40 p-0">
         <Plus className="h-6 w-6" />
       </Button>
+
+      <ClinicianOnboardingGuide
+        open={showGuide}
+        onOpenChange={(open) => {
+          setShowGuide(open)
+          if (!open) localStorage.setItem('neuroflow_clinician_guide_seen', 'true')
+        }}
+      />
     </div>
   )
 }

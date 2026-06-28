@@ -932,6 +932,7 @@ export type Database = {
           latency_ms: number | null
           rag_sources: Json | null
           scenario_name: string | null
+          test_tag: string | null
         }
         Insert: {
           actual_output?: Json | null
@@ -944,6 +945,7 @@ export type Database = {
           latency_ms?: number | null
           rag_sources?: Json | null
           scenario_name?: string | null
+          test_tag?: string | null
         }
         Update: {
           actual_output?: Json | null
@@ -956,6 +958,7 @@ export type Database = {
           latency_ms?: number | null
           rag_sources?: Json | null
           scenario_name?: string | null
+          test_tag?: string | null
         }
         Relationships: []
       }
