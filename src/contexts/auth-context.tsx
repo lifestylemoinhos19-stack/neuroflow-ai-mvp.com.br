@@ -1,4 +1,12 @@
-import { createContext, useContext, useState, useEffect, ReactNode, createElement } from 'react'
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  createElement,
+  Fragment,
+} from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 interface AuthState {
@@ -85,5 +93,5 @@ export function AuthGuard({
 
   if (isChecking) return null
 
-  return createElement(import('react').Fragment, null, children)
+  return createElement(Fragment, null, children)
 }
