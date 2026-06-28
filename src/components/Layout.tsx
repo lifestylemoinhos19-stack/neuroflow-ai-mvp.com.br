@@ -9,8 +9,10 @@ import {
   LogOut,
   Menu,
   CheckCircle2,
+  ClipboardList,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
+import { Link as RouterLink } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
@@ -18,6 +20,7 @@ import { useState } from 'react'
 
 const navItems = [
   { path: '/', label: 'Painel', icon: Activity },
+  { path: '/anamnesis', label: 'Anamnese', icon: ClipboardList },
   { path: '/insights', label: 'IA Insights', icon: Brain },
   { path: '/logs', label: 'Registros', icon: FileText },
   { path: '/security', label: 'Segurança', icon: Shield },

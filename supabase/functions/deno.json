@@ -1,0 +1,27 @@
+{
+  "_versions": {
+    "spa-reminders": 6,
+    "performance-alerts": 3,
+    "send-nps": 3,
+    "recover-cart": 3,
+    "sync-marketing": 3,
+    "whatsapp-bot": 5,
+    "send-pre-checkin": 2,
+    "stripe-webhook": 5,
+    "ota-webhook": 4,
+    "ota-sync-alerts": 3,
+    "daily-sales-summary": 3,
+    "spa-whatsapp-notification": 4,
+    "ota-sync": 3,
+    "send-confirmation-email": 9,
+    "checkin-reminders": 3,
+    "validate-booking-rules": 5,
+    "create-payment-intent": 5,
+    "process-webhook": 3,
+    "query-payment-status": 4,
+    "refund-payment": 2,
+    "sync-google-calendar": 2,
+    "send-reservation-confirmation": 1,
+    "chat-ayla": 8
+  }
+}
