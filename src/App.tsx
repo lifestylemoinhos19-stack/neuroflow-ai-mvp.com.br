@@ -4,6 +4,7 @@ import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
 import { AuthProvider, AuthGuard } from '@/contexts/auth-context'
+import NeuroValidationPage from '@/pages/NeuroValidationPage'
 import Layout from '@/components/Layout'
 import Login from '@/pages/Login'
 import MFA from '@/pages/MFA'
@@ -65,6 +66,7 @@ const App = () => (
             <Route path="/insights" element={<Insights />} />
             <Route path="/logs" element={<HealthLogs />} />
             <Route path="/security" element={<Security />} />
+            <Route path="/neuro-validation" element={<NeuroValidationPage />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

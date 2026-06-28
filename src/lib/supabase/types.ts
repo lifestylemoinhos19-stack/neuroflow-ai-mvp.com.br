@@ -1137,6 +1137,16 @@ export type Database = {
       decrypt_pii: { Args: { p_cipher: string }; Returns: string }
       encrypt_pii: { Args: { p_text: string }; Returns: string }
       get_encryption_key: { Args: never; Returns: string }
+      get_session_responses_decrypted: {
+        Args: { p_session_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          question_key: string
+          question_label: string
+          response_value: string
+        }[]
+      }
       get_user_guest_id: { Args: never; Returns: string }
       get_user_role: { Args: never; Returns: string }
       is_encrypted: { Args: { p_text: string }; Returns: boolean }
