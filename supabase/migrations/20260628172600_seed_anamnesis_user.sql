@@ -26,12 +26,12 @@ BEGIN
     );
 
     INSERT INTO public.profiles (id, role, full_name)
-    VALUES (new_user_id, 'authenticated', 'NeuroFlow User')
+    VALUES (new_user_id, 'hospede', 'NeuroFlow User')
     ON CONFLICT (id) DO NOTHING;
   ELSE
     SELECT id INTO existing_profile_id FROM auth.users WHERE email = 'lifestylemoinhos19@gmail.com';
     INSERT INTO public.profiles (id, role, full_name)
-    VALUES (existing_profile_id, 'authenticated', 'NeuroFlow User')
+    VALUES (existing_profile_id, 'hospede', 'NeuroFlow User')
     ON CONFLICT (id) DO NOTHING;
   END IF;
 END $$;
