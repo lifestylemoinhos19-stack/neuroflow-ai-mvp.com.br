@@ -13,6 +13,7 @@ import {
 } from 'recharts'
 import { ChartContainer } from '@/components/ui/chart'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 
 export default function Index() {
   const [data, setData] = useState<any>(null)

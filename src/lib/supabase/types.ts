@@ -522,6 +522,8 @@ export type Database = {
           full_name: string | null
           guest_id: string | null
           id: string
+          privacy_consent: boolean | null
+          privacy_consent_accepted_at: string | null
           role: string
         }
         Insert: {
@@ -529,6 +531,8 @@ export type Database = {
           full_name?: string | null
           guest_id?: string | null
           id: string
+          privacy_consent?: boolean | null
+          privacy_consent_accepted_at?: string | null
           role?: string
         }
         Update: {
@@ -536,6 +540,8 @@ export type Database = {
           full_name?: string | null
           guest_id?: string | null
           id?: string
+          privacy_consent?: boolean | null
+          privacy_consent_accepted_at?: string | null
           role?: string
         }
         Relationships: [
@@ -1128,8 +1134,12 @@ export type Database = {
     }
     Functions: {
       cleanup_unauthorized_data: { Args: never; Returns: Json }
+      decrypt_pii: { Args: { p_cipher: string }; Returns: string }
+      encrypt_pii: { Args: { p_text: string }; Returns: string }
+      get_encryption_key: { Args: never; Returns: string }
       get_user_guest_id: { Args: never; Returns: string }
       get_user_role: { Args: never; Returns: string }
+      is_encrypted: { Args: { p_text: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
