@@ -117,6 +117,10 @@ const IMPLANT_PATTERNS = [
   'metalico',
   'marcapasso',
   'clip aneurisma',
+  'clipe de aneurisma',
+  'clipe aneurisma',
+  'clipe metálico',
+  'clipe metalico',
   'eletrodos',
   'chumbo metálico',
   'chumbo metalico',
@@ -132,6 +136,15 @@ const SEIZURE_PATTERNS = [
   'crise convulsiva',
   'história de convulsões',
   'historia de convulsoes',
+]
+
+const DEPRESSION_PATTERNS = [
+  'depressão',
+  'depressao',
+  'depressão resistente',
+  'depressao resistente',
+  'transtorno depressivo',
+  'depressivo',
 ]
 
 const OUT_OF_SCOPE_PATTERNS = [
@@ -234,6 +247,12 @@ const TMS_REL_CITATION: ClinicalCitation = {
   title: 'EMT/TMS: Contraindicações Relativas',
   section: 'Contraindicações Relativas',
 }
+const TMS_PROTO_CITATION: ClinicalCitation = {
+  source: 'TMS-Safety',
+  code: 'TMS-PROTO',
+  title: 'EMT/TMS: Protocolo de Avaliação de Segurança',
+  section: 'Protocolo de Segurança',
+}
 const CFM_ART4_CITATION: ClinicalCitation = {
   source: 'CFM-2314-2022',
   code: 'CFM-ART-4',
@@ -252,6 +271,7 @@ function classifyInput(message: string): ValidationResult {
   const tmsMatches = matchPatterns(lower, TMS_PATTERNS)
   const implantMatches = matchPatterns(lower, IMPLANT_PATTERNS)
   const seizureMatches = matchPatterns(lower, SEIZURE_PATTERNS)
+  const depressionMatches = matchPatterns(lower, DEPRESSION_PATTERNS)
 
   if (tmsMatches.length > 0 && implantMatches.length > 0) {
     return {
@@ -283,6 +303,27 @@ function classifyInput(message: string): ValidationResult {
       suggestedAction:
         'Suspender protocolo EMT/TMS até avaliação médica especializada. Encaminhar para neurologista para avaliação de risco-benefício.',
       clinicalCitations: [TMS_REL_CITATION, TMS_ABS_CITATION],
+      telemedicineDisclaimer: true,
+    }
+  }
+
+  if (
+    tmsMatches.length > 0 &&
+    depressionMatches.length > 0 &&
+    implantMatches.length === 0 &&
+    seizureMatches.length === 0
+  ) {
+    return {
+      category: 'SAFETY_ALERT',
+      riskLevel: 'medium',
+      scaleSuggestion: 'NONE',
+      safetyFlag: 'none',
+      safetyMessage: null,
+      clinicalRationale:
+        'Paciente com depressão (incluindo depressão resistente) sem contraindicações absolutas ou relativas identificadas para EMT/TMS. Conforme protocolo de segurança TMS, elegibilidade deve ser confirmada através de avaliação médica especializada.',
+      suggestedAction:
+        'Paciente potencialmente elegível para EMT/TMS. É obrigatória a realização de validação médica antes do início do protocolo, incluindo anamnese completa, revisão de medicações em uso, avaliação de risco-benefício e documentação clínica. A telemedicina serve como triagem inicial apenas.',
+      clinicalCitations: [TMS_PROTO_CITATION, CFM_ART4_CITATION],
       telemedicineDisclaimer: true,
     }
   }

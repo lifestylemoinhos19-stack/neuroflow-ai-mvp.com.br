@@ -920,6 +920,45 @@ export type Database = {
         }
         Relationships: []
       }
+      stress_test_logs: {
+        Row: {
+          actual_output: Json | null
+          created_at: string
+          expected_risk_level: string | null
+          expected_suggestion: string | null
+          id: string
+          input_text: string | null
+          is_success: boolean | null
+          latency_ms: number | null
+          rag_sources: Json | null
+          scenario_name: string | null
+        }
+        Insert: {
+          actual_output?: Json | null
+          created_at?: string
+          expected_risk_level?: string | null
+          expected_suggestion?: string | null
+          id?: string
+          input_text?: string | null
+          is_success?: boolean | null
+          latency_ms?: number | null
+          rag_sources?: Json | null
+          scenario_name?: string | null
+        }
+        Update: {
+          actual_output?: Json | null
+          created_at?: string
+          expected_risk_level?: string | null
+          expected_suggestion?: string | null
+          id?: string
+          input_text?: string | null
+          is_success?: boolean | null
+          latency_ms?: number | null
+          rag_sources?: Json | null
+          scenario_name?: string | null
+        }
+        Relationships: []
+      }
       suites: {
         Row: {
           amenidades: string[] | null

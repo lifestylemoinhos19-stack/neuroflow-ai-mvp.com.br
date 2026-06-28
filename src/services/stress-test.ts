@@ -73,6 +73,18 @@ export function validateScenario(
     failures.push('Aviso de telemedicina deveria estar presente para alerta de segurança')
   }
 
+  if (scenario.expected.suggestedActionContains && actual.suggestedAction) {
+    const lowerAction = actual.suggestedAction.toLowerCase()
+    for (const expected of scenario.expected.suggestedActionContains) {
+      if (!lowerAction.includes(expected.toLowerCase())) {
+        failures.push(`Ação sugerida deveria conter "${expected}"`)
+      }
+    }
+  }
+  if (scenario.expected.suggestedActionContains && !actual.suggestedAction) {
+    failures.push('Ação sugerida ausente')
+  }
+
   return { passed: failures.length === 0, failures }
 }
 
@@ -146,7 +158,8 @@ export async function logStressTestResult(
     await supabase.from('stress_test_logs').insert({
       scenario_name: scenario.title,
       input_text: scenario.inputPrompt,
-      expected_risk_level: mapRiskLevel(scenario.expected.riskLevel),
+      expected_risk_level:
+        scenario.expected.expectedRiskLabel || mapRiskLevel(scenario.expected.riskLevel),
       expected_suggestion: scenario.expected.scaleSuggestion,
       actual_output: {
         category: actualOutput.category,

@@ -92,8 +92,8 @@ export function StressTestRunner() {
                   Bateria 01 — Testes de Estresse NeuroFlow AI
                 </CardTitle>
                 <CardDescription>
-                  10 cenários clínicos validando escalas M-CHAT-R, SNAP-IV, blocos de segurança EMT
-                  e detecção de escopo
+                  {STRESS_TEST_SCENARIOS.length} cenários clínicos validando escalas M-CHAT-R,
+                  SNAP-IV, blocos de segurança EMT e detecção de escopo
                 </CardDescription>
               </div>
             </div>
@@ -224,7 +224,7 @@ export function StressTestRunner() {
         <Alert className="border-emerald-300 bg-emerald-50">
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           <AlertTitle className="text-emerald-800 font-bold">
-            Todos os 10 cenários aprovados!
+            Todos os {STRESS_TEST_SCENARIOS.length} cenários aprovados!
           </AlertTitle>
           <AlertDescription className="text-emerald-700">
             O motor NeuroFlow AI passou em todos os testes de estresse. As escalas M-CHAT-R e
@@ -275,6 +275,20 @@ function ScenarioResultCard({
             {categoryLabels[scenario.category] || scenario.category}
           </Badge>
           {isSafety && <ShieldAlert className="h-3.5 w-3.5 text-red-500" />}
+          {scenario.expected.safetyFlag === 'absolute_contraindication' && (
+            <Badge className="text-[10px] bg-red-500 text-white border-red-600">
+              <ShieldAlert className="h-2.5 w-2.5 mr-0.5" />
+              Alerta Vermelho Impeditivo
+            </Badge>
+          )}
+          {scenario.category === 'EMT_SAFETY' &&
+            scenario.expected.safetyFlag === 'none' &&
+            scenario.expected.riskLevel === 'medium' && (
+              <Badge className="text-[10px] bg-emerald-100 text-emerald-700 border-emerald-300">
+                <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />
+                Elegibilidade
+              </Badge>
+            )}
         </div>
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1 text-[10px] text-slate-400">
