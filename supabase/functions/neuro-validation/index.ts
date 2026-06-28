@@ -2,9 +2,20 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 
-type SafetyFlag = 'none' | 'absolute_contraindication' | 'out_of_scope'
-type Category = 'TEA' | 'TDAH' | 'SAFETY_ALERT' | 'OUT_OF_SCOPE' | 'GENERAL'
+type SafetyFlag =
+  | 'none'
+  | 'absolute_contraindication'
+  | 'relative_contraindication'
+  | 'out_of_scope'
+type Category = 'TEA' | 'TDAH' | 'DI' | 'SAFETY_ALERT' | 'OUT_OF_SCOPE' | 'GENERAL'
 type ScaleSuggestion = 'M-CHAT-R' | 'SNAP-IV' | 'NONE'
+
+interface ClinicalCitation {
+  source: string
+  code: string
+  title: string
+  section: string
+}
 
 interface ValidationResult {
   category: Category
@@ -14,6 +25,8 @@ interface ValidationResult {
   safetyMessage: string | null
   clinicalRationale: string
   suggestedAction: string
+  clinicalCitations: ClinicalCitation[]
+  telemedicineDisclaimer: boolean
 }
 
 const TEA_PATTERNS = [
@@ -44,6 +57,9 @@ const TEA_PATTERNS = [
   'sem linguagem',
   'não verbal',
   'nao verbal',
+  'reciprocidade social',
+  'interesses restritos',
+  'compartilhamento de interesses',
 ]
 
 const TDAH_PATTERNS = [
@@ -68,6 +84,19 @@ const TDAH_PATTERNS = [
   'foco escolar',
   'rendimento escolar',
   'tarefa escolar',
+  'organização',
+  'perde objetos',
+]
+
+const DI_PATTERNS = [
+  'deficiência intelectual',
+  'deficiencia intelectual',
+  'atraso cognitivo',
+  'dificuldade de aprendizagem',
+  'raciocínio',
+  'funcionamento intelectual',
+  'aptidões cognitivas',
+  'comportamento adaptativo',
 ]
 
 const TMS_PATTERNS = [
@@ -92,6 +121,16 @@ const IMPLANT_PATTERNS = [
   'chumbo metalico',
   'fragmento metálico',
   'fragmento metalico',
+  'dispositivo eletrônico',
+]
+
+const SEIZURE_PATTERNS = [
+  'convulsão',
+  'convulsao',
+  'epilepsia',
+  'crise convulsiva',
+  'história de convulsões',
+  'historia de convulsoes',
 ]
 
 const OUT_OF_SCOPE_PATTERNS = [
@@ -122,15 +161,96 @@ const OUT_OF_SCOPE_PATTERNS = [
   'rinite',
 ]
 
+const DSM5_TEA_A_CITATION: ClinicalCitation = {
+  source: 'DSM-5-TR',
+  code: 'F84.0',
+  title: 'TEA - Critério A',
+  section: 'Critérios Diagnósticos',
+}
+const DSM5_TEA_B_CITATION: ClinicalCitation = {
+  source: 'DSM-5-TR',
+  code: 'F84.0',
+  title: 'TEA - Critério B',
+  section: 'Critérios Diagnósticos',
+}
+const CID11_TEA_CITATION: ClinicalCitation = {
+  source: 'CID-11',
+  code: '6A02',
+  title: 'Transtorno do Espectro do Autismo',
+  section: 'Neurodesenvolvimento',
+}
+const DSM5_TDAH_INATT_CITATION: ClinicalCitation = {
+  source: 'DSM-5-TR',
+  code: 'F90.0',
+  title: 'TDAH - Tipo Desatento',
+  section: 'Critérios Diagnósticos',
+}
+const DSM5_TDAH_HYPER_CITATION: ClinicalCitation = {
+  source: 'DSM-5-TR',
+  code: 'F90.1',
+  title: 'TDAH - Tipo Hiperativo-Impulsivo',
+  section: 'Critérios Diagnósticos',
+}
+const CID11_TDAH_CITATION: ClinicalCitation = {
+  source: 'CID-11',
+  code: '6A05',
+  title: 'Transtorno de Déficit de Atenção e Hiperatividade',
+  section: 'Neurodesenvolvimento',
+}
+const DSM5_DI_CITATION: ClinicalCitation = {
+  source: 'DSM-5-TR',
+  code: 'F70-F79',
+  title: 'Transtornos do Desenvolvimento Intelectual',
+  section: 'Critérios Diagnósticos',
+}
+const CID11_DI_CITATION: ClinicalCitation = {
+  source: 'CID-11',
+  code: '6A00',
+  title: 'Transtorno do Desenvolvimento Intelectual',
+  section: 'Neurodesenvolvimento',
+}
+const MCHAT_CITATION: ClinicalCitation = {
+  source: 'M-CHAT-R/F',
+  code: 'M-CHAT-R',
+  title: 'M-CHAT-R: Triagem Inicial',
+  section: 'Protocolo de Triagem',
+}
+const SNAP_IV_CITATION: ClinicalCitation = {
+  source: 'SNAP-IV',
+  code: 'SNAP-IV-INTERP',
+  title: 'SNAP-IV Interpretação',
+  section: 'Interpretação',
+}
+const TMS_ABS_CITATION: ClinicalCitation = {
+  source: 'TMS-Safety',
+  code: 'TMS-ABS',
+  title: 'EMT/TMS: Contraindicações Absolutas',
+  section: 'Contraindicações',
+}
+const TMS_REL_CITATION: ClinicalCitation = {
+  source: 'TMS-Safety',
+  code: 'TMS-REL',
+  title: 'EMT/TMS: Contraindicações Relativas',
+  section: 'Contraindicações Relativas',
+}
+const CFM_ART4_CITATION: ClinicalCitation = {
+  source: 'CFM-2314-2022',
+  code: 'CFM-ART-4',
+  title: 'Limitações e Responsabilidades',
+  section: 'Telemedicina',
+}
+
 function matchPatterns(lowerMessage: string, patterns: string[]): string[] {
   return patterns.filter((p) => lowerMessage.includes(p))
 }
 
 function classifyInput(message: string): ValidationResult {
   const lower = message.toLowerCase()
+  const baseCitations: ClinicalCitation[] = []
 
   const tmsMatches = matchPatterns(lower, TMS_PATTERNS)
   const implantMatches = matchPatterns(lower, IMPLANT_PATTERNS)
+  const seizureMatches = matchPatterns(lower, SEIZURE_PATTERNS)
 
   if (tmsMatches.length > 0 && implantMatches.length > 0) {
     return {
@@ -139,16 +259,36 @@ function classifyInput(message: string): ValidationResult {
       scaleSuggestion: 'NONE',
       safetyFlag: 'absolute_contraindication',
       safetyMessage:
-        '⚠️ ALERTA DE CONTRAINDICAÇÃO ABSOLUTA: A Estimulação Magnética Transcraniana (EMT/TMS) é ESTITAMENTE CONTRAINDICADA em pacientes com implantes cocleares, implantes metálicos, marcapassos ou qualquer fragmento metálico na região cefálica. O campo magnético pode deslocar o implante, causar aquecimento tecidual, malfuncionamento do dispositivo e lesões graves.',
+        '⚠️ ALERTA DE CONTRAINDICAÇÃO ABSOLUTA: A Estimulação Magnética Transcraniana (EMT/TMS) é ESTRIAMENTE CONTRAINDICADA em pacientes com implantes cocleares, implantes metálicos, marcapassos ou qualquer fragmento metálico na região cefálica. O campo magnético pode deslocar o implante, causar aquecimento tecidual, malfuncionamento do dispositivo e lesões graves. Referência: Protocolo de Segurança TMS.',
       clinicalRationale:
-        'Identificada menção simultânea a EMT/TMS e implante/metálico. Este é um cenário de segurança crítica que exige intervenção imediata.',
+        'Identificada menção simultânea a EMT/TMS e implante/metálico. Cenário de segurança crítica conforme protocolo oficial de segurança TMS exige intervenção imediata.',
       suggestedAction:
         'NÃO prosseguir com EMT/TMS. Encaminhar para avaliação presencial com especialista para avaliação de segurança e alternativas terapêuticas.',
+      clinicalCitations: [TMS_ABS_CITATION, CFM_ART4_CITATION],
+      telemedicineDisclaimer: true,
+    }
+  }
+
+  if (tmsMatches.length > 0 && seizureMatches.length > 0) {
+    return {
+      category: 'SAFETY_ALERT',
+      riskLevel: null,
+      scaleSuggestion: 'NONE',
+      safetyFlag: 'relative_contraindication',
+      safetyMessage:
+        '⚠️ ALERTA DE CONTRAINDICAÇÃO RELATIVA: História de convulsões/epilepsia é uma contraindicação relativa para EMT/TMS. O campo magnético pode reduzir o limiar convulsivo. Avaliação médica obrigatória para relação risco-benefício antes de qualquer protocolo de estimulação.',
+      clinicalRationale:
+        'Identificada menção simultânea a EMT/TMS e histórico de convulsões. Contraindicação relativa conforme protocolo de segurança TMS requer avaliação médica prévia.',
+      suggestedAction:
+        'Suspender protocolo EMT/TMS até avaliação médica especializada. Encaminhar para neurologista para avaliação de risco-benefício.',
+      clinicalCitations: [TMS_REL_CITATION, TMS_ABS_CITATION],
+      telemedicineDisclaimer: true,
     }
   }
 
   const outOfScopeMatches = matchPatterns(lower, OUT_OF_SCOPE_PATTERNS)
-  const hasNeurodevKeywords = matchPatterns(lower, [...TEA_PATTERNS, ...TDAH_PATTERNS]).length > 0
+  const hasNeurodevKeywords =
+    matchPatterns(lower, [...TEA_PATTERNS, ...TDAH_PATTERNS, ...DI_PATTERNS]).length > 0
 
   if (outOfScopeMatches.length > 0 && !hasNeurodevKeywords) {
     return {
@@ -157,16 +297,34 @@ function classifyInput(message: string): ValidationResult {
       scaleSuggestion: 'NONE',
       safetyFlag: 'out_of_scope',
       safetyMessage:
-        'Esta solicitação está fora do escopo do NeuroFlow AI, que é especializado em neurodesenvolvimento (TEA e TDAH).',
+        'Esta solicitação está fora do escopo do NeuroFlow AI, especializado em neurodesenvolvimento (TEA, TDAH e DI) conforme critérios DSM-5-TR e CID-11.',
       clinicalRationale:
         'A consulta não apresenta indicadores de neurodesenvolvimento e refere-se a condição clínica não coberta pelo sistema.',
       suggestedAction:
         'Recomendamos consultar um pediatra ou clínico geral para esta questão. O NeuroFlow AI é focado exclusivamente em triagem de transtornos do neurodesenvolvimento.',
+      clinicalCitations: [],
+      telemedicineDisclaimer: false,
     }
   }
 
   const teaMatches = matchPatterns(lower, TEA_PATTERNS)
   const tdahMatches = matchPatterns(lower, TDAH_PATTERNS)
+  const diMatches = matchPatterns(lower, DI_PATTERNS)
+
+  if (diMatches.length >= 2) {
+    return {
+      category: 'DI',
+      riskLevel: diMatches.length >= 3 ? 'high' : 'medium',
+      scaleSuggestion: 'NONE',
+      safetyFlag: 'none',
+      safetyMessage: null,
+      clinicalRationale: `Identificados ${diMatches.length} indicadores de Transtorno do Desenvolvimento Intelectual (DI): ${diMatches.join(', ')}. Conforme CID-11 (6A00) e DSM-5-TR (F70-F79), os padrões sugerem possível comprometimento do funcionamento intelectual e comportamento adaptativo.`,
+      suggestedAction:
+        'Encaminhar para avaliação diagnóstica presencial com neuropsicólogo para aplicação de testes cognitivos padronizados (WISC, WAIS) e avaliação adaptativa. A telemedicina serve apenas como triagem inicial.',
+      clinicalCitations: [DSM5_DI_CITATION, CID11_DI_CITATION, CFM_ART4_CITATION],
+      telemedicineDisclaimer: true,
+    }
+  }
 
   if (teaMatches.length >= 2) {
     const criticalCount = teaMatches.filter(
@@ -175,6 +333,26 @@ function classifyInput(message: string): ValidationResult {
     ).length
 
     const riskLevel = criticalCount >= 2 || teaMatches.length >= 3 ? 'high' : 'medium'
+    const citations = [DSM5_TEA_A_CITATION, DSM5_TEA_B_CITATION, CID11_TEA_CITATION]
+    if (riskLevel === 'high') citations.push(MCHAT_CITATION)
+
+    const criteriaDescription = teaMatches.some(
+      (m) =>
+        m.includes('contato visual') || m.includes('apontar') || m.includes('responde ao nome'),
+    )
+      ? 'Déicits em reciprocidade social e comunicação não verbal (Critério A DSM-5-TR)'
+      : ''
+    const repetitiveDescription = teaMatches.some(
+      (m) =>
+        m.includes('estereotipia') ||
+        m.includes('repetitivos') ||
+        m.includes('flapping') ||
+        m.includes('alinh'),
+    )
+      ? 'Padrões restritos e repetitivos de comportamento (Critério B DSM-5-TR)'
+      : ''
+
+    const rationale = `Identificados ${teaMatches.length} indicadores de risco para Transtorno do Espectro Autista (TEA): ${teaMatches.join(', ')}. ${criteriaDescription}. ${repetitiveDescription}. Conforme CID-11 (6A02), padrões sugerem possível atraso no desenvolvimento social e comunicativo.`
 
     return {
       category: 'TEA',
@@ -182,14 +360,44 @@ function classifyInput(message: string): ValidationResult {
       scaleSuggestion: 'M-CHAT-R',
       safetyFlag: 'none',
       safetyMessage: null,
-      clinicalRationale: `Identificados ${teaMatches.length} indicadores de risco para Transtorno do Espectro Autista (TEA): ${teaMatches.join(', ')}. Padrões identificados sugerem possível atraso no desenvolvimento social e comunicativo.`,
+      clinicalRationale: rationale,
       suggestedAction:
-        'Recomenda-se a aplicação imediata da escala M-CHAT-R (Modified Checklist for Autism in Toddlers) para triagem estruturada. Em caso de pontuação de risco, encaminhar para avaliação diagnóstica com neuropediatra ou psiquiatra infantil.',
+        riskLevel === 'high'
+          ? 'Pontuação sugere alto risco. Conforme fluxograma M-CHAT-R/F, encaminhar DIRETAMENTE para avaliação diagnóstica com neuropediatra ou psiquiatra infantil (sem necessidade de follow-up). Diagnóstico definitivo requer avaliação presencial multidisciplinar.'
+          : 'Recomenda-se aplicação imediata da escala M-CHAT-R (Modified Checklist for Autism in Toddlers) para triagem estruturada. Conforme fluxograma M-CHAT-R/F, pontuação 3-7 requer aplicação de M-CHAT-R/F (Follow-up Interview). Em caso de risco confirmado, encaminhar para avaliação diagnóstica.',
+      clinicalCitations: citations,
+      telemedicineDisclaimer: true,
     }
   }
 
   if (tdahMatches.length >= 2) {
     const riskLevel = tdahMatches.length >= 3 ? 'high' : 'medium'
+    const inattentive = tdahMatches.some(
+      (m) =>
+        m.includes('desaten') ||
+        m.includes('foco') ||
+        m.includes('concentr') ||
+        m.includes('organiza') ||
+        m.includes('tarefas') ||
+        m.includes('esquece'),
+    )
+    const hyperactive = tdahMatches.some(
+      (m) =>
+        m.includes('inquiet') ||
+        m.includes('hiper') ||
+        m.includes('parado') ||
+        m.includes('agitado') ||
+        m.includes('interrompe') ||
+        m.includes('fala demais'),
+    )
+
+    const citations: ClinicalCitation[] = [CID11_TDAH_CITATION]
+    if (inattentive) citations.push(DSM5_TDAH_INATT_CITATION)
+    if (hyperactive) citations.push(DSM5_TDAH_HYPER_CITATION)
+    citations.push(SNAP_IV_CITATION)
+
+    const subtype =
+      inattentive && hyperactive ? 'combinado' : inattentive ? 'desatento' : 'hiperativo-impulsivo'
 
     return {
       category: 'TDAH',
@@ -197,9 +405,11 @@ function classifyInput(message: string): ValidationResult {
       scaleSuggestion: 'SNAP-IV',
       safetyFlag: 'none',
       safetyMessage: null,
-      clinicalRationale: `Identificados ${tdahMatches.length} indicadores de Transtorno de Déficit de Atenção e Hiperatividade (TDAH): ${tdahMatches.join(', ')}. Padrões identificados sugerem possível comprometimento nas funções executivas e autorregulação.`,
+      clinicalRationale: `Identificados ${tdahMatches.length} indicadores de Transtorno de Déficit de Atenção e Hiperatividade (TDAH), subtipo ${subtype}: ${tdahMatches.join(', ')}. Conforme CID-11 (6A05) e DSM-5-TR (F90.0/F90.1), padrões sugerem possível comprometimento nas funções executivas e autorregulação.`,
       suggestedAction:
-        'Recomenda-se a aplicação da escala SNAP-IV (Swanson, Nolan, and Pelham Rating Scale) para avaliação estruturada dos sintomas de desatenção e hiperatividade. Em caso de indicadores significativos, encaminhar para avaliação com neuropediatra ou psicólogo especializado.',
+        'Recomenda-se aplicação da escala SNAP-IV (Swanson, Nolan, and Pelham Rating Scale) para avaliação estruturada. Pontos de corte: média >1.5 sugestivo, >2.0 alto risco. Diagnóstico definitivo requer avaliação presencial multidisciplinar conforme Resolução CFM nº 2.314/2022.',
+      clinicalCitations: citations,
+      telemedicineDisclaimer: true,
     }
   }
 
@@ -210,9 +420,11 @@ function classifyInput(message: string): ValidationResult {
       scaleSuggestion: 'M-CHAT-R',
       safetyFlag: 'none',
       safetyMessage: null,
-      clinicalRationale: `Identificado 1 indicador de possível risco para TEA: ${teaMatches[0]}. Recomenda-se monitoramento continuado.`,
+      clinicalRationale: `Identificado 1 indicador de possível risco para TEA: ${teaMatches[0]}. Recomenda-se monitoramento continuado conforme critérios DSM-5-TR (F84.0).`,
       suggestedAction:
-        'Recomenda-se aplicação da escala M-CHAT-R como triagem preventiva e acompanhamento do desenvolvimento.',
+        'Recomenda-se aplicação da escala M-CHAT-R como triagem preventiva e acompanhamento do desenvolvimento. Conforme fluxograma M-CHAT-R/F, pontuação baixa requer apenas monitoramento de rotina.',
+      clinicalCitations: [DSM5_TEA_A_CITATION, MCHAT_CITATION],
+      telemedicineDisclaimer: true,
     }
   }
 
@@ -223,9 +435,11 @@ function classifyInput(message: string): ValidationResult {
       scaleSuggestion: 'SNAP-IV',
       safetyFlag: 'none',
       safetyMessage: null,
-      clinicalRationale: `Identificado 1 indicador de possível TDAH: ${tdahMatches[0]}. Recomenda-se monitoramento continuado.`,
+      clinicalRationale: `Identificado 1 indicador de possível TDAH: ${tdahMatches[0]}. Recomenda-se monitoramento continuado conforme critérios DSM-5-TR (F90.0).`,
       suggestedAction:
         'Recomenda-se aplicação da escala SNAP-IV como triagem preventiva e acompanhamento do comportamento.',
+      clinicalCitations: [DSM5_TDAH_INATT_CITATION, SNAP_IV_CITATION],
+      telemedicineDisclaimer: true,
     }
   }
 
@@ -236,9 +450,11 @@ function classifyInput(message: string): ValidationResult {
     safetyFlag: 'none',
     safetyMessage: null,
     clinicalRationale:
-      'Não foram identificados indicadores claros de TEA ou TDAH no texto fornecido.',
+      'Não foram identificados indicadores claros de TEA, TDAH ou DI no texto fornecido, conforme critérios DSM-5-TR e CID-11.',
     suggestedAction:
       'Forneça mais detalhes sobre o comportamento, desenvolvimento ou queixas para uma análise mais precisa.',
+    clinicalCitations: [],
+    telemedicineDisclaimer: false,
   }
 }
 
@@ -277,6 +493,13 @@ Deno.serve(async (req) => {
       } = await supabaseClient.auth.getUser()
       if (user) userId = user.id
     }
+
+    const clinicalReferences = result.clinicalCitations.map((c) => ({
+      source: c.source,
+      code: c.code,
+      title: c.title,
+      section: c.section,
+    }))
 
     if (persist) {
       let sessionId: string | null = null
@@ -317,6 +540,8 @@ Deno.serve(async (req) => {
           safetyMessage: result.safetyMessage,
           clinicalRationale: result.clinicalRationale,
           suggestedAction: result.suggestedAction,
+          clinicalReferences,
+          telemedicineDisclaimer: result.telemedicineDisclaimer,
           sessionId,
           timestamp: new Date().toISOString(),
         },

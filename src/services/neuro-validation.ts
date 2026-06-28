@@ -1,8 +1,19 @@
 import { supabase } from '@/lib/supabase/client'
 
-export type SafetyFlag = 'none' | 'absolute_contraindication' | 'out_of_scope'
-export type NeuroCategory = 'TEA' | 'TDAH' | 'SAFETY_ALERT' | 'OUT_OF_SCOPE' | 'GENERAL'
+export type SafetyFlag =
+  | 'none'
+  | 'absolute_contraindication'
+  | 'relative_contraindication'
+  | 'out_of_scope'
+export type NeuroCategory = 'TEA' | 'TDAH' | 'DI' | 'SAFETY_ALERT' | 'OUT_OF_SCOPE' | 'GENERAL'
 export type ScaleSuggestion = 'M-CHAT-R' | 'SNAP-IV' | 'NONE'
+
+export interface ClinicalCitation {
+  source: string
+  code: string
+  title: string
+  section: string
+}
 
 export interface ValidationResult {
   category: NeuroCategory
@@ -12,6 +23,8 @@ export interface ValidationResult {
   safetyMessage: string | null
   clinicalRationale: string
   suggestedAction: string
+  clinicalCitations: ClinicalCitation[]
+  telemedicineDisclaimer: boolean
 }
 
 export interface ValidationResponse {
@@ -51,6 +64,8 @@ export interface AuditLogEntry {
     safetyMessage: string | null
     clinicalRationale: string
     suggestedAction: string
+    clinicalReferences?: ClinicalCitation[]
+    telemedicineDisclaimer?: boolean
     timestamp: string
   }
   created_at: string

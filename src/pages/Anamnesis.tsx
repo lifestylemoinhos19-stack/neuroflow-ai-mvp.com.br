@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Brain, Send, CheckCircle2, Loader2 } from 'lucide-react'
+import { Brain, Send, CheckCircle2, Loader2, Scale } from 'lucide-react'
+import { TELEMEDICINE_DISCLAIMER } from '@/lib/clinical-references'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
@@ -142,14 +143,17 @@ export default function Anamnesis() {
         <div className="flex items-center gap-2 mb-1">
           <Brain className="h-5 w-5 text-primary" />
           <h1 className="text-xl sm:text-2xl font-display font-bold text-slate-900">
-            Entrevista Adaptativa
+            Entrevista Adaptativa de Neurodesenvolvimento
           </h1>
         </div>
         <p className="text-sm text-slate-500">
           Pergunta {Math.min(currentIndex + 1, chatQuestions.length)} de {chatQuestions.length}
         </p>
+        <div className="mt-2 p-2 rounded-lg bg-blue-50 border border-blue-200 flex items-start gap-2">
+          <Scale className="h-3.5 w-3.5 text-blue-600 shrink-0 mt-0.5" />
+          <p className="text-[11px] text-blue-700 leading-snug">{TELEMEDICINE_DISCLAIMER.text}</p>
+        </div>
       </div>
-
       <div className="flex-1 overflow-y-auto space-y-3 pb-4">
         {messages.map((msg, i) => (
           <div

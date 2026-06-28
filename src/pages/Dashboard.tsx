@@ -11,7 +11,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Download, Loader2, AlertTriangle, CheckCircle2, Clock, Activity } from 'lucide-react'
+import {
+  Download,
+  Loader2,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Activity,
+  Scale,
+} from 'lucide-react'
+import { TELEMEDICINE_DISCLAIMER } from '@/lib/clinical-references'
 import { getUserSessions, SessionWithRisk } from '@/services/sessions'
 import { exportReport } from '@/lib/pdf-export'
 import { cn } from '@/lib/utils'
@@ -78,7 +87,9 @@ export default function Dashboard() {
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-slate-900">
             Dashboard Clínico
           </h1>
-          <p className="text-slate-500">Resumo de sessões e indicadores de risco.</p>
+          <p className="text-slate-500">
+            Resumo de sessões e indicadores de risco (DSM-5-TR / CID-11).
+          </p>
         </div>
         <Button
           onClick={handleExport}
@@ -94,7 +105,15 @@ export default function Dashboard() {
         </Button>
       </div>
 
+      <Card className="border-blue-200 bg-blue-50">
+        <CardContent className="p-3 flex items-start gap-2">
+          <Scale className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+          <p className="text-xs text-blue-700">{TELEMEDICINE_DISCLAIMER.text}</p>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {' '}
         <Card className="shadow-subtle border-slate-100">
           <CardContent className="p-5 flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-emerald-50 flex items-center justify-center">

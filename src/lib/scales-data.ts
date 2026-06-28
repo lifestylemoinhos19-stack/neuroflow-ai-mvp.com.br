@@ -272,7 +272,18 @@ export function getMChatRiskLevel(score: number): 'low' | 'medium' | 'high' {
 }
 
 export function getSnapivRiskLevel(avg: number): 'low' | 'medium' | 'high' {
-  if (avg > 2) return 'high'
-  if (avg > 1.5) return 'medium'
+  if (avg > 2.0) return 'high'
+  if (avg >= 1.5) return 'medium'
   return 'low'
 }
+
+export const MCHAT_CRITICAL_QUESTIONS = [2, 5, 12, 15, 16, 18, 19, 20]
+
+export function getMChatCriticalFailCount(answers: Record<string, string>): number {
+  return mchatQuestions
+    .filter((q) => MCHAT_CRITICAL_QUESTIONS.includes(q.id))
+    .filter((q) => answers[q.key] === q.riskAnswer).length
+}
+
+export const SNAP_IV_CUTOFF = 1.5
+export const SNAP_IV_HIGH_RISK = 2.0

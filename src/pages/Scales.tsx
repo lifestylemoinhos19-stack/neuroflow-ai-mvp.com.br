@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ClipboardCheck, Loader2, Plus } from 'lucide-react'
+import { ClipboardCheck, Loader2, Plus, Scale } from 'lucide-react'
+import { TELEMEDICINE_DISCLAIMER } from '@/lib/clinical-references'
 import { MChatR } from '@/components/MChatR'
 import { SNAPIV } from '@/components/SNAPIV'
 import { createAnamnesisSession } from '@/services/anamnesis'
@@ -61,8 +62,16 @@ export default function Scales() {
           <ClipboardCheck className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
           <p className="text-sm text-slate-600">
             Cada escala cria uma sessão independente. Responda todas as perguntas e clique em{' '}
-            <strong>Salvar & Continuar</strong> para registrar os resultados.
+            <strong>Salvar & Continuar</strong> para registrar os resultados. As escalas seguem os
+            protocolos oficiais M-CHAT-R/F e SNAP-IV.
           </p>
+        </CardContent>
+      </Card>
+
+      <Card className="border-blue-200 bg-blue-50">
+        <CardContent className="p-3 flex items-start gap-2">
+          <Scale className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+          <p className="text-xs text-blue-700">{TELEMEDICINE_DISCLAIMER.text}</p>
         </CardContent>
       </Card>
 

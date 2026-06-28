@@ -14,6 +14,9 @@ import {
   Stethoscope,
   History,
   CheckCircle2,
+  BookOpen,
+  Scale,
+  Info,
 } from 'lucide-react'
 import {
   runNeuroValidation,
@@ -21,12 +24,14 @@ import {
   type ValidationResult,
   type AuditLogEntry,
 } from '@/services/neuro-validation'
+import { TELEMEDICINE_DISCLAIMER, formatCitation } from '@/lib/clinical-references'
 import { cn } from '@/lib/utils'
 
 const EXAMPLE_SCENARIOS = [
   { label: 'TEA - Risco Alto', text: 'Criança de 2 anos sem contato visual e sem apontar' },
   { label: 'TDAH - Indicadores', text: 'Inquietude severa e falta de foco escolar' },
   { label: 'Segurança - EMT', text: 'Posso fazer EMT com implante coclear?' },
+  { label: 'Segurança - Convulsão', text: 'Paciente com epilepsia pode fazer EMT?' },
   { label: 'Fora de Escopo', text: 'Como tratar gripe?' },
 ]
 
@@ -48,6 +53,7 @@ function categoryLabel(cat: string): string {
   const map: Record<string, string> = {
     TEA: 'Transtorno do Espectro Autista',
     TDAH: 'Transtorno de Déficit de Atenção/Hiperatividade',
+    DI: 'Transtorno do Desenvolvimento Intelectual',
     SAFETY_ALERT: 'Alerta de Segurança',
     OUT_OF_SCOPE: 'Fora de Escopo',
     GENERAL: 'Geral',
@@ -87,7 +93,9 @@ export function NeuroValidationPanel() {
     setResult(null)
   }
 
-  const isSafety = result?.safetyFlag === 'absolute_contraindication'
+  const isSafety =
+    result?.safetyFlag === 'absolute_contraindication' ||
+    result?.safetyFlag === 'relative_contraindication'
   const isOutOfScope = result?.safetyFlag === 'out_of_scope'
 
   return (
@@ -101,7 +109,8 @@ export function NeuroValidationPanel() {
             <div>
               <CardTitle className="font-display">NeuroFlow AI — Validação Clínica</CardTitle>
               <CardDescription>
-                Motor de RAG clínico para triagem de TEA e TDAH com guardrails de segurança
+                Motor de RAG clínico com DSM-5-TR, CID-11, M-CHAT-R/F, SNAP-IV e protocolos de
+                segurança TMS
               </CardDescription>
             </div>
           </div>
@@ -164,13 +173,25 @@ export function NeuroValidationPanel() {
           )}
         >
           <CardContent className="pt-6 space-y-4">
-            {isSafety && (
+            {result.safetyFlag === 'absolute_contraindication' && (
               <Alert variant="destructive" className="border-red-300 bg-red-50">
                 <ShieldAlert className="h-5 w-5 text-red-600" />
                 <AlertTitle className="text-red-800 font-bold">
                   🚫 CONTRAINDICAÇÃO ABSOLUTA
                 </AlertTitle>
                 <AlertDescription className="text-red-700">{result.safetyMessage}</AlertDescription>
+              </Alert>
+            )}
+
+            {result.safetyFlag === 'relative_contraindication' && (
+              <Alert className="border-orange-300 bg-orange-50">
+                <ShieldAlert className="h-5 w-5 text-orange-600" />
+                <AlertTitle className="text-orange-800 font-bold">
+                  ⚠️ CONTRAINDICAÇÃO RELATIVA
+                </AlertTitle>
+                <AlertDescription className="text-orange-700">
+                  {result.safetyMessage}
+                </AlertDescription>
               </Alert>
             )}
 
@@ -212,12 +233,18 @@ export function NeuroValidationPanel() {
                   variant="outline"
                   className={cn(
                     'text-xs font-semibold',
-                    isSafety
+                    result.safetyFlag === 'absolute_contraindication'
                       ? 'bg-red-100 text-red-700 border-red-200'
-                      : 'bg-amber-100 text-amber-700 border-amber-200',
+                      : result.safetyFlag === 'relative_contraindication'
+                        ? 'bg-orange-100 text-orange-700 border-orange-200'
+                        : 'bg-amber-100 text-amber-700 border-amber-200',
                   )}
                 >
-                  {isSafety ? 'Flag: Contraindicação' : 'Flag: Fora de Escopo'}
+                  {result.safetyFlag === 'absolute_contraindication'
+                    ? 'Flag: Contraindicação Absoluta'
+                    : result.safetyFlag === 'relative_contraindication'
+                      ? 'Flag: Contraindicação Relativa'
+                      : 'Flag: Fora de Escopo'}
                 </Badge>
               )}
             </div>
@@ -232,11 +259,46 @@ export function NeuroValidationPanel() {
               <p className="text-sm text-slate-600 leading-relaxed">{result.suggestedAction}</p>
             </div>
 
+            {result.clinicalCitations && result.clinicalCitations.length > 0 && (
+              <div className="space-y-2 p-3 rounded-lg bg-slate-50 border border-slate-100">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-slate-600" />
+                  <h4 className="text-sm font-semibold text-slate-700">
+                    Referências Clínicas Utilizadas
+                  </h4>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {result.clinicalCitations.map((cite, i) => (
+                    <Badge
+                      key={i}
+                      variant="secondary"
+                      className="text-xs bg-white border border-slate-200"
+                    >
+                      <BookOpen className="h-3 w-3 mr-1 text-slate-400" />
+                      {formatCitation(cite)}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {result.telemedicineDisclaimer && (
+              <Alert className="border-blue-200 bg-blue-50">
+                <Scale className="h-4 w-4 text-blue-600" />
+                <AlertTitle className="text-blue-800 font-semibold text-sm">
+                  Aviso de Telemedicina — Resolução CFM nº 2.314/2022
+                </AlertTitle>
+                <AlertDescription className="text-blue-700 text-xs">
+                  {TELEMEDICINE_DISCLAIMER.text}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
               <p className="text-xs text-slate-400">
-                Resultado persistido em audit_logs (action: RAG_VALIDATION) para auditoria e
-                conformidade LGPD.
+                Resultado persistido em audit_logs (action: RAG_VALIDATION) com referências clínicas
+                para auditoria e conformidade LGPD.
               </p>
             </div>
           </CardContent>
@@ -305,14 +367,28 @@ export function NeuroValidationPanel() {
                               'text-[10px]',
                               entry.details.safetyFlag === 'absolute_contraindication'
                                 ? 'bg-red-50 text-red-600'
-                                : 'bg-amber-50 text-amber-600',
+                                : entry.details.safetyFlag === 'relative_contraindication'
+                                  ? 'bg-orange-50 text-orange-600'
+                                  : 'bg-amber-50 text-amber-600',
                             )}
                           >
                             {entry.details.safetyFlag === 'absolute_contraindication'
-                              ? 'Contraindicação'
-                              : 'Fora de Escopo'}
+                              ? 'Contraindicação Absoluta'
+                              : entry.details.safetyFlag === 'relative_contraindication'
+                                ? 'Contraindicação Relativa'
+                                : 'Fora de Escopo'}
                           </Badge>
                         )}
+                        {entry.details.clinicalReferences?.map((ref, i) => (
+                          <Badge
+                            key={i}
+                            variant="secondary"
+                            className="text-[10px] bg-slate-100 text-slate-600"
+                          >
+                            <BookOpen className="h-2.5 w-2.5 mr-0.5" />
+                            {ref.source} {ref.code}
+                          </Badge>
+                        ))}
                       </div>
                     </div>
                   ))}

@@ -3,10 +3,16 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle2, Save, Loader2 } from 'lucide-react'
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
+import { CheckCircle2, Save, Loader2, FileText, ArrowRight, BookOpen } from 'lucide-react'
 import { mchatQuestions, getMChatRiskLevel } from '@/lib/scales-data'
 import { saveScaleResponses, logAuditAction } from '@/services/scales'
 import { completeAnamnesisSession } from '@/services/anamnesis'
+import {
+  getMChatFlowchartResult,
+  formatCitation,
+  type ClinicalCitation,
+} from '@/lib/clinical-references'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 
@@ -24,6 +30,7 @@ export function MChatR({ sessionId }: MChatRProps) {
   const progress = (answeredCount / mchatQuestions.length) * 100
   const score = mchatQuestions.filter((q) => answers[q.key] === q.riskAnswer).length
   const riskLevel = getMChatRiskLevel(score)
+  const flowchart = getMChatFlowchartResult(score).flowchart
 
   const handleSave = async () => {
     if (!sessionId || answeredCount < mchatQuestions.length) return
@@ -36,11 +43,16 @@ export function MChatR({ sessionId }: MChatRProps) {
     const success = await saveScaleResponses(sessionId, responses)
     if (success) {
       await completeAnamnesisSession(sessionId)
-      logAuditAction('mchat_completed', 'anamnesis_sessions', sessionId, { score, riskLevel })
+      logAuditAction('mchat_completed', 'anamnesis_sessions', sessionId, {
+        score,
+        riskLevel,
+        flowchartStep: flowchart.label,
+        clinicalReferences: flowchart.citations,
+      })
       setIsComplete(true)
       toast({
         title: 'M-CHAT-R concluído!',
-        description: `Pontuação: ${score}/20 — Risco: ${riskLabel(riskLevel)}`,
+        description: `Pontuação: ${score}/20 — ${flowchart.label}`,
       })
     } else {
       toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível salvar.' })
@@ -48,7 +60,8 @@ export function MChatR({ sessionId }: MChatRProps) {
     setIsSaving(false)
   }
 
-  const riskLabel = (l: string) => (l === 'high' ? 'Alto' : l === 'medium' ? 'Médio' : 'Baixo')
+  const riskLabel = (l: string) =>
+    l === 'high' ? 'Alto Risco' : l === 'medium' ? 'Risco Médio' : 'Baixo Risco'
   const riskColor = (l: string) =>
     l === 'high'
       ? 'bg-red-100 text-red-700'
@@ -65,12 +78,58 @@ export function MChatR({ sessionId }: MChatRProps) {
           <div
             className={cn('px-4 py-2 rounded-full text-sm font-bold mb-4', riskColor(riskLevel))}
           >
-            Risco {riskLabel(riskLevel)} — Pontuação {score}/20
+            {flowchart.label} — Pontuação {score}/20
           </div>
+
+          <Alert
+            className={cn(
+              'text-left mb-4 w-full max-w-lg',
+              riskLevel === 'high'
+                ? 'border-red-200 bg-red-50'
+                : riskLevel === 'medium'
+                  ? 'border-amber-200 bg-amber-50'
+                  : 'border-emerald-200 bg-emerald-50',
+            )}
+          >
+            <FileText className="h-4 w-4 text-slate-600" />
+            <AlertTitle className="text-sm font-semibold text-slate-800">
+              Fluxograma de Seguimento M-CHAT-R/F — Passo Recomendado
+            </AlertTitle>
+            <AlertDescription className="text-sm text-slate-700 mt-1">
+              {flowchart.action}
+            </AlertDescription>
+            {flowchart.nextStep && (
+              <div className="mt-2 flex items-start gap-2">
+                <ArrowRight className="h-4 w-4 text-slate-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-slate-600">{flowchart.nextStep}</p>
+              </div>
+            )}
+          </Alert>
+
+          <div className="w-full max-w-lg space-y-2 mb-4">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-slate-600" />
+              <p className="text-xs font-semibold text-slate-700">Referências Clínicas</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {flowchart.citations.map((cite: ClinicalCitation, i: number) => (
+                <Badge
+                  key={i}
+                  variant="secondary"
+                  className="text-[10px] bg-slate-100 text-slate-600"
+                >
+                  {formatCitation(cite)}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
           <p className="text-sm text-slate-500 max-w-md">
-            {riskLevel === 'high' && 'Recomenda-se avaliação profissional detalhada.'}
-            {riskLevel === 'medium' && 'Recomenda-se entrevista de acompanhamento (M-CHAT-R/F).'}
-            {riskLevel === 'low' && 'Nenhum indicador de risco significativo identificado.'}
+            {riskLevel === 'high' &&
+              'Encaminhamento imediato para avaliação diagnóstica (neuropediatra/psiquiatra infantil).'}
+            {riskLevel === 'medium' && 'Aplicar M-CHAT-R/F (Follow-up Interview) para confirmação.'}
+            {riskLevel === 'low' &&
+              'Nenhum indicador de risco significativo. Continuar monitoramento de rotina.'}
           </p>
         </CardContent>
       </Card>
