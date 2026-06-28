@@ -18,6 +18,7 @@ interface AuthContextType {
   loading: boolean
   needsOnboarding: boolean
   profileChecked: boolean
+  isAdmin: boolean
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signUp: (
     email: string,
@@ -73,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   const needsOnboarding = isAuthenticated && isMfaVerified && (!profile || !profile.privacy_consent)
+  const isAdmin = !!profile && profile.role === 'admin'
 
   useEffect(() => {
     const applySession = (s: Session | null) => {
@@ -174,6 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         needsOnboarding,
         profileChecked,
+        isAdmin,
         signIn,
         signUp,
         verifyMfa,
@@ -195,11 +198,14 @@ export function useAuth() {
 export function AuthGuard({
   children,
   requireMfa = true,
+  requireAdmin = false,
 }: {
   children: ReactNode
   requireMfa?: boolean
+  requireAdmin?: boolean
 }) {
-  const { isAuthenticated, isMfaVerified, loading, needsOnboarding, profileChecked } = useAuth()
+  const { isAuthenticated, isMfaVerified, loading, needsOnboarding, profileChecked, isAdmin } =
+    useAuth()
   const location = useLocation()
 
   if (loading || (isAuthenticated && isMfaVerified && !profileChecked)) {
@@ -225,6 +231,10 @@ export function AuthGuard({
   if (needsOnboarding) {
     if (location.pathname === '/onboarding') return <>{children}</>
     return <Navigate to="/onboarding" replace />
+  }
+
+  if (requireAdmin && !isAdmin) {
+    return <Navigate to="/" replace />
   }
 
   if (

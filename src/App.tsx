@@ -71,6 +71,14 @@ const App = () => (
             <Route path="/security" element={<Security />} />
             <Route path="/neuro-validation" element={<NeuroValidationPage />} />
             <Route path="/stress-test" element={<StressTestDashboard />} />
+            <Route
+              path="/admin/stress-tests"
+              element={
+                <AuthGuard requireAdmin>
+                  <StressTestDashboard />
+                </AuthGuard>
+              }
+            />
           </Route>
 
           <Route path="*" element={<NotFound />} />

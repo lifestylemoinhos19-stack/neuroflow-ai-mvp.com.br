@@ -32,10 +32,13 @@ export interface ValidationResponse {
   input: string
 }
 
-export async function runNeuroValidation(message: string): Promise<ValidationResponse | null> {
+export async function runNeuroValidation(
+  message: string,
+  testMode = false,
+): Promise<ValidationResponse | null> {
   try {
     const { data, error } = await supabase.functions.invoke('neuro-validation', {
-      body: { message, persist: true },
+      body: { message, persist: true, testMode },
     })
 
     if (error) {

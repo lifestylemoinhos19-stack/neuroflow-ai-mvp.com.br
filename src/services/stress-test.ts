@@ -19,6 +19,13 @@ export interface BatchResult {
   completedAt: string
 }
 
+function mapRiskLevel(risk: 'low' | 'medium' | 'high' | null): string | null {
+  if (risk === 'high') return 'Alto'
+  if (risk === 'medium') return 'Moderado'
+  if (risk === 'low') return 'Baixo'
+  return null
+}
+
 export function validateScenario(
   scenario: StressTestScenario,
   actual: ValidationResult,
@@ -30,19 +37,16 @@ export function validateScenario(
       `Categoria: esperado "${scenario.expected.category}", obtido "${actual.category}"`,
     )
   }
-
   if (actual.riskLevel !== scenario.expected.riskLevel) {
     failures.push(
       `Risco: esperado "${scenario.expected.riskLevel ?? 'null'}", obtido "${actual.riskLevel ?? 'null'}"`,
     )
   }
-
   if (actual.scaleSuggestion !== scenario.expected.scaleSuggestion) {
     failures.push(
       `Escala: esperado "${scenario.expected.scaleSuggestion}", obtido "${actual.scaleSuggestion}"`,
     )
   }
-
   if (actual.safetyFlag !== scenario.expected.safetyFlag) {
     failures.push(
       `Safety Flag: esperado "${scenario.expected.safetyFlag}", obtido "${actual.safetyFlag}"`,
@@ -65,7 +69,6 @@ export function validateScenario(
   ) {
     failures.push('Mensagem de segurança ausente para alerta de segurança')
   }
-
   if (scenario.expected.safetyFlag !== 'none' && !actual.telemedicineDisclaimer) {
     failures.push('Aviso de telemedicina deveria estar presente para alerta de segurança')
   }
@@ -75,7 +78,7 @@ export function validateScenario(
 
 export async function runSingleScenario(scenario: StressTestScenario): Promise<ScenarioResult> {
   const startTime = performance.now()
-  const response = await runNeuroValidation(scenario.inputPrompt)
+  const response = await runNeuroValidation(scenario.inputPrompt, true)
   const durationMs = Math.round(performance.now() - startTime)
 
   if (!response || !response.result) {
@@ -89,16 +92,9 @@ export async function runSingleScenario(scenario: StressTestScenario): Promise<S
   }
 
   const { passed, failures } = validateScenario(scenario, response.result)
+  await logStressTestResult(scenario, response.result, passed, failures, durationMs)
 
-  await logStressTestResult(scenario, response.result, passed, failures)
-
-  return {
-    scenario,
-    passed,
-    actualOutput: response.result,
-    failures,
-    durationMs,
-  }
+  return { scenario, passed, actualOutput: response.result, failures, durationMs }
 }
 
 export async function logStressTestResult(
@@ -106,10 +102,18 @@ export async function logStressTestResult(
   actualOutput: ValidationResult,
   passed: boolean,
   failures: string[],
+  durationMs: number,
 ): Promise<void> {
   try {
     const { data: userData } = await supabase.auth.getUser()
     const userId = userData.user?.id ?? null
+
+    const ragSources = actualOutput.clinicalCitations.map((c) => ({
+      source: c.source,
+      code: c.code,
+      title: c.title,
+      section: c.section,
+    }))
 
     await supabase.from('audit_logs').insert({
       user_id: userId,
@@ -138,6 +142,26 @@ export async function logStressTestResult(
         timestamp: new Date().toISOString(),
       },
     })
+
+    await supabase.from('stress_test_logs').insert({
+      scenario_name: scenario.title,
+      input_text: scenario.inputPrompt,
+      expected_risk_level: mapRiskLevel(scenario.expected.riskLevel),
+      expected_suggestion: scenario.expected.scaleSuggestion,
+      actual_output: {
+        category: actualOutput.category,
+        riskLevel: actualOutput.riskLevel,
+        scaleSuggestion: actualOutput.scaleSuggestion,
+        safetyFlag: actualOutput.safetyFlag,
+        safetyMessage: actualOutput.safetyMessage,
+        clinicalRationale: actualOutput.clinicalRationale,
+        suggestedAction: actualOutput.suggestedAction,
+        telemedicineDisclaimer: actualOutput.telemedicineDisclaimer,
+      },
+      is_success: passed,
+      rag_sources: ragSources,
+      latency_ms: durationMs,
+    })
   } catch (err) {
     console.error('Failed to log stress test result:', err)
   }
@@ -155,21 +179,17 @@ export async function runAllScenarios(
     const result = await runSingleScenario(scenarios[i])
     results.push(result)
     totalDurationMs += result.durationMs
-    if (onProgress) {
-      onProgress(i + 1, scenarios.length, result)
-    }
+    if (onProgress) onProgress(i + 1, scenarios.length, result)
   }
 
-  const completedAt = new Date().toISOString()
   const totalPassed = results.filter((r) => r.passed).length
-
   return {
     results,
     totalPassed,
     totalFailed: results.length - totalPassed,
     totalDurationMs,
     startedAt,
-    completedAt,
+    completedAt: new Date().toISOString(),
   }
 }
 
@@ -181,18 +201,14 @@ export interface CategoryStats {
 }
 
 export function getCategoryStats(results: ScenarioResult[]): CategoryStats[] {
-  const categoryMap = new Map<string, CategoryStats>()
-
-  for (const result of results) {
-    const cat = result.scenario.category
-    if (!categoryMap.has(cat)) {
-      categoryMap.set(cat, { category: cat, total: 0, passed: 0, failed: 0 })
-    }
-    const stats = categoryMap.get(cat)!
-    stats.total++
-    if (result.passed) stats.passed++
-    else stats.failed++
+  const map = new Map<string, CategoryStats>()
+  for (const r of results) {
+    const cat = r.scenario.category
+    if (!map.has(cat)) map.set(cat, { category: cat, total: 0, passed: 0, failed: 0 })
+    const s = map.get(cat)!
+    s.total++
+    if (r.passed) s.passed++
+    else s.failed++
   }
-
-  return Array.from(categoryMap.values())
+  return Array.from(map.values())
 }

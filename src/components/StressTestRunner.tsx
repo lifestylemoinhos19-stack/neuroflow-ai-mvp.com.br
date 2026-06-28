@@ -15,7 +15,7 @@ import {
   Activity,
   FileBarChart,
   Clock,
-  RefreshCw,
+  Eye,
 } from 'lucide-react'
 import { STRESS_TEST_SCENARIOS } from '@/lib/stress-test-scenarios'
 import {
@@ -25,6 +25,7 @@ import {
   type BatchResult,
   type CategoryStats,
 } from '@/services/stress-test'
+import { StressTestDetailDialog } from '@/components/StressTestDetailDialog'
 import { cn } from '@/lib/utils'
 
 const categoryLabels: Record<string, string> = {
@@ -32,6 +33,7 @@ const categoryLabels: Record<string, string> = {
   SNAPIV_ACCURACY: 'SNAP-IV (TDAH)',
   EMT_SAFETY: 'Segurança EMT/TMS',
   OUT_OF_SCOPE: 'Fora de Escopo',
+  NORMAL_DEVELOPMENT: 'Desenvolvimento Normal',
 }
 
 const categoryColors: Record<string, string> = {
@@ -39,6 +41,7 @@ const categoryColors: Record<string, string> = {
   SNAPIV_ACCURACY: 'bg-purple-100 text-purple-700 border-purple-200',
   EMT_SAFETY: 'bg-red-100 text-red-700 border-red-200',
   OUT_OF_SCOPE: 'bg-amber-100 text-amber-700 border-amber-200',
+  NORMAL_DEVELOPMENT: 'bg-emerald-100 text-emerald-700 border-emerald-200',
 }
 
 export function StressTestRunner() {
@@ -46,6 +49,8 @@ export function StressTestRunner() {
   const [results, setResults] = useState<ScenarioResult[]>([])
   const [batchResult, setBatchResult] = useState<BatchResult | null>(null)
   const [progress, setProgress] = useState(0)
+  const [selectedResult, setSelectedResult] = useState<ScenarioResult | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
   const cancelRef = useRef(false)
 
   const handleRun = useCallback(async () => {
@@ -66,6 +71,11 @@ export function StressTestRunner() {
     setIsRunning(false)
   }, [])
 
+  const handleViewDetail = (result: ScenarioResult) => {
+    setSelectedResult(result)
+    setDialogOpen(true)
+  }
+
   const categoryStats: CategoryStats[] = batchResult ? getCategoryStats(batchResult.results) : []
 
   return (
@@ -79,7 +89,7 @@ export function StressTestRunner() {
               </div>
               <div>
                 <CardTitle className="font-display">
-                  Bateria de Testes de Estresse — NeuroFlow AI
+                  Bateria 01 — Testes de Estresse NeuroFlow AI
                 </CardTitle>
                 <CardDescription>
                   10 cenários clínicos validando escalas M-CHAT-R, SNAP-IV, blocos de segurança EMT
@@ -93,7 +103,7 @@ export function StressTestRunner() {
               ) : (
                 <Play className="h-4 w-4 mr-2" />
               )}
-              {isRunning ? 'Executando...' : 'Executar Bateria Completa'}
+              {isRunning ? 'Executando...' : 'Executar Bateria 01'}
             </Button>
           </div>
         </CardHeader>
@@ -145,14 +155,12 @@ export function StressTestRunner() {
                     key={stat.category}
                     className="flex items-center justify-between p-2 rounded-lg border border-slate-100 bg-white"
                   >
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant="outline"
-                        className={cn('text-[10px]', categoryColors[stat.category])}
-                      >
-                        {categoryLabels[stat.category] || stat.category}
-                      </Badge>
-                    </div>
+                    <Badge
+                      variant="outline"
+                      className={cn('text-[10px]', categoryColors[stat.category])}
+                    >
+                      {categoryLabels[stat.category] || stat.category}
+                    </Badge>
                     <div className="flex items-center gap-2 text-xs">
                       <span className="text-emerald-600 font-semibold flex items-center gap-1">
                         <CheckCircle2 className="h-3 w-3" />
@@ -185,7 +193,12 @@ export function StressTestRunner() {
             <ScrollArea className="h-[500px] pr-4">
               <div className="space-y-3">
                 {results.map((result, idx) => (
-                  <ScenarioResultCard key={result.scenario.id} result={result} index={idx} />
+                  <ScenarioResultCard
+                    key={result.scenario.id}
+                    result={result}
+                    index={idx}
+                    onViewDetail={() => handleViewDetail(result)}
+                  />
                 ))}
               </div>
             </ScrollArea>
@@ -220,11 +233,25 @@ export function StressTestRunner() {
           </AlertDescription>
         </Alert>
       )}
+
+      <StressTestDetailDialog
+        result={selectedResult}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+      />
     </div>
   )
 }
 
-function ScenarioResultCard({ result, index }: { result: ScenarioResult; index: number }) {
+function ScenarioResultCard({
+  result,
+  index,
+  onViewDetail,
+}: {
+  result: ScenarioResult
+  index: number
+  onViewDetail: () => void
+}) {
   const { scenario, passed, actualOutput, failures, durationMs } = result
   const isSafety = scenario.category === 'EMT_SAFETY'
 
@@ -249,9 +276,15 @@ function ScenarioResultCard({ result, index }: { result: ScenarioResult; index: 
           </Badge>
           {isSafety && <ShieldAlert className="h-3.5 w-3.5 text-red-500" />}
         </div>
-        <div className="flex items-center gap-2 text-[10px] text-slate-400">
-          <Clock className="h-3 w-3" />
-          {durationMs}ms
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-1 text-[10px] text-slate-400">
+            <Clock className="h-3 w-3" />
+            {durationMs}ms
+          </span>
+          <Button variant="ghost" size="sm" onClick={onViewDetail} className="h-6 px-2 text-[10px]">
+            <Eye className="h-3 w-3 mr-1" />
+            Detalhes
+          </Button>
         </div>
       </div>
 

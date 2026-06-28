@@ -49,17 +49,16 @@ const TEA_PATTERNS = [
   'não responde ao nome',
   'nao responde ao nome',
   'isolamento social',
-  'criança de 2 anos',
-  'crianca de 2 anos',
-  'criança de 3 anos',
-  'crianca de 3 anos',
-  'atraso de fala',
+  'atraso',
   'sem linguagem',
   'não verbal',
   'nao verbal',
   'reciprocidade social',
   'interesses restritos',
   'compartilhamento de interesses',
+  'ironia',
+  'interesses',
+  'estereotipad',
 ]
 
 const TDAH_PATTERNS = [
@@ -86,6 +85,8 @@ const TDAH_PATTERNS = [
   'tarefa escolar',
   'organização',
   'perde objetos',
+  'esquec',
+  'manter o foco',
 ]
 
 const DI_PATTERNS = [
@@ -465,7 +466,11 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json()
-    const { message, persist = true } = body as { message: string; persist?: boolean }
+    const {
+      message,
+      persist = true,
+      testMode = false,
+    } = body as { message: string; persist?: boolean; testMode?: boolean }
 
     if (!message || typeof message !== 'string') {
       return new Response(JSON.stringify({ error: 'Message string is required' }), {
@@ -504,7 +509,7 @@ Deno.serve(async (req) => {
     if (persist) {
       let sessionId: string | null = null
 
-      if (userId) {
+      if (userId && !testMode) {
         const { data: session } = await supabaseService
           .from('anamnesis_sessions')
           .insert({
@@ -543,6 +548,7 @@ Deno.serve(async (req) => {
           clinicalReferences,
           telemedicineDisclaimer: result.telemedicineDisclaimer,
           sessionId,
+          testMode,
           timestamp: new Date().toISOString(),
         },
       })
