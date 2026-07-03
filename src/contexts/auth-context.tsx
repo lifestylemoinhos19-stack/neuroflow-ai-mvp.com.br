@@ -19,6 +19,7 @@ interface AuthContextType {
   needsOnboarding: boolean
   profileChecked: boolean
   isAdmin: boolean
+  bleOnboardingCompleted: boolean
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signUp: (
     email: string,
@@ -28,6 +29,7 @@ interface AuthContextType {
   verifyMfa: (code: string) => Promise<void>
   logout: () => Promise<void>
   completeOnboarding: () => Promise<void>
+  completeBleOnboarding: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -75,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const needsOnboarding = isAuthenticated && isMfaVerified && (!profile || !profile.privacy_consent)
   const isAdmin = !!profile && profile.role === 'admin'
+  const bleOnboardingCompleted = !!profile?.has_completed_onboarding
 
   useEffect(() => {
     const applySession = (s: Session | null) => {
@@ -166,6 +169,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(data)
   }
 
+  const completeBleOnboarding = async () => {
+    if (!user) return
+    await supabase
+      .from('profiles')
+      .upsert({ id: user.id, has_completed_onboarding: true }, { onConflict: 'id' })
+    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+    setProfile(data)
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -177,11 +189,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         needsOnboarding,
         profileChecked,
         isAdmin,
+        bleOnboardingCompleted,
         signIn,
         signUp,
         verifyMfa,
         logout,
         completeOnboarding,
+        completeBleOnboarding,
       }}
     >
       {children}

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useFocusSession } from '@/hooks/use-focus-session'
 import { useHeartRate } from '@/hooks/use-heart-rate'
+import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
 import {
   Heart,
@@ -14,18 +15,14 @@ import {
   Bluetooth,
   BluetoothConnected,
   Loader2,
-  Camera,
-  Video,
   Waves,
   Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
-import { Slider } from '@/components/ui/slider'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { CrystalParticles } from '@/components/CrystalParticles'
-import { useRppg } from '@/hooks/use-rppg'
+import { BleStatusIndicator } from '@/components/BleStatusIndicator'
+import { BleOnboardingTutorial } from '@/components/BleOnboardingTutorial'
 
 const formatTime = (s: number) =>
   `${Math.floor(s / 60)
@@ -33,6 +30,8 @@ const formatTime = (s: number) =>
     .padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`
 
 export default function FocusSession() {
+  const { bleOnboardingCompleted, completeBleOnboarding } = useAuth()
+
   const {
     timeLeft,
     isActive,
@@ -43,55 +42,59 @@ export default function FocusSession() {
     masterCrystals,
     showParticles,
     mockSensor,
-    mockBpmTarget,
     stateLevel,
     setMockSensor,
-    setMockBpmTarget,
     setExternalBpm,
     toggleActive,
     handleCancel,
   } = useFocusSession()
 
   const {
-    isConnected: btConnected,
-    isConnecting: btConnecting,
-    isSupported: btSupported,
-    connect: btConnect,
-    disconnect: btDisconnect,
-    bpm: btBpm,
-    error: btError,
+    bpm: bleBpm,
+    connectionState,
+    isConnecting,
+    isSupported: bleSupported,
+    connect: bleConnect,
+    disconnect: bleDisconnect,
+    autoReconnect,
+    error: bleError,
   } = useHeartRate()
 
   useEffect(() => {
-    if (btBpm !== null) {
-      setExternalBpm(btBpm)
-      if (mockSensor) setMockSensor(false)
-    }
-  }, [btBpm, mockSensor, setExternalBpm, setMockSensor])
-
-  const {
-    bpm: rppgBpm,
-    isConnected: rppgConnected,
-    isConnecting: rppgConnecting,
-    isSupported: rppgSupported,
-    connect: rppgConnect,
-    disconnect: rppgDisconnect,
-    error: rppgError,
-  } = useRppg()
+    autoReconnect()
+  }, [autoReconnect])
 
   useEffect(() => {
-    if (rppgBpm !== null) {
-      setExternalBpm(rppgBpm)
+    if (bleBpm !== null) {
+      setExternalBpm(bleBpm)
       if (mockSensor) setMockSensor(false)
     }
-  }, [rppgBpm, mockSensor, setExternalBpm, setMockSensor])
+  }, [bleBpm, mockSensor, setExternalBpm, setMockSensor])
+
+  useEffect(() => {
+    if (connectionState === 'disconnected' && !mockSensor) {
+      setMockSensor(true)
+    }
+  }, [connectionState, mockSensor, setMockSensor])
+
+  if (!bleOnboardingCompleted) {
+    return (
+      <BleOnboardingTutorial
+        connectionState={connectionState}
+        isConnecting={isConnecting}
+        isSupported={bleSupported}
+        error={bleError}
+        onConnect={bleConnect}
+        onComplete={completeBleOnboarding}
+      />
+    )
+  }
 
   const energyColor = bpm < 70 ? 'bg-[#00FFFF]/80' : bpm >= 90 ? 'bg-[#0A192F]' : 'bg-blue-400/70'
   const energyPattern = bpm < 70 ? 'pattern-calm' : bpm >= 90 ? 'pattern-agitated' : ''
   const energyPulse = bpm < 70 ? 'animate-pulse-slow' : bpm >= 90 ? 'animate-pulse-fast' : ''
   const mascotFilter = stateLevel === 'agitated' ? 'grayscale(0.3) brightness(0.8)' : 'none'
   const floatDuration = stateLevel === 'calm' ? '6s' : stateLevel === 'alert' ? '4s' : '2s'
-
   const stateLabel = stateLevel === 'calm' ? 'Calmo' : stateLevel === 'alert' ? 'Atento' : 'Agitado'
   const stateTextureLabel =
     stateLevel === 'calm'
@@ -133,16 +136,7 @@ export default function FocusSession() {
             {masterCrystals}.
           </div>
           <div className="flex items-center gap-3">
-            {btConnected && (
-              <div className="bg-emerald-500/10 px-3 py-1 rounded-full flex items-center text-sm font-medium text-emerald-400">
-                <BluetoothConnected className="h-4 w-4 mr-1" /> HR
-              </div>
-            )}
-            {rppgConnected && (
-              <div className="bg-emerald-500/10 px-3 py-1 rounded-full flex items-center text-sm font-medium text-emerald-400">
-                <Camera className="h-4 w-4 mr-1" /> Cam
-              </div>
-            )}
+            <BleStatusIndicator state={connectionState} />
             <div className="bg-[#00FFFF]/10 px-3 py-1 rounded-full flex items-center text-sm font-medium text-[#00FFFF]">
               <Diamond className="h-4 w-4 mr-1" fill="currentColor" /> {crystals + masterCrystals}
             </div>
@@ -157,88 +151,39 @@ export default function FocusSession() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent
-                className="w-80 p-4 bg-[#0A192F] border-[#00FFFF]/20 text-white"
+                className="w-72 p-4 bg-[#0A192F] border-[#00FFFF]/20 text-white"
                 align="end"
               >
-                <div className="space-y-4">
-                  <h4 className="font-medium text-[#00FFFF]">Configurações de Biofeedback</h4>
-                  {btSupported && (
-                    <div className="space-y-2">
-                      <Label className="text-white/80">Sensor Bluetooth (HR Real)</Label>
-                      <Button
-                        variant={btConnected ? 'outline' : 'default'}
-                        size="sm"
-                        className="w-full"
-                        onClick={btConnected ? btDisconnect : btConnect}
-                        disabled={btConnecting}
-                      >
-                        {btConnecting ? (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        ) : btConnected ? (
-                          <BluetoothConnected className="h-4 w-4 mr-2" />
-                        ) : (
-                          <Bluetooth className="h-4 w-4 mr-2" />
-                        )}
-                        {btConnecting
-                          ? 'Conectando...'
-                          : btConnected
-                            ? 'Conectado'
-                            : 'Conectar Sensor'}
-                      </Button>
-                      {btError && <p className="text-xs text-red-400">{btError}</p>}
-                      {btConnected && btBpm && (
-                        <p className="text-xs text-[#00FFFF]">BPM em tempo real: {btBpm}</p>
-                      )}
-                    </div>
+                <div className="space-y-3">
+                  <h4 className="font-medium text-[#00FFFF]">Sensor Bluetooth (BLE)</h4>
+                  <Button
+                    variant={connectionState === 'connected' ? 'outline' : 'default'}
+                    size="sm"
+                    className="w-full"
+                    onClick={connectionState === 'connected' ? bleDisconnect : bleConnect}
+                    disabled={isConnecting || !bleSupported}
+                  >
+                    {isConnecting ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : connectionState === 'connected' ? (
+                      <BluetoothConnected className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Bluetooth className="h-4 w-4 mr-2" />
+                    )}
+                    {isConnecting
+                      ? 'Conectando...'
+                      : connectionState === 'connected'
+                        ? 'Conectado'
+                        : 'Conectar Sensor'}
+                  </Button>
+                  {bleError && <p className="text-xs text-red-400">{bleError}</p>}
+                  {connectionState === 'connected' && bleBpm && (
+                    <p className="text-xs text-[#00FFFF]">BPM em tempo real: {bleBpm}</p>
                   )}
-                  {rppgSupported && (
-                    <div className="space-y-2">
-                      <Label className="text-white/80">Câmera rPPG (Óptico)</Label>
-                      <Button
-                        variant={rppgConnected ? 'outline' : 'default'}
-                        size="sm"
-                        className="w-full"
-                        onClick={rppgConnected ? rppgDisconnect : rppgConnect}
-                        disabled={rppgConnecting || btConnected}
-                      >
-                        {rppgConnecting ? (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        ) : rppgConnected ? (
-                          <Camera className="h-4 w-4 mr-2" />
-                        ) : (
-                          <Video className="h-4 w-4 mr-2" />
-                        )}
-                        {rppgConnecting
-                          ? 'Iniciando...'
-                          : rppgConnected
-                            ? 'Câmera Ativa'
-                            : 'Usar Câmera'}
-                      </Button>
-                      {rppgError && <p className="text-xs text-red-400">{rppgError}</p>}
-                      {rppgConnected && rppgBpm && (
-                        <p className="text-xs text-[#00FFFF]">BPM via câmera: {rppgBpm}</p>
-                      )}
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <Label className="text-white/80">Sensor Mock (Simulação)</Label>
-                    <Switch
-                      checked={mockSensor}
-                      onCheckedChange={setMockSensor}
-                      disabled={btConnected || rppgConnected}
-                    />
-                  </div>
-                  {mockSensor && (
-                    <div className="space-y-2">
-                      <Label className="text-white/80">BPM Alvo ({mockBpmTarget})</Label>
-                      <Slider
-                        value={[mockBpmTarget]}
-                        onValueChange={(v) => setMockBpmTarget(v[0])}
-                        min={50}
-                        max={150}
-                        step={1}
-                      />
-                    </div>
+                  {!bleSupported && (
+                    <p className="text-xs text-amber-400">
+                      Bluetooth não suportado. Usando modo simulação.
+                    </p>
                   )}
                 </div>
               </PopoverContent>
