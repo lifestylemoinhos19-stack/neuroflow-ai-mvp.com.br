@@ -27,18 +27,58 @@ import { ClinicalFeedbackDialog } from '@/components/ClinicalFeedbackDialog'
 import { getUserSessions, SessionWithRisk } from '@/services/sessions'
 import { exportReport } from '@/lib/pdf-export'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase/client'
+import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts'
 
 export default function Dashboard() {
   const [sessions, setSessions] = useState<SessionWithRisk[]>([])
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
   const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null)
+  const [focusTrends, setFocusTrends] = useState<any[]>([])
 
   useEffect(() => {
     getUserSessions().then((data) => {
       setSessions(data)
       setLoading(false)
     })
+
+    const fetchFocus = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data } = await supabase
+        .from('focus_sessions')
+        .select(`
+          id, started_at, status,
+          logs:focus_biofeedback_logs(bpm)
+        `)
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .order('started_at', { ascending: true })
+        .limit(10)
+
+      if (data) {
+        const mapped = data.map((session: any) => {
+          const bpms = session.logs.map((l: any) => l.bpm).filter(Boolean)
+          const avgBpm = bpms.length
+            ? bpms.reduce((a: number, b: number) => a + b, 0) / bpms.length
+            : 0
+          return {
+            date: new Date(session.started_at).toLocaleDateString('pt-BR', {
+              day: '2-digit',
+              month: 'short',
+            }),
+            bpm: Math.round(avgBpm),
+            duracao: 25,
+          }
+        })
+        setFocusTrends(mapped)
+      }
+    }
+    fetchFocus()
   }, [])
 
   const completedCount = sessions.filter((s) => s.status === 'completed').length
@@ -290,6 +330,61 @@ export default function Dashboard() {
             </div>
           )}
         </CardContent>
+      </Card>
+
+      <Card className="shadow-subtle border-slate-100">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5 text-indigo-500" /> Tendências de Foco (Biofeedback)
+          </CardTitle>
+          <CardDescription>
+            Média de Batimentos Cardíacos (BPM) por Sessão de Foco concluída.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {focusTrends.length === 0 ? (
+            <p className="text-sm text-slate-500 py-8 text-center">
+              Nenhuma sessão de foco concluída ainda.
+            </p>
+          ) : (
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={focusTrends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="hsl(var(--slate-200))"
+                  />
+                  <XAxis
+                    dataKey="date"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'hsl(var(--slate-500))', fontSize: 12 }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'hsl(var(--slate-500))', fontSize: 12 }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: '8px',
+                      border: 'none',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                    }}
+                    cursor={{ fill: 'hsl(var(--slate-50))' }}
+                  />
+                  <Bar dataKey="bpm" fill="#6366f1" radius={[4, 4, 0, 0]} name="BPM Médio" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </CardContent>
+        <div className="border-t border-slate-100 p-4 bg-slate-50 text-center rounded-b-lg">
+          <p className="text-xs font-medium text-slate-500">
+            Suporte à decisão clínica — Validação médica obrigatória
+          </p>
+        </div>
       </Card>
 
       <ClinicalFeedbackDialog

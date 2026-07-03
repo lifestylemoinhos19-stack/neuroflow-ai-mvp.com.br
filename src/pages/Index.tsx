@@ -42,6 +42,14 @@ export default function Index() {
     }
   }
 
+  const handleStartFocus = () => {
+    if (!localStorage.getItem('neuroflow_tcle_accepted')) {
+      setShowConsent(true)
+    } else {
+      navigate('/focus-session')
+    }
+  }
+
   if (!data) {
     return (
       <div className="space-y-6">
@@ -128,8 +136,9 @@ export default function Index() {
             </p>
             <div className="mt-6 flex gap-3">
               <Button
+                onClick={handleStartFocus}
                 variant="secondary"
-                className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+                className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 shadow-sm"
               >
                 Iniciar Sessão de Foco
               </Button>

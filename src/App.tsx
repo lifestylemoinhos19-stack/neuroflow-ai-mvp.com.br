@@ -21,6 +21,7 @@ import Ethics from '@/pages/Ethics'
 import EthicalAuditDashboard from '@/pages/EthicalAuditDashboard'
 import TermsOfUse from '@/pages/TermsOfUse'
 import NotFound from '@/pages/NotFound'
+import FocusSession from '@/pages/FocusSession'
 
 const App = () => (
   <BrowserRouter>
@@ -54,6 +55,15 @@ const App = () => (
             element={
               <AuthGuard>
                 <Onboarding />
+              </AuthGuard>
+            }
+          />
+
+          <Route
+            path="/focus-session"
+            element={
+              <AuthGuard>
+                <FocusSession />
               </AuthGuard>
             }
           />
