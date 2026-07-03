@@ -6,10 +6,9 @@ import { useToast } from '@/hooks/use-toast'
 
 const FOCUS_DURATION = 25 * 60
 const BREAK_DURATION = 5 * 60
-const CRYSTAL_INTERVAL = 30
+const CRYSTAL_INTERVAL = 120
 const CALM_THRESHOLD = 70
 const AGITATION_THRESHOLD = 90
-const MAX_SPIKES_FOR_MASTER = 3
 const STABILITY_SDNN_THRESHOLD = 10
 
 export type SessionPhase = 'focus' | 'break'
@@ -99,8 +98,8 @@ export function useFocusSession() {
             : en
       setEnergy(en)
       energyRef.current = en
-      const isStable = sdnn < STABILITY_SDNN_THRESHOLD
-      if (isStable && curBpm < AGITATION_THRESHOLD) {
+      const isStable = curBpm < AGITATION_THRESHOLD
+      if (isStable) {
         stableTimeRef.current += 1
         if (stableTimeRef.current >= CRYSTAL_INTERVAL) {
           stableTimeRef.current -= CRYSTAL_INTERVAL
@@ -214,7 +213,7 @@ export function useFocusSession() {
     if (timeLeft <= 0) {
       setIsActive(false)
       if (phase === 'focus') {
-        if (spikesRef.current < MAX_SPIKES_FOR_MASTER) {
+        if (spikesRef.current === 0) {
           masterRef.current += 1
           setMasterCrystals(masterRef.current)
           triggerParticles()
