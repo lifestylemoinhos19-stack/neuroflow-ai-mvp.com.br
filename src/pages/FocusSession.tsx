@@ -125,22 +125,22 @@ export default function FocusSession() {
 
       <div className="absolute inset-0 pointer-events-none opacity-20">
         <Diamond
-          className="absolute top-32 left-10 text-[#00FFFF] h-6 w-6 animate-float"
+          className="absolute top-20 sm:top-32 left-6 sm:left-10 text-[#00FFFF] h-5 w-5 sm:h-6 sm:w-6 animate-float"
           fill="currentColor"
         />
         <Diamond
-          className="absolute top-64 right-20 text-[#00FFFF]/60 h-4 w-4 animate-float"
+          className="absolute top-48 sm:top-64 right-12 sm:right-20 text-[#00FFFF]/60 h-3 w-3 sm:h-4 sm:w-4 animate-float"
           fill="currentColor"
           style={{ animationDuration: '6s' }}
         />
         <Diamond
-          className="absolute bottom-40 left-20 text-[#00FFFF]/40 h-5 w-5 animate-float"
+          className="absolute bottom-32 sm:bottom-40 left-12 sm:left-20 text-[#00FFFF]/40 h-4 w-4 sm:h-5 sm:w-5 animate-float"
           fill="currentColor"
           style={{ animationDuration: '2s' }}
         />
       </div>
 
-      <header className="p-6 pb-2 z-10 flex flex-col items-center text-center">
+      <header className="p-4 sm:p-6 pb-2 z-10 flex flex-col items-center text-center">
         <div className="flex items-center gap-2 mb-2 w-full justify-between">
           <div className="flex items-center">
             <Map className="h-5 w-5 text-[#00FFFF] mr-2" />
@@ -211,10 +211,10 @@ export default function FocusSession() {
           </div>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-medium text-white tracking-tight mt-2">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-medium text-white tracking-tight mt-2">
           O EXPLORADOR DA CALMA
         </h1>
-        <p className="text-[#00FFFF]/70 font-medium text-sm mt-1">
+        <p className="text-[#00FFFF]/70 font-medium text-xs sm:text-sm mt-1">
           {phase === 'focus' ? 'Foco' : 'Pausa'} • Nível 4 • Cristais: {crystals} + {masterCrystals}{' '}
           Mestres
         </p>
@@ -237,25 +237,25 @@ export default function FocusSession() {
         )}
       </header>
 
-      <main className="flex-1 relative flex items-center justify-center w-full max-w-2xl mx-auto px-4 sm:px-8">
+      <main className="flex-1 relative flex items-center justify-center w-full max-w-2xl mx-auto px-2 sm:px-8">
         <div
           className={cn(
             'relative z-10 transition-all duration-1000',
             stateLevel === 'agitated' && phase === 'focus'
-              ? 'translate-y-20 opacity-60'
+              ? 'translate-y-16 sm:translate-y-20 opacity-60'
               : 'opacity-100',
           )}
           style={{ animation: `float ${floatDuration} ease-in-out infinite` }}
         >
           <img
-            src="https://img.usecurling.com/p/512/512?q=hot%20air%20balloon%20cute&color=cyan&dpr=2"
+            src="https://img.usecurling.com/p/512/512?q=hot%20air%20balloon%20cute&color=cyan&dpr=3"
             alt="Explorador da Calma"
-            className="w-80 h-80 object-contain drop-shadow-2xl"
+            className="w-56 h-56 sm:w-80 sm:h-80 md:w-96 md:h-96 object-contain drop-shadow-2xl"
             style={{ filter: mascotFilter }}
           />
         </div>
 
-        <div className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center z-20">
+        <div className="absolute right-1 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center z-20">
           <span
             className="text-xs font-medium text-[#00FFFF]/70 mb-2 w-16 text-center leading-tight"
             id="energy-bar-label"
@@ -263,7 +263,7 @@ export default function FocusSession() {
             Energia da Calma
           </span>
           <div
-            className="h-56 w-8 bg-white/10 rounded-full border border-[#00FFFF]/20 p-1 flex flex-col justify-end overflow-hidden relative"
+            className="h-44 sm:h-56 w-7 sm:w-8 bg-white/10 rounded-full border border-[#00FFFF]/20 p-1 flex flex-col justify-end overflow-hidden relative"
             role="progressbar"
             aria-labelledby="energy-bar-label"
             aria-valuenow={Math.round(energy)}
@@ -285,7 +285,7 @@ export default function FocusSession() {
               </span>
             </div>
           </div>
-          <div className="mt-4 flex flex-col items-center bg-white/5 px-3 py-2 rounded-xl border border-[#00FFFF]/10">
+          <div className="mt-2 sm:mt-4 flex flex-col items-center bg-white/5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-[#00FFFF]/10">
             <Heart
               className={cn(
                 'h-5 w-5 mb-1',
@@ -325,8 +325,8 @@ export default function FocusSession() {
         )}
       </main>
 
-      <footer className="p-6 z-10 flex flex-col items-center bg-gradient-to-t from-[#0A192F] to-transparent">
-        <div className="text-4xl font-medium text-[#00FFFF] mb-2 tabular-nums">
+      <footer className="p-4 sm:p-6 z-10 flex flex-col items-center bg-gradient-to-t from-[#0A192F] to-transparent">
+        <div className="text-3xl sm:text-4xl font-medium text-[#00FFFF] mb-2 tabular-nums">
           {formatTime(timeLeft)}
         </div>
         <div className="text-xs text-white/40 font-medium mb-4">
