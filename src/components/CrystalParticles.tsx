@@ -5,6 +5,7 @@ interface Particle {
   left: number
   delay: number
   size: number
+  duration: number
 }
 
 export function CrystalParticles({ show }: { show: boolean }) {
@@ -13,11 +14,12 @@ export function CrystalParticles({ show }: { show: boolean }) {
   useEffect(() => {
     if (show) {
       setParticles(
-        Array.from({ length: 14 }, (_, i) => ({
+        Array.from({ length: 16 }, (_, i) => ({
           id: i,
-          left: 20 + Math.random() * 60,
-          delay: Math.random() * 0.4,
-          size: 4 + Math.random() * 10,
+          left: 15 + Math.random() * 70,
+          delay: Math.random() * 0.5,
+          size: 6 + Math.random() * 14,
+          duration: 2 + Math.random() * 1.5,
         })),
       )
     }
@@ -30,14 +32,17 @@ export function CrystalParticles({ show }: { show: boolean }) {
       {particles.map((p) => (
         <div
           key={p.id}
-          className="absolute rounded-full bg-[#00FFFF]"
+          className="absolute"
           style={{
             left: `${p.left}%`,
-            bottom: '25%',
+            bottom: '20%',
             width: `${p.size}px`,
             height: `${p.size}px`,
-            animation: `particleFloat 2.5s ease-out ${p.delay}s forwards`,
-            boxShadow: '0 0 12px rgba(0, 255, 255, 0.9)',
+            transform: 'rotate(45deg)',
+            animation: `crystalFloat ${p.duration}s ease-out ${p.delay}s forwards`,
+            background: 'linear-gradient(135deg, #00FFFF, #00CCCC)',
+            boxShadow: '0 0 16px rgba(0, 255, 255, 0.9), 0 0 32px rgba(0, 255, 255, 0.4)',
+            borderRadius: '2px',
           }}
         />
       ))}

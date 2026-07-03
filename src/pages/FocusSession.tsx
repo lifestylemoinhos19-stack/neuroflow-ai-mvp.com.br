@@ -64,8 +64,9 @@ export default function FocusSession() {
     }
   }, [btBpm, mockSensor, setExternalBpm, setMockSensor])
 
-  const energyColor =
-    energy >= 75 ? 'bg-[#00FFFF]/70' : energy >= 40 ? 'bg-blue-400/70' : 'bg-slate-400/70'
+  const energyColor = bpm < 70 ? 'bg-[#00FFFF]/80' : bpm >= 90 ? 'bg-[#0A192F]' : 'bg-blue-400/70'
+  const energyPattern = bpm < 70 ? 'pattern-calm' : bpm >= 90 ? 'pattern-agitated' : ''
+  const energyPulse = bpm < 70 ? 'animate-pulse-slow' : bpm >= 90 ? 'animate-pulse-fast' : ''
   const mascotFilter = stateLevel === 'agitated' ? 'grayscale(0.3) brightness(0.8)' : 'none'
   const floatDuration = stateLevel === 'calm' ? '6s' : stateLevel === 'alert' ? '4s' : '2s'
 
@@ -221,12 +222,18 @@ export default function FocusSession() {
           <span className="text-xs font-medium text-[#00FFFF]/70 mb-2 w-16 text-center leading-tight">
             Energia da Calma
           </span>
-          <div className="h-56 w-8 bg-white/10 rounded-full border border-[#00FFFF]/20 p-1 flex flex-col justify-end overflow-hidden">
+          <div className="h-56 w-8 bg-white/10 rounded-full border border-[#00FFFF]/20 p-1 flex flex-col justify-end overflow-hidden relative">
             <div
-              className={cn('w-full rounded-full transition-all duration-1000', energyColor)}
+              className={cn(
+                'w-full rounded-full transition-all duration-1000 relative overflow-hidden',
+                energyColor,
+                energyPulse,
+                bpm >= 90 && 'border border-white/30',
+              )}
               style={{ height: `${energy}%` }}
             >
-              <span className="text-white text-[9px] font-medium flex justify-center pt-1">
+              <div className={cn('absolute inset-0 rounded-full', energyPattern)} />
+              <span className="text-white text-[9px] font-medium flex justify-center pt-1 relative z-10">
                 {Math.round(energy)}%
               </span>
             </div>

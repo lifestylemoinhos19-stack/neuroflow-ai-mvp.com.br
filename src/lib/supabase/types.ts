@@ -118,6 +118,44 @@ export type Database = {
         }
         Relationships: []
       }
+      beta_feedback: {
+        Row: {
+          child_experience: string | null
+          created_at: string
+          id: string
+          parent_comments: string | null
+          rating: number
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          child_experience?: string | null
+          created_at?: string
+          id?: string
+          parent_comments?: string | null
+          rating: number
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          child_experience?: string | null
+          created_at?: string
+          id?: string
+          parent_comments?: string | null
+          rating?: number
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'beta_feedback_session_id_fkey'
+            columns: ['session_id']
+            isOneToOne: false
+            referencedRelation: 'focus_sessions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       checkout_sessions: {
         Row: {
           channel: string | null

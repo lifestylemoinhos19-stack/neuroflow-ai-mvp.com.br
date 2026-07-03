@@ -6,9 +6,11 @@ import { useToast } from '@/hooks/use-toast'
 
 const FOCUS_DURATION = 25 * 60
 const BREAK_DURATION = 5 * 60
-const CRYSTAL_INTERVAL = 2 * 60
+const CRYSTAL_INTERVAL = 30
+const CALM_THRESHOLD = 70
 const AGITATION_THRESHOLD = 90
 const MAX_SPIKES_FOR_MASTER = 3
+const STABILITY_SDNN_THRESHOLD = 10
 
 export type SessionPhase = 'focus' | 'break'
 export type BioState = 'calm' | 'alert' | 'agitated'
@@ -36,20 +38,18 @@ export function useFocusSession() {
   const bpmRef = useRef(72)
   const energyRef = useRef(72)
   const sessionIdRef = useRef<string | null>(null)
-  const phaseRef = useRef<SessionPhase>('focus')
   const mockRef = useRef({ sensor: true, target: 72 })
   const crystalsRef = useRef(0)
   const masterRef = useRef(0)
   const externalBpmRef = useRef<number | null>(null)
+  const bpmHistoryRef = useRef<number[]>([])
 
-  const stateLevel: BioState = bpm < 75 ? 'calm' : bpm < AGITATION_THRESHOLD ? 'alert' : 'agitated'
+  const stateLevel: BioState =
+    bpm < CALM_THRESHOLD ? 'calm' : bpm < AGITATION_THRESHOLD ? 'alert' : 'agitated'
 
   useEffect(() => {
     sessionIdRef.current = sessionId
   }, [sessionId])
-  useEffect(() => {
-    phaseRef.current = phase
-  }, [phase])
   useEffect(() => {
     mockRef.current = { sensor: mockSensor, target: mockBpmTarget }
   }, [mockSensor, mockBpmTarget])
@@ -75,8 +75,96 @@ export function useFocusSession() {
 
   const triggerParticles = useCallback(() => {
     setShowParticles(true)
-    setTimeout(() => setShowParticles(false), 2500)
+    setTimeout(() => setShowParticles(false), 2800)
   }, [])
+
+  const calculateSDNN = useCallback(() => {
+    const h = bpmHistoryRef.current
+    if (h.length < 2) return 0
+    const mean = h.reduce((a, b) => a + b, 0) / h.length
+    const variance = h.reduce((a, b) => a + (b - mean) ** 2, 0) / h.length
+    return Math.sqrt(variance)
+  }, [])
+
+  const processBiofeedback = useCallback(
+    (curBpm: number, sdnn: number) => {
+      bpmRef.current = curBpm
+      setBpm(curBpm)
+      let en = energyRef.current
+      en =
+        curBpm < CALM_THRESHOLD
+          ? Math.min(100, en + 0.5)
+          : curBpm >= AGITATION_THRESHOLD
+            ? Math.max(0, en - 1)
+            : en
+      setEnergy(en)
+      energyRef.current = en
+      const isStable = sdnn < STABILITY_SDNN_THRESHOLD
+      if (isStable && curBpm < AGITATION_THRESHOLD) {
+        stableTimeRef.current += 1
+        if (stableTimeRef.current >= CRYSTAL_INTERVAL) {
+          stableTimeRef.current -= CRYSTAL_INTERVAL
+          crystalsRef.current += 1
+          setCrystals(crystalsRef.current)
+          triggerParticles()
+        }
+      } else if (curBpm >= AGITATION_THRESHOLD) {
+        stableTimeRef.current = 0
+        spikesRef.current += 1
+      }
+    },
+    [triggerParticles],
+  )
+
+  useEffect(() => {
+    if (!sessionId) return
+    const channel = supabase
+      .channel(`biofeedback:${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'focus_biofeedback_logs',
+          filter: `session_id=eq.${sessionId}`,
+        },
+        (payload) => {
+          const log = payload.new as { bpm: number | null; vrc: number | null }
+          if (log.bpm === null || log.bpm === undefined) return
+          processBiofeedback(log.bpm, log.vrc ?? 0)
+        },
+      )
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [sessionId, processBiofeedback])
+
+  useEffect(() => {
+    if (!isActive || phase !== 'focus' || !sessionId) return
+    const interval = setInterval(() => {
+      let cur = bpmRef.current
+      if (mockRef.current.sensor) {
+        cur = Math.max(
+          50,
+          Math.min(
+            150,
+            Math.round(cur + (mockRef.current.target - cur) * 0.2 + (Math.random() * 4 - 2)),
+          ),
+        )
+      } else if (externalBpmRef.current !== null) {
+        cur = externalBpmRef.current
+      }
+      bpmHistoryRef.current.push(cur)
+      if (bpmHistoryRef.current.length > 30) bpmHistoryRef.current.shift()
+      const sdnn = calculateSDNN()
+      supabase
+        .from('focus_biofeedback_logs')
+        .insert({ session_id: sessionIdRef.current, bpm: cur, vrc: sdnn })
+        .catch(() => {})
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [isActive, phase, sessionId, calculateSDNN])
 
   const finalizeSession = async () => {
     if (!sessionIdRef.current) return
@@ -90,11 +178,13 @@ export function useFocusSession() {
         master_crystals: masterRef.current,
       })
       .eq('id', sessionIdRef.current)
+    let vrcValue: number | undefined
     try {
       const { data } = await supabase.functions.invoke('calculate-vrc', {
         body: { sessionId: sessionIdRef.current },
       })
-      if (data?.vrc !== undefined && sessionIdRef.current) {
+      if (data?.vrc !== undefined) {
+        vrcValue = data.vrc
         await supabase
           .from('focus_sessions')
           .update({ vrc: data.vrc })
@@ -103,18 +193,18 @@ export function useFocusSession() {
       toast({
         title: 'Sessão Concluída!',
         description: data?.vrc
-          ? `VRC médio: ${data.vrc.toFixed(2)} ms • ${total} cristais ganhos!`
-          : `${total} cristais ganhos!`,
+          ? `VRC médio: ${data.vrc.toFixed(2)} ms • ${total} cristais!`
+          : `${total} cristais!`,
       })
     } catch {
-      toast({ title: 'Sessão Concluída!', description: `${total} cristais ganhos!` })
+      toast({ title: 'Sessão Concluída!', description: `${total} cristais!` })
     }
     navigate('/session-summary', {
       state: {
         sessionId: sessionIdRef.current,
         crystals: crystalsRef.current,
         masterCrystals: masterRef.current,
-        vrc: data?.vrc,
+        vrc: vrcValue,
       },
     })
   }
@@ -140,47 +230,6 @@ export function useFocusSession() {
     const interval = setInterval(() => setTimeLeft((t) => t - 1), 1000)
     return () => clearInterval(interval)
   }, [isActive, timeLeft, phase])
-
-  useEffect(() => {
-    if (!isActive || phase !== 'focus' || !sessionId) return
-    const interval = setInterval(() => {
-      let cur = bpmRef.current
-      if (mockRef.current.sensor) {
-        cur = Math.max(
-          50,
-          Math.min(
-            150,
-            Math.round(cur + (mockRef.current.target - cur) * 0.2 + (Math.random() * 4 - 2)),
-          ),
-        )
-      } else if (externalBpmRef.current !== null) {
-        cur = externalBpmRef.current
-      }
-      let en = energyRef.current
-      en =
-        cur < 80 ? Math.min(100, en + 0.5) : cur >= AGITATION_THRESHOLD ? Math.max(0, en - 1) : en
-      setBpm(cur)
-      setEnergy(en)
-      bpmRef.current = cur
-      energyRef.current = en
-      if (cur < AGITATION_THRESHOLD) {
-        stableTimeRef.current += 1
-        if (stableTimeRef.current >= CRYSTAL_INTERVAL) {
-          stableTimeRef.current -= CRYSTAL_INTERVAL
-          crystalsRef.current += 1
-          setCrystals(crystalsRef.current)
-          triggerParticles()
-        }
-      } else {
-        spikesRef.current += 1
-      }
-      supabase
-        .from('focus_biofeedback_logs')
-        .insert({ session_id: sessionIdRef.current, bpm: cur, vrc: 0 })
-        .catch(() => {})
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [isActive, phase, sessionId])
 
   const handleCancel = async () => {
     setIsActive(false)
