@@ -6,6 +6,7 @@ interface Particle {
   delay: number
   size: number
   duration: number
+  isGlow: boolean
 }
 
 export function CrystalParticles({ show }: { show: boolean }) {
@@ -14,12 +15,13 @@ export function CrystalParticles({ show }: { show: boolean }) {
   useEffect(() => {
     if (show) {
       setParticles(
-        Array.from({ length: 16 }, (_, i) => ({
+        Array.from({ length: 20 }, (_, i) => ({
           id: i,
-          left: 15 + Math.random() * 70,
-          delay: Math.random() * 0.5,
-          size: 6 + Math.random() * 14,
-          duration: 2 + Math.random() * 1.5,
+          left: 10 + Math.random() * 80,
+          delay: Math.random() * 0.6,
+          size: 5 + Math.random() * 16,
+          duration: 2 + Math.random() * 1.8,
+          isGlow: i % 3 === 0,
         })),
       )
     }
@@ -28,21 +30,25 @@ export function CrystalParticles({ show }: { show: boolean }) {
   if (!show) return null
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-50">
+    <div className="fixed inset-0 pointer-events-none z-50" aria-hidden="true">
       {particles.map((p) => (
         <div
           key={p.id}
           className="absolute"
           style={{
             left: `${p.left}%`,
-            bottom: '20%',
+            bottom: '18%',
             width: `${p.size}px`,
             height: `${p.size}px`,
-            transform: 'rotate(45deg)',
+            transform: p.isGlow ? 'none' : 'rotate(45deg)',
+            borderRadius: p.isGlow ? '50%' : '2px',
             animation: `crystalFloat ${p.duration}s ease-out ${p.delay}s forwards`,
-            background: 'linear-gradient(135deg, #00FFFF, #00CCCC)',
-            boxShadow: '0 0 16px rgba(0, 255, 255, 0.9), 0 0 32px rgba(0, 255, 255, 0.4)',
-            borderRadius: '2px',
+            background: p.isGlow
+              ? 'radial-gradient(circle, rgba(0,255,255,0.6) 0%, rgba(0,255,255,0) 70%)'
+              : 'linear-gradient(135deg, #00FFFF, #00CCCC)',
+            boxShadow: p.isGlow
+              ? '0 0 24px rgba(0, 255, 255, 0.5)'
+              : '0 0 16px rgba(0, 255, 255, 0.9), 0 0 32px rgba(0, 255, 255, 0.4)',
           }}
         />
       ))}

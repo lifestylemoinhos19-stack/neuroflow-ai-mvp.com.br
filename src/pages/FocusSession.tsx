@@ -16,6 +16,8 @@ import {
   Loader2,
   Camera,
   Video,
+  Waves,
+  Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
@@ -124,6 +126,11 @@ export default function FocusSession() {
           <div className="flex items-center">
             <Map className="h-5 w-5 text-[#00FFFF] mr-2" />
             <span className="font-medium text-white/90 tracking-tight text-sm">NeuroFlow AI</span>
+          </div>
+          <div className="sr-only" aria-live="polite" aria-atomic="true">
+            Estado atual: {stateLabel}. Frequência cardíaca: {bpm} batimentos por minuto. Energia da
+            calma: {Math.round(energy)} por cento. Cristais de foco: {crystals}. Cristais mestres:{' '}
+            {masterCrystals}.
           </div>
           <div className="flex items-center gap-3">
             {btConnected && (
@@ -246,7 +253,10 @@ export default function FocusSession() {
           {phase === 'focus' ? 'Foco' : 'Pausa'} • Nível 4 • Cristais: {crystals} + {masterCrystals}{' '}
           Mestres
         </p>
-        <p className="text-white/60 font-medium mt-2 bg-white/5 px-4 py-1.5 rounded-full text-sm border border-[#00FFFF]/10">
+        <p
+          className="text-white/60 font-medium mt-2 bg-white/5 px-4 py-1.5 rounded-full text-sm border border-[#00FFFF]/10"
+          role="status"
+        >
           {phase === 'focus'
             ? 'Objetivo: Mantenha a calma para ganhar cristais a cada 2 minutos!'
             : 'Respire fundo... O descanso faz parte da jornada.'}
@@ -281,10 +291,20 @@ export default function FocusSession() {
         </div>
 
         <div className="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col items-center z-20">
-          <span className="text-xs font-medium text-[#00FFFF]/70 mb-2 w-16 text-center leading-tight">
+          <span
+            className="text-xs font-medium text-[#00FFFF]/70 mb-2 w-16 text-center leading-tight"
+            id="energy-bar-label"
+          >
             Energia da Calma
           </span>
-          <div className="h-56 w-8 bg-white/10 rounded-full border border-[#00FFFF]/20 p-1 flex flex-col justify-end overflow-hidden relative">
+          <div
+            className="h-56 w-8 bg-white/10 rounded-full border border-[#00FFFF]/20 p-1 flex flex-col justify-end overflow-hidden relative"
+            role="progressbar"
+            aria-labelledby="energy-bar-label"
+            aria-valuenow={Math.round(energy)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
             <div
               className={cn(
                 'w-full rounded-full transition-all duration-1000 relative overflow-hidden',
@@ -315,10 +335,19 @@ export default function FocusSession() {
             <span className="text-[10px] text-white/50 font-medium">BPM</span>
             <span className="font-medium text-white">{bpm}</span>
             <span
-              className="text-[9px] mt-0.5 px-1.5 py-0.5 rounded-full font-medium"
+              className={cn(
+                'text-[9px] mt-0.5 px-1.5 py-0.5 rounded-full font-medium flex items-center gap-1',
+                stateLevel === 'calm'
+                  ? 'bg-[#00FFFF]/20 text-[#00FFFF]'
+                  : stateLevel === 'alert'
+                    ? 'bg-blue-400/20 text-blue-300'
+                    : 'bg-white/15 text-white/70',
+              )}
               aria-live="polite"
               aria-label={`Estado: ${stateLabel}, Textura: ${stateTextureLabel}`}
             >
+              {stateLevel === 'calm' && <Waves className="h-2.5 w-2.5" />}
+              {stateLevel === 'agitated' && <Zap className="h-2.5 w-2.5" />}
               {stateLabel} · {stateTextureLabel}
             </span>
           </div>
