@@ -202,22 +202,30 @@
   }
 
   .pattern-calm {
-    background-image: radial-gradient(
-      circle at 50% 50%,
-      rgba(255, 255, 255, 0.1) 1px,
-      transparent 2px
-    );
-    background-size: 8px 8px;
+    background-image:
+      radial-gradient(ellipse 8px 4px at 50% 50%, rgba(255, 255, 255, 0.12) 0%, transparent 70%),
+      radial-gradient(ellipse 6px 3px at 20% 60%, rgba(255, 255, 255, 0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 6px 3px at 80% 40%, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+    background-size: 16px 16px;
+    background-repeat: repeat;
   }
 
   .pattern-agitated {
-    background-image: repeating-linear-gradient(
-      45deg,
-      rgba(255, 255, 255, 0.15) 0px,
-      rgba(255, 255, 255, 0.15) 2px,
-      transparent 2px,
-      transparent 6px
-    );
+    background-image:
+      repeating-linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.15) 0px,
+        rgba(255, 255, 255, 0.15) 2px,
+        transparent 2px,
+        transparent 8px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.1) 0px,
+        rgba(255, 255, 255, 0.1) 2px,
+        transparent 2px,
+        transparent 8px
+      );
   }
 
   @keyframes crystalFloat {

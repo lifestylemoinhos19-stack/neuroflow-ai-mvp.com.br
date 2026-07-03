@@ -70,6 +70,14 @@ export default function FocusSession() {
   const mascotFilter = stateLevel === 'agitated' ? 'grayscale(0.3) brightness(0.8)' : 'none'
   const floatDuration = stateLevel === 'calm' ? '6s' : stateLevel === 'alert' ? '4s' : '2s'
 
+  const stateLabel = stateLevel === 'calm' ? 'Calmo' : stateLevel === 'alert' ? 'Atento' : 'Agitado'
+  const stateTextureLabel =
+    stateLevel === 'calm'
+      ? 'Ondas Suaves'
+      : stateLevel === 'agitated'
+        ? 'Padrão Geométrico'
+        : 'Neutro'
+
   return (
     <div className="min-h-screen bg-[#0A192F] text-white flex flex-col relative overflow-hidden font-medium">
       <CrystalParticles show={showParticles} />
@@ -252,6 +260,13 @@ export default function FocusSession() {
             />
             <span className="text-[10px] text-white/50 font-medium">BPM</span>
             <span className="font-medium text-white">{bpm}</span>
+            <span
+              className="text-[9px] mt-0.5 px-1.5 py-0.5 rounded-full font-medium"
+              aria-live="polite"
+              aria-label={`Estado: ${stateLabel}, Textura: ${stateTextureLabel}`}
+            >
+              {stateLabel} · {stateTextureLabel}
+            </span>
           </div>
         </div>
 

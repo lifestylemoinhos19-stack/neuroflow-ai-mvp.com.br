@@ -6,10 +6,10 @@ import { useToast } from '@/hooks/use-toast'
 
 const FOCUS_DURATION = 25 * 60
 const BREAK_DURATION = 5 * 60
-const CRYSTAL_INTERVAL = 120
+const CRYSTAL_INTERVAL = 30
 const CALM_THRESHOLD = 70
 const AGITATION_THRESHOLD = 90
-const STABILITY_SDNN_THRESHOLD = 10
+const STABILITY_SDNN_THRESHOLD = 15
 
 export type SessionPhase = 'focus' | 'break'
 export type BioState = 'calm' | 'alert' | 'agitated'
@@ -98,7 +98,7 @@ export function useFocusSession() {
             : en
       setEnergy(en)
       energyRef.current = en
-      const isStable = curBpm < AGITATION_THRESHOLD
+      const isStable = curBpm < AGITATION_THRESHOLD && sdnn < STABILITY_SDNN_THRESHOLD
       if (isStable) {
         stableTimeRef.current += 1
         if (stableTimeRef.current >= CRYSTAL_INTERVAL) {
