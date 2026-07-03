@@ -21,13 +21,26 @@ import {
 import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { CrystalParticles } from '@/components/CrystalParticles'
-import { BleStatusIndicator } from '@/components/BleStatusIndicator'
+import { ConnectionStatusTooltip } from '@/components/ConnectionStatusTooltip'
+import type { BleSensorState } from '@/hooks/use-ble-sensor'
 import { BleOnboardingTutorial } from '@/components/BleOnboardingTutorial'
 
 const formatTime = (s: number) =>
   `${Math.floor(s / 60)
     .toString()
     .padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`
+
+function mapToSensorState(
+  connectionState: any,
+  isConnecting: boolean,
+  error: string | null,
+): BleSensorState {
+  if (connectionState === 'connected') return 'connected'
+  if (isConnecting) return 'connecting'
+  if (connectionState === 'searching') return 'scanning'
+  if (error) return 'error'
+  return 'idle'
+}
 
 export default function FocusSession() {
   const { bleOnboardingCompleted, completeBleOnboarding } = useAuth()
@@ -86,6 +99,9 @@ export default function FocusSession() {
         error={bleError}
         onConnect={bleConnect}
         onComplete={completeBleOnboarding}
+        onSkip={async () => {
+          await completeBleOnboarding('simulation')
+        }}
       />
     )
   }
@@ -136,7 +152,11 @@ export default function FocusSession() {
             {masterCrystals}.
           </div>
           <div className="flex items-center gap-3">
-            <BleStatusIndicator state={connectionState} />
+            <ConnectionStatusTooltip
+              state={mapToSensorState(connectionState, isConnecting, bleError)}
+              error={bleError}
+              onRetry={() => bleConnect()}
+            />
             <div className="bg-[#00FFFF]/10 px-3 py-1 rounded-full flex items-center text-sm font-medium text-[#00FFFF]">
               <Diamond className="h-4 w-4 mr-1" fill="currentColor" /> {crystals + masterCrystals}
             </div>

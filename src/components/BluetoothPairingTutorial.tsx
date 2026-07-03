@@ -148,7 +148,7 @@ export function BluetoothPairingTutorial({
           )}
         </div>
 
-        {(step === 0 || (isConnectStep && !isSupported)) && (
+        {(step === 0 || isConnectStep) && (
           <button
             onClick={onSkip}
             className="w-full text-center text-xs text-white/40 hover:text-white/60 mt-6 transition-colors"

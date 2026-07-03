@@ -28,19 +28,19 @@ const stateConfig: Record<
   },
   connecting: {
     label: 'Conectando',
-    tooltip: 'Estabelecendo conexão com o sensor...',
+    tooltip: 'Estabelecendo conexão...',
     color: 'text-[#00FFFF]',
     icon: Bluetooth,
   },
   connected: {
     label: 'Conectado',
-    tooltip: 'Sensor NeuroFlow conectado e ativo.',
+    tooltip: 'Sensor conectado!',
     color: 'text-[#00FFFF]',
     icon: BluetoothConnected,
   },
   error: {
     label: 'Erro',
-    tooltip: 'Falha na conexão com o sensor.',
+    tooltip: 'Falha na conexão',
     color: 'text-red-400',
     icon: AlertCircle,
   },

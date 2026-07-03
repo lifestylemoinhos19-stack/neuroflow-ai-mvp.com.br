@@ -11,6 +11,7 @@ interface BleOnboardingTutorialProps {
   error: string | null
   onConnect: () => Promise<void>
   onComplete: () => Promise<void>
+  onSkip: () => Promise<void>
 }
 
 const steps = [
@@ -43,6 +44,7 @@ export function BleOnboardingTutorial({
   error,
   onConnect,
   onComplete,
+  onSkip,
 }: BleOnboardingTutorialProps) {
   const [step, setStep] = useState(0)
   const [completing, setCompleting] = useState(false)
@@ -56,6 +58,12 @@ export function BleOnboardingTutorial({
   const handleFinish = async () => {
     setCompleting(true)
     await onComplete()
+    setCompleting(false)
+  }
+
+  const handleSkip = async () => {
+    setCompleting(true)
+    await onSkip()
     setCompleting(false)
   }
 
@@ -151,9 +159,9 @@ export function BleOnboardingTutorial({
           )}
         </div>
 
-        {(step === 0 || (isConnectStep && !isSupported)) && (
+        {(step === 0 || isConnectStep) && (
           <button
-            onClick={handleFinish}
+            onClick={handleSkip}
             className="w-full text-center text-xs text-white/40 hover:text-white/60 mt-6 transition-colors"
           >
             {isConnectStep ? 'Continuar sem sensor' : 'Pular tutorial'}
