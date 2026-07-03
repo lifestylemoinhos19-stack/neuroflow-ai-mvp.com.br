@@ -109,7 +109,14 @@ export function useFocusSession() {
     } catch {
       toast({ title: 'Sessão Concluída!', description: `${total} cristais ganhos!` })
     }
-    navigate('/')
+    navigate('/session-summary', {
+      state: {
+        sessionId: sessionIdRef.current,
+        crystals: crystalsRef.current,
+        masterCrystals: masterRef.current,
+        vrc: data?.vrc,
+      },
+    })
   }
 
   useEffect(() => {

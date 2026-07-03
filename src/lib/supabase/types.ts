@@ -402,6 +402,7 @@ export type Database = {
           started_at: string
           status: string | null
           user_id: string | null
+          vrc: number | null
         }
         Insert: {
           completed_at?: string | null
@@ -412,6 +413,7 @@ export type Database = {
           started_at?: string
           status?: string | null
           user_id?: string | null
+          vrc?: number | null
         }
         Update: {
           completed_at?: string | null
@@ -422,6 +424,7 @@ export type Database = {
           started_at?: string
           status?: string | null
           user_id?: string | null
+          vrc?: number | null
         }
         Relationships: []
       }

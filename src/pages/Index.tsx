@@ -50,6 +50,10 @@ export default function Index() {
     }
   }
 
+  const handleViewSessions = () => {
+    navigate('/dashboard')
+  }
+
   if (!data) {
     return (
       <div className="space-y-6">
@@ -135,13 +139,23 @@ export default function Index() {
               para tarefas complexas que exigem alto nível cognitivo.
             </p>
             <div className="mt-6 flex gap-3">
-              <Button
-                onClick={handleStartFocus}
-                variant="secondary"
-                className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 shadow-sm"
-              >
-                Iniciar Sessão de Foco
-              </Button>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  onClick={handleStartFocus}
+                  variant="secondary"
+                  className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 shadow-sm"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  O Explorador da Calma
+                </Button>
+                <Button
+                  onClick={handleViewSessions}
+                  variant="ghost"
+                  className="text-slate-600 hover:text-indigo-700"
+                >
+                  Ver Histórico
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
