@@ -27,7 +27,6 @@ Deno.serve(async (req) => {
 
     if (error) throw error
 
-    // Simple VRC mock calculation (RMSSD approximation)
     let vrc = 0
     if (logs && logs.length > 1) {
       let sumSq = 0
@@ -37,6 +36,12 @@ Deno.serve(async (req) => {
         sumSq += Math.pow(rr2 - rr1, 2)
       }
       vrc = Math.sqrt(sumSq / (logs.length - 1))
+    }
+
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+    if (serviceKey) {
+      const adminClient = createClient(supabaseUrl, serviceKey)
+      await adminClient.from('focus_sessions').update({ vrc }).eq('id', sessionId)
     }
 
     return new Response(JSON.stringify({ vrc, logsCount: logs?.length || 0 }), {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/contexts/auth-context'
@@ -29,6 +29,7 @@ export function useFocusSession() {
   const [showParticles, setShowParticles] = useState(false)
   const [mockSensor, setMockSensor] = useState(true)
   const [mockBpmTarget, setMockBpmTarget] = useState(72)
+  const [externalBpm, setExternalBpm] = useState<number | null>(null)
 
   const stableTimeRef = useRef(0)
   const spikesRef = useRef(0)
@@ -39,6 +40,7 @@ export function useFocusSession() {
   const mockRef = useRef({ sensor: true, target: 72 })
   const crystalsRef = useRef(0)
   const masterRef = useRef(0)
+  const externalBpmRef = useRef<number | null>(null)
 
   const stateLevel: BioState = bpm < 75 ? 'calm' : bpm < AGITATION_THRESHOLD ? 'alert' : 'agitated'
 
@@ -51,21 +53,30 @@ export function useFocusSession() {
   useEffect(() => {
     mockRef.current = { sensor: mockSensor, target: mockBpmTarget }
   }, [mockSensor, mockBpmTarget])
+  useEffect(() => {
+    externalBpmRef.current = externalBpm
+  }, [externalBpm])
 
   useEffect(() => {
-    if (!user)
-      return supabase
-        .from('focus_sessions')
-        .insert({ user_id: user.id, settings: { duration: FOCUS_DURATION, mode: 'pomodoro' } })
-        .select('id')
-        .single()
-        .then(({ data }) => data && setSessionId(data.id))
+    if (!user) return
+    let mounted = true
+    supabase
+      .from('focus_sessions')
+      .insert({ user_id: user.id, settings: { duration: FOCUS_DURATION, mode: 'pomodoro' } })
+      .select('id')
+      .single()
+      .then(({ data }) => {
+        if (data && mounted) setSessionId(data.id)
+      })
+    return () => {
+      mounted = false
+    }
   }, [user])
 
-  const triggerParticles = () => {
+  const triggerParticles = useCallback(() => {
     setShowParticles(true)
     setTimeout(() => setShowParticles(false), 2500)
-  }
+  }, [])
 
   const finalizeSession = async () => {
     if (!sessionIdRef.current) return
@@ -83,6 +94,12 @@ export function useFocusSession() {
       const { data } = await supabase.functions.invoke('calculate-vrc', {
         body: { sessionId: sessionIdRef.current },
       })
+      if (data?.vrc !== undefined && sessionIdRef.current) {
+        await supabase
+          .from('focus_sessions')
+          .update({ vrc: data.vrc })
+          .eq('id', sessionIdRef.current)
+      }
       toast({
         title: 'Sessão Concluída!',
         description: data?.vrc
@@ -129,6 +146,8 @@ export function useFocusSession() {
             Math.round(cur + (mockRef.current.target - cur) * 0.2 + (Math.random() * 4 - 2)),
           ),
         )
+      } else if (externalBpmRef.current !== null) {
+        cur = externalBpmRef.current
       }
       let en = energyRef.current
       en =
@@ -186,6 +205,7 @@ export function useFocusSession() {
     stateLevel,
     setMockSensor,
     setMockBpmTarget,
+    setExternalBpm,
     toggleActive: () => setIsActive((a) => !a),
     handleCancel,
   }

@@ -395,7 +395,9 @@ export type Database = {
       focus_sessions: {
         Row: {
           completed_at: string | null
+          crystals_earned: number | null
           id: string
+          master_crystals: number | null
           settings: Json | null
           started_at: string
           status: string | null
@@ -403,7 +405,9 @@ export type Database = {
         }
         Insert: {
           completed_at?: string | null
+          crystals_earned?: number | null
           id?: string
+          master_crystals?: number | null
           settings?: Json | null
           started_at?: string
           status?: string | null
@@ -411,7 +415,9 @@ export type Database = {
         }
         Update: {
           completed_at?: string | null
+          crystals_earned?: number | null
           id?: string
+          master_crystals?: number | null
           settings?: Json | null
           started_at?: string
           status?: string | null

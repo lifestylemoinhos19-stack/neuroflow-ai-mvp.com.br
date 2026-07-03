@@ -26,6 +26,7 @@ import { TELEMEDICINE_DISCLAIMER } from '@/lib/clinical-references'
 import { ClinicalFeedbackDialog } from '@/components/ClinicalFeedbackDialog'
 import { getUserSessions, SessionWithRisk } from '@/services/sessions'
 import { exportReport } from '@/lib/pdf-export'
+import { FocusAnalytics } from '@/components/FocusAnalytics'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase/client'
 import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts'
@@ -386,6 +387,8 @@ export default function Dashboard() {
           </p>
         </div>
       </Card>
+
+      <FocusAnalytics />
 
       <ClinicalFeedbackDialog
         sessionId={feedbackSessionId}

@@ -1,6 +1,20 @@
+import { useEffect } from 'react'
 import { useFocusSession } from '@/hooks/use-focus-session'
+import { useHeartRate } from '@/hooks/use-heart-rate'
 import { Button } from '@/components/ui/button'
-import { Heart, Settings, X, Pause, Play, Wind, Diamond, Map } from 'lucide-react'
+import {
+  Heart,
+  Settings,
+  X,
+  Pause,
+  Play,
+  Wind,
+  Diamond,
+  Map,
+  Bluetooth,
+  BluetoothConnected,
+  Loader2,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
@@ -28,9 +42,27 @@ export default function FocusSession() {
     stateLevel,
     setMockSensor,
     setMockBpmTarget,
+    setExternalBpm,
     toggleActive,
     handleCancel,
   } = useFocusSession()
+
+  const {
+    isConnected: btConnected,
+    isConnecting: btConnecting,
+    isSupported: btSupported,
+    connect: btConnect,
+    disconnect: btDisconnect,
+    bpm: btBpm,
+    error: btError,
+  } = useHeartRate()
+
+  useEffect(() => {
+    if (btBpm !== null) {
+      setExternalBpm(btBpm)
+      if (mockSensor) setMockSensor(false)
+    }
+  }, [btBpm, mockSensor, setExternalBpm, setMockSensor])
 
   const energyColor =
     energy >= 75 ? 'bg-[#00FFFF]/70' : energy >= 40 ? 'bg-blue-400/70' : 'bg-slate-400/70'
@@ -65,6 +97,11 @@ export default function FocusSession() {
             <span className="font-medium text-white/90 tracking-tight text-sm">NeuroFlow AI</span>
           </div>
           <div className="flex items-center gap-3">
+            {btConnected && (
+              <div className="bg-emerald-500/10 px-3 py-1 rounded-full flex items-center text-sm font-medium text-emerald-400">
+                <BluetoothConnected className="h-4 w-4 mr-1" /> HR
+              </div>
+            )}
             <div className="bg-[#00FFFF]/10 px-3 py-1 rounded-full flex items-center text-sm font-medium text-[#00FFFF]">
               <Diamond className="h-4 w-4 mr-1" fill="currentColor" /> {crystals + masterCrystals}
             </div>
@@ -84,9 +121,42 @@ export default function FocusSession() {
               >
                 <div className="space-y-4">
                   <h4 className="font-medium text-[#00FFFF]">Configurações de Biofeedback</h4>
+                  {btSupported && (
+                    <div className="space-y-2">
+                      <Label className="text-white/80">Sensor Bluetooth (HR Real)</Label>
+                      <Button
+                        variant={btConnected ? 'outline' : 'default'}
+                        size="sm"
+                        className="w-full"
+                        onClick={btConnected ? btDisconnect : btConnect}
+                        disabled={btConnecting}
+                      >
+                        {btConnecting ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : btConnected ? (
+                          <BluetoothConnected className="h-4 w-4 mr-2" />
+                        ) : (
+                          <Bluetooth className="h-4 w-4 mr-2" />
+                        )}
+                        {btConnecting
+                          ? 'Conectando...'
+                          : btConnected
+                            ? 'Conectado'
+                            : 'Conectar Sensor'}
+                      </Button>
+                      {btError && <p className="text-xs text-red-400">{btError}</p>}
+                      {btConnected && btBpm && (
+                        <p className="text-xs text-[#00FFFF]">BPM em tempo real: {btBpm}</p>
+                      )}
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <Label className="text-white/80">Sensor Mock (Simulação)</Label>
-                    <Switch checked={mockSensor} onCheckedChange={setMockSensor} />
+                    <Switch
+                      checked={mockSensor}
+                      onCheckedChange={setMockSensor}
+                      disabled={btConnected}
+                    />
                   </div>
                   {mockSensor && (
                     <div className="space-y-2">
