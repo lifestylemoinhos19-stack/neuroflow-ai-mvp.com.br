@@ -2,7 +2,7 @@
   "_versions": {
     "spa-reminders": 6,
     "performance-alerts": 3,
-    "send-nps": 3,
+    "send-nps": 4,
     "recover-cart": 3,
     "sync-marketing": 3,
     "whatsapp-bot": 5,
@@ -24,6 +24,7 @@
     "send-reservation-confirmation": 1,
     "chat-ayla": 8,
     "neuro-validation": 7,
-    "calculate-vrc": 3
+    "calculate-vrc": 3,
+    "send-beta-invitation": 1
   }
 }

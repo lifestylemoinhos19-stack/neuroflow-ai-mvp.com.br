@@ -4,6 +4,8 @@ import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
 import { AuthProvider, AuthGuard } from '@/contexts/auth-context'
+import BetaLanding from '@/pages/BetaLanding'
+import BetaFeedback from '@/pages/BetaFeedback'
 import NeuroValidationPage from '@/pages/NeuroValidationPage'
 import StressTestDashboard from '@/pages/StressTestDashboard'
 import Layout from '@/components/Layout'
@@ -73,6 +75,22 @@ const App = () => (
             element={
               <AuthGuard>
                 <SessionSummary />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/beta"
+            element={
+              <AuthGuard>
+                <BetaLanding />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/beta-feedback"
+            element={
+              <AuthGuard>
+                <BetaFeedback />
               </AuthGuard>
             }
           />

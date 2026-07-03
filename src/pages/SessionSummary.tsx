@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Diamond, Heart, Activity, Clock, Home, RotateCcw } from 'lucide-react'
+import { Diamond, Heart, Activity, Clock, Home, RotateCcw, MessageCircle } from 'lucide-react'
 import { CrystalParticles } from '@/components/CrystalParticles'
 import { supabase } from '@/lib/supabase/client'
 
@@ -156,24 +156,37 @@ export default function SessionSummary() {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="space-y-3">
           <Button
-            onClick={() => navigate('/focus-session')}
-            className="flex-1 bg-[#00FFFF] hover:bg-[#00FFFF]/90 text-[#0A192F] font-medium rounded-full"
+            onClick={() =>
+              navigate('/beta-feedback', {
+                state: { sessionId: state?.sessionId ?? session?.id },
+              })
+            }
+            className="w-full bg-[#00FFFF]/20 hover:bg-[#00FFFF]/30 border border-[#00FFFF]/30 text-[#00FFFF] font-medium rounded-full"
           >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Nova Sessão
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Conte-nos o que achou
           </Button>
-          <Button
-            asChild
-            variant="outline"
-            className="flex-1 bg-white/5 border-[#00FFFF]/20 text-white hover:bg-white/10 font-medium rounded-full"
-          >
-            <Link to="/">
-              <Home className="h-4 w-4 mr-2" />
-              Início
-            </Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              onClick={() => navigate('/focus-session')}
+              className="flex-1 bg-[#00FFFF] hover:bg-[#00FFFF]/90 text-[#0A192F] font-medium rounded-full"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Nova Sessão
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="flex-1 bg-white/5 border-[#00FFFF]/20 text-white hover:bg-white/10 font-medium rounded-full"
+            >
+              <Link to="/">
+                <Home className="h-4 w-4 mr-2" />
+                Início
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     </div>

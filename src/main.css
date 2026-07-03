@@ -166,4 +166,8 @@
       opacity: 0;
     }
   }
+
+  .font-medium {
+    font-weight: 500;
+  }
 }
