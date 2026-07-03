@@ -3,8 +3,10 @@ import { useAuth } from '@/contexts/auth-context'
 import {
   getOnboardingState,
   markOnboardingComplete,
+  getCachedSensorId,
   type UserOnboarding,
 } from '@/services/user-onboarding'
+import { ensureSensorConsistency, detectBrowser } from '@/lib/sensor-persistence'
 import { useBleSensor } from '@/hooks/use-ble-sensor'
 import { BluetoothPairingTutorial } from '@/components/BluetoothPairingTutorial'
 import { ConnectionStatusTooltip } from '@/components/ConnectionStatusTooltip'
@@ -39,17 +41,34 @@ export function AdaptiveBleConnect({ onConnected }: { onConnected?: () => void }
   }, [state, onConnected])
 
   useEffect(() => {
+    if (loading || !user) return
+
+    const browser = detectBrowser()
+    const cachedSensor = getCachedSensorId()
+
     if (
-      !loading &&
       onboarding &&
       !onboarding.is_first_access &&
-      onboarding.paired_sensor_id &&
+      (onboarding.paired_sensor_id || cachedSensor) &&
       !autoReconnectStarted.current
     ) {
       autoReconnectStarted.current = true
-      startAutoReconnect(onboarding.paired_sensor_id)
+      const sensorToReconnect = onboarding.paired_sensor_id || cachedSensor
+      startAutoReconnect(sensorToReconnect)
+    } else if (
+      !onboarding &&
+      cachedSensor &&
+      browser.supportsBle &&
+      !autoReconnectStarted.current
+    ) {
+      autoReconnectStarted.current = true
+      ensureSensorConsistency(user.id).then((consistentId) => {
+        if (consistentId) {
+          startAutoReconnect(consistentId)
+        }
+      })
     }
-  }, [loading, onboarding, startAutoReconnect])
+  }, [loading, onboarding, user, startAutoReconnect])
 
   if (loading) {
     return (
@@ -91,7 +110,7 @@ export function AdaptiveBleConnect({ onConnected }: { onConnected?: () => void }
     <ConnectionStatusTooltip
       state={state}
       error={error}
-      onRetry={() => startAutoReconnect(onboarding?.paired_sensor_id)}
+      onRetry={() => startAutoReconnect(onboarding?.paired_sensor_id || getCachedSensorId())}
     />
   )
 }

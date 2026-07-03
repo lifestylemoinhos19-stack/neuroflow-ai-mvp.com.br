@@ -1,4 +1,11 @@
 import { supabase } from '@/lib/supabase/client'
+import {
+  saveSensorIdToLocalStorage,
+  getSensorIdFromLocalStorage,
+  clearSensorIdFromLocalStorage,
+  detectBrowser,
+  type BrowserInfo,
+} from '@/lib/sensor-persistence'
 
 export interface UserOnboarding {
   user_id: string
@@ -6,6 +13,18 @@ export interface UserOnboarding {
   paired_sensor_id: string | null
   onboarding_completed_at: string | null
   updated_at: string
+}
+
+export function getBrowserInfo(): BrowserInfo {
+  return detectBrowser()
+}
+
+export function getCachedSensorId(): string | null {
+  return getSensorIdFromLocalStorage()
+}
+
+export function clearCachedSensorId(): void {
+  clearSensorIdFromLocalStorage()
 }
 
 export async function getOnboardingState(userId: string): Promise<UserOnboarding | null> {
@@ -16,10 +35,17 @@ export async function getOnboardingState(userId: string): Promise<UserOnboarding
     .maybeSingle()
 
   if (error) return null
+
+  if (data && data.paired_sensor_id && !getSensorIdFromLocalStorage()) {
+    saveSensorIdToLocalStorage(data.paired_sensor_id)
+  }
+
   return data as UserOnboarding | null
 }
 
 export async function markOnboardingComplete(userId: string, sensorId: string): Promise<void> {
+  saveSensorIdToLocalStorage(sensorId)
+
   await supabase.from('user_onboarding').upsert(
     {
       user_id: userId,
@@ -45,4 +71,12 @@ export async function ensureOnboardingRecord(userId: string): Promise<void> {
       { onConflict: 'user_id' },
     )
   }
+}
+
+export async function getPairedSensorId(userId: string): Promise<string | null> {
+  const cached = getSensorIdFromLocalStorage()
+  if (cached) return cached
+
+  const data = await getOnboardingState(userId)
+  return data?.paired_sensor_id ?? null
 }
