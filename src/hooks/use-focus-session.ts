@@ -6,7 +6,8 @@ import { useToast } from '@/hooks/use-toast'
 
 const FOCUS_DURATION = 25 * 60
 const BREAK_DURATION = 5 * 60
-const CRYSTAL_INTERVAL = 30
+const CRYSTAL_INTERVAL = 120
+const STABILITY_DURATION_REQUIRED = 30
 const CALM_THRESHOLD = 70
 const AGITATION_THRESHOLD = 90
 const STABILITY_SDNN_THRESHOLD = 15
@@ -33,6 +34,7 @@ export function useFocusSession() {
   const [externalBpm, setExternalBpm] = useState<number | null>(null)
 
   const stableTimeRef = useRef(0)
+  const stableDurationRef = useRef(0)
   const spikesRef = useRef(0)
   const bpmRef = useRef(72)
   const energyRef = useRef(72)
@@ -100,16 +102,22 @@ export function useFocusSession() {
       energyRef.current = en
       const isStable = curBpm < AGITATION_THRESHOLD && sdnn < STABILITY_SDNN_THRESHOLD
       if (isStable) {
-        stableTimeRef.current += 1
-        if (stableTimeRef.current >= CRYSTAL_INTERVAL) {
-          stableTimeRef.current -= CRYSTAL_INTERVAL
-          crystalsRef.current += 1
-          setCrystals(crystalsRef.current)
-          triggerParticles()
+        stableDurationRef.current += 1
+        if (stableDurationRef.current >= STABILITY_DURATION_REQUIRED) {
+          stableTimeRef.current += 1
+          if (stableTimeRef.current >= CRYSTAL_INTERVAL) {
+            stableTimeRef.current -= CRYSTAL_INTERVAL
+            crystalsRef.current += 1
+            setCrystals(crystalsRef.current)
+            triggerParticles()
+          }
         }
-      } else if (curBpm >= AGITATION_THRESHOLD) {
-        stableTimeRef.current = 0
-        spikesRef.current += 1
+      } else {
+        stableDurationRef.current = 0
+        if (curBpm >= AGITATION_THRESHOLD) {
+          stableTimeRef.current = 0
+          spikesRef.current += 1
+        }
       }
     },
     [triggerParticles],

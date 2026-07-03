@@ -14,6 +14,8 @@ import {
   Bluetooth,
   BluetoothConnected,
   Loader2,
+  Camera,
+  Video,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
@@ -21,6 +23,7 @@ import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { CrystalParticles } from '@/components/CrystalParticles'
+import { useRppg } from '@/hooks/use-rppg'
 
 const formatTime = (s: number) =>
   `${Math.floor(s / 60)
@@ -63,6 +66,23 @@ export default function FocusSession() {
       if (mockSensor) setMockSensor(false)
     }
   }, [btBpm, mockSensor, setExternalBpm, setMockSensor])
+
+  const {
+    bpm: rppgBpm,
+    isConnected: rppgConnected,
+    isConnecting: rppgConnecting,
+    isSupported: rppgSupported,
+    connect: rppgConnect,
+    disconnect: rppgDisconnect,
+    error: rppgError,
+  } = useRppg()
+
+  useEffect(() => {
+    if (rppgBpm !== null) {
+      setExternalBpm(rppgBpm)
+      if (mockSensor) setMockSensor(false)
+    }
+  }, [rppgBpm, mockSensor, setExternalBpm, setMockSensor])
 
   const energyColor = bpm < 70 ? 'bg-[#00FFFF]/80' : bpm >= 90 ? 'bg-[#0A192F]' : 'bg-blue-400/70'
   const energyPattern = bpm < 70 ? 'pattern-calm' : bpm >= 90 ? 'pattern-agitated' : ''
@@ -109,6 +129,11 @@ export default function FocusSession() {
             {btConnected && (
               <div className="bg-emerald-500/10 px-3 py-1 rounded-full flex items-center text-sm font-medium text-emerald-400">
                 <BluetoothConnected className="h-4 w-4 mr-1" /> HR
+              </div>
+            )}
+            {rppgConnected && (
+              <div className="bg-emerald-500/10 px-3 py-1 rounded-full flex items-center text-sm font-medium text-emerald-400">
+                <Camera className="h-4 w-4 mr-1" /> Cam
               </div>
             )}
             <div className="bg-[#00FFFF]/10 px-3 py-1 rounded-full flex items-center text-sm font-medium text-[#00FFFF]">
@@ -159,12 +184,41 @@ export default function FocusSession() {
                       )}
                     </div>
                   )}
+                  {rppgSupported && (
+                    <div className="space-y-2">
+                      <Label className="text-white/80">Câmera rPPG (Óptico)</Label>
+                      <Button
+                        variant={rppgConnected ? 'outline' : 'default'}
+                        size="sm"
+                        className="w-full"
+                        onClick={rppgConnected ? rppgDisconnect : rppgConnect}
+                        disabled={rppgConnecting || btConnected}
+                      >
+                        {rppgConnecting ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : rppgConnected ? (
+                          <Camera className="h-4 w-4 mr-2" />
+                        ) : (
+                          <Video className="h-4 w-4 mr-2" />
+                        )}
+                        {rppgConnecting
+                          ? 'Iniciando...'
+                          : rppgConnected
+                            ? 'Câmera Ativa'
+                            : 'Usar Câmera'}
+                      </Button>
+                      {rppgError && <p className="text-xs text-red-400">{rppgError}</p>}
+                      {rppgConnected && rppgBpm && (
+                        <p className="text-xs text-[#00FFFF]">BPM via câmera: {rppgBpm}</p>
+                      )}
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <Label className="text-white/80">Sensor Mock (Simulação)</Label>
                     <Switch
                       checked={mockSensor}
                       onCheckedChange={setMockSensor}
-                      disabled={btConnected}
+                      disabled={btConnected || rppgConnected}
                     />
                   </div>
                   {mockSensor && (
