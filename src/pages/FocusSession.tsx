@@ -237,7 +237,7 @@ export default function FocusSession() {
         )}
       </header>
 
-      <main className="flex-1 relative flex items-center justify-center w-full max-w-md mx-auto px-6">
+      <main className="flex-1 relative flex items-center justify-center w-full max-w-2xl mx-auto px-4 sm:px-8">
         <div
           className={cn(
             'relative z-10 transition-all duration-1000',
@@ -248,14 +248,14 @@ export default function FocusSession() {
           style={{ animation: `float ${floatDuration} ease-in-out infinite` }}
         >
           <img
-            src="https://img.usecurling.com/p/256/256?q=hot%20air%20balloon%20cute&color=cyan"
+            src="https://img.usecurling.com/p/512/512?q=hot%20air%20balloon%20cute&color=cyan&dpr=2"
             alt="Explorador da Calma"
-            className="w-48 h-48 object-contain drop-shadow-2xl"
+            className="w-80 h-80 object-contain drop-shadow-2xl"
             style={{ filter: mascotFilter }}
           />
         </div>
 
-        <div className="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col items-center z-20">
+        <div className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center z-20">
           <span
             className="text-xs font-medium text-[#00FFFF]/70 mb-2 w-16 text-center leading-tight"
             id="energy-bar-label"
