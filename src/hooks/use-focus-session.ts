@@ -219,10 +219,18 @@ export function useFocusSession() {
           setMasterCrystals(masterRef.current)
           triggerParticles()
         }
+        toast({
+          title: 'Bloco de Foco Concluído!',
+          description: 'Hora da pausa. Respire fundo e relaxe por 5 minutos.',
+        })
         setPhase('break')
         setTimeLeft(BREAK_DURATION)
         setTimeout(() => setIsActive(true), 1000)
       } else {
+        toast({
+          title: 'Pausa Concluída!',
+          description: 'Sessão finalizada. Calculando métricas...',
+        })
         finalizeSession()
       }
       return
@@ -262,7 +270,18 @@ export function useFocusSession() {
     setMockSensor,
     setMockBpmTarget,
     setExternalBpm,
-    toggleActive: () => setIsActive((a) => !a),
+    toggleActive: () => {
+      if (!isActive) {
+        toast({
+          title: phase === 'focus' ? 'Foco Iniciado!' : 'Pausa Iniciada!',
+          description:
+            phase === 'focus'
+              ? 'Mantenha a calma para ganhar cristais.'
+              : 'Respire fundo e relaxe.',
+        })
+      }
+      setIsActive((a) => !a)
+    },
     handleCancel,
   }
 }
