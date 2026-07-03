@@ -360,6 +360,65 @@ export type Database = {
         }
         Relationships: []
       }
+      focus_biofeedback_logs: {
+        Row: {
+          bpm: number | null
+          id: string
+          session_id: string | null
+          timestamp: string
+          vrc: number | null
+        }
+        Insert: {
+          bpm?: number | null
+          id?: string
+          session_id?: string | null
+          timestamp?: string
+          vrc?: number | null
+        }
+        Update: {
+          bpm?: number | null
+          id?: string
+          session_id?: string | null
+          timestamp?: string
+          vrc?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'focus_biofeedback_logs_session_id_fkey'
+            columns: ['session_id']
+            isOneToOne: false
+            referencedRelation: 'focus_sessions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      focus_sessions: {
+        Row: {
+          completed_at: string | null
+          id: string
+          settings: Json | null
+          started_at: string
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          settings?: Json | null
+          started_at?: string
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          settings?: Json | null
+          started_at?: string
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       guests: {
         Row: {
           birth_date: string | null
