@@ -161,7 +161,7 @@ export function useFocusSession() {
       supabase
         .from('focus_biofeedback_logs')
         .insert({ session_id: sessionIdRef.current, bpm: cur, vrc: sdnn })
-        .catch(() => {})
+        .then(() => {})
     }, 1000)
     return () => clearInterval(interval)
   }, [isActive, phase, sessionId, calculateSDNN])
