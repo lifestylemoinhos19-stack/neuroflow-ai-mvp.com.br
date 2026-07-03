@@ -704,6 +704,7 @@ export type Database = {
           created_at: string
           full_name: string | null
           guest_id: string | null
+          has_completed_onboarding: boolean
           id: string
           privacy_consent: boolean | null
           privacy_consent_accepted_at: string | null
@@ -713,6 +714,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           guest_id?: string | null
+          has_completed_onboarding?: boolean
           id: string
           privacy_consent?: boolean | null
           privacy_consent_accepted_at?: string | null
@@ -722,6 +724,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           guest_id?: string | null
+          has_completed_onboarding?: boolean
           id?: string
           privacy_consent?: boolean | null
           privacy_consent_accepted_at?: string | null

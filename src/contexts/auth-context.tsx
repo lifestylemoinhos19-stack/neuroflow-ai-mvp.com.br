@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
 import { Loader2 } from 'lucide-react'
+import { getOnboardingState, markOnboardingComplete } from '@/services/user-onboarding'
 
 interface AuthUser {
   id: string
@@ -20,6 +21,7 @@ interface AuthContextType {
   profileChecked: boolean
   isAdmin: boolean
   bleOnboardingCompleted: boolean
+  pairedSensorId: string | null
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signUp: (
     email: string,
@@ -29,7 +31,7 @@ interface AuthContextType {
   verifyMfa: (code: string) => Promise<void>
   logout: () => Promise<void>
   completeOnboarding: () => Promise<void>
-  completeBleOnboarding: () => Promise<void>
+  completeBleOnboarding: (sensorId?: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -53,12 +55,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
   const [profile, setProfile] = useState<any>(null)
   const [profileChecked, setProfileChecked] = useState(false)
+  const [onboarding, setOnboarding] = useState<{
+    is_first_access: boolean
+    paired_sensor_id: string | null
+  } | null>(null)
 
   const isAuthenticated = !!session && !!user
 
   useEffect(() => {
     if (!user) {
       setProfile(null)
+      setOnboarding(null)
       setProfileChecked(true)
       return
     }
@@ -73,11 +80,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfileChecked(true)
       })
       .catch(() => setProfileChecked(true))
+    getOnboardingState(user.id).then((data) => {
+      setOnboarding(
+        data
+          ? { is_first_access: data.is_first_access, paired_sensor_id: data.paired_sensor_id }
+          : null,
+      )
+    })
   }, [user])
 
   const needsOnboarding = isAuthenticated && isMfaVerified && (!profile || !profile.privacy_consent)
   const isAdmin = !!profile && profile.role === 'admin'
-  const bleOnboardingCompleted = !!profile?.has_completed_onboarding
+  const bleOnboardingCompleted = onboarding
+    ? !onboarding.is_first_access
+    : !!profile?.has_completed_onboarding
 
   useEffect(() => {
     const applySession = (s: Session | null) => {
@@ -169,11 +185,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(data)
   }
 
-  const completeBleOnboarding = async () => {
+  const completeBleOnboarding = async (sensorId?: string) => {
     if (!user) return
     await supabase
       .from('profiles')
       .upsert({ id: user.id, has_completed_onboarding: true }, { onConflict: 'id' })
+    if (sensorId) {
+      await markOnboardingComplete(user.id, sensorId)
+    }
+    const onboardingData = await getOnboardingState(user.id)
+    setOnboarding(
+      onboardingData
+        ? {
+            is_first_access: onboardingData.is_first_access,
+            paired_sensor_id: onboardingData.paired_sensor_id,
+          }
+        : null,
+    )
     const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
     setProfile(data)
   }
@@ -190,6 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profileChecked,
         isAdmin,
         bleOnboardingCompleted,
+        pairedSensorId: onboarding?.paired_sensor_id ?? null,
         signIn,
         signUp,
         verifyMfa,

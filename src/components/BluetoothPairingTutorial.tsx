@@ -1,57 +1,53 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Bluetooth, Check, ChevronRight, Loader2 } from 'lucide-react'
-import type { BleConnectionState } from '@/hooks/use-heart-rate'
 import { cn } from '@/lib/utils'
+import type { BleSensorState } from '@/hooks/use-ble-sensor'
 
-interface BleOnboardingTutorialProps {
-  connectionState: BleConnectionState
-  isConnecting: boolean
+interface BluetoothPairingTutorialProps {
+  bleState: BleSensorState
   isSupported: boolean
   error: string | null
+  sensorId: string | null
   onConnect: () => Promise<void>
   onComplete: () => Promise<void>
+  onSkip: () => void
 }
 
 const steps = [
   {
-    title: 'Bem-vindo ao Explorador da Calma',
-    description:
-      'Vamos conectar seu sensor de batimentos cardíacos via Bluetooth para iniciar sua jornada de foco.',
+    title: 'Bem-vindo ao NeuroFlow',
+    description: 'Vamos conectar seu sensor NeuroFlow via Bluetooth para iniciar sua jornada.',
   },
   {
     title: 'Ative o Bluetooth',
     description:
-      'Certifique-se de que o Bluetooth está ativado no seu dispositivo. Coloque o sensor de frequência cardíaca próximo.',
+      'Certifique-se de que o Bluetooth está ativado. Coloque o sensor próximo ao dispositivo.',
   },
   {
-    title: 'Conecte o Sensor',
-    description:
-      'Toque no botão abaixo para procurar e parear seu sensor de batimentos cardíacos via Bluetooth Low Energy.',
+    title: 'Parear Sensor',
+    description: 'Toque no botão abaixo para procurar e parear seu sensor NeuroFlow.',
   },
   {
     title: 'Tudo Pronto!',
-    description:
-      'Seu sensor está conectado. Você está pronto para iniciar sua sessão de foco e coletar cristais.',
+    description: 'Seu sensor está conectado. Você está pronto para iniciar sua sessão.',
   },
 ]
 
-export function BleOnboardingTutorial({
-  connectionState,
-  isConnecting,
+export function BluetoothPairingTutorial({
+  bleState,
   isSupported,
   error,
   onConnect,
   onComplete,
-}: BleOnboardingTutorialProps) {
+  onSkip,
+}: BluetoothPairingTutorialProps) {
   const [step, setStep] = useState(0)
   const [completing, setCompleting] = useState(false)
 
   useEffect(() => {
-    if (connectionState === 'connected' && step === 2) {
-      setStep(3)
-    }
-  }, [connectionState, step])
+    if (bleState === 'connected' && step === 2) setStep(3)
+  }, [bleState, step])
 
   const handleFinish = async () => {
     setCompleting(true)
@@ -61,9 +57,10 @@ export function BleOnboardingTutorial({
 
   const isLastStep = step === steps.length - 1
   const isConnectStep = step === 2
+  const isConnecting = bleState === 'scanning' || bleState === 'connecting'
 
   return (
-    <div className="min-h-screen bg-[#0A192F] text-white flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#0A192F] text-white flex items-center justify-center p-6 font-sans font-medium">
       <div className="max-w-md w-full">
         <div className="flex justify-center mb-8">
           <div className="h-20 w-20 rounded-full bg-[#00FFFF]/10 flex items-center justify-center">
@@ -94,7 +91,7 @@ export function BleOnboardingTutorial({
 
         {isConnectStep && (
           <div className="mb-6 space-y-2">
-            {connectionState === 'connected' && (
+            {bleState === 'connected' && (
               <p className="flex items-center justify-center gap-2 text-[#00FFFF] text-sm">
                 <Check className="h-4 w-4" /> Sensor conectado com sucesso!
               </p>
@@ -118,7 +115,7 @@ export function BleOnboardingTutorial({
             <Button
               onClick={onConnect}
               disabled={isConnecting || !isSupported}
-              className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/90 rounded-full px-8"
+              className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/90 rounded-full px-8 font-medium"
             >
               {isConnecting ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -131,7 +128,7 @@ export function BleOnboardingTutorial({
             <Button
               onClick={handleFinish}
               disabled={completing}
-              className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/90 rounded-full px-8"
+              className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/90 rounded-full px-8 font-medium"
             >
               {completing ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -143,7 +140,7 @@ export function BleOnboardingTutorial({
           ) : (
             <Button
               onClick={() => setStep(step + 1)}
-              className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/90 rounded-full px-8"
+              className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/90 rounded-full px-8 font-medium"
             >
               Avançar
               <ChevronRight className="h-4 w-4 ml-1" />
@@ -153,7 +150,7 @@ export function BleOnboardingTutorial({
 
         {(step === 0 || (isConnectStep && !isSupported)) && (
           <button
-            onClick={handleFinish}
+            onClick={onSkip}
             className="w-full text-center text-xs text-white/40 hover:text-white/60 mt-6 transition-colors"
           >
             {isConnectStep ? 'Continuar sem sensor' : 'Pular tutorial'}
