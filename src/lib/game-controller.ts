@@ -10,14 +10,16 @@ export interface GameControllerState {
 export class GameController {
   private bpm = 72
   private energy = 50
+  private currentAltitude = 50
   private isActive = false
   private externalBpm: number | null = null
   private intervalId: ReturnType<typeof setInterval> | null = null
   private listeners = new Set<(state: GameControllerState) => void>()
 
-  private calculateAltitude(bpm: number): number {
-    const normalized = Math.max(0, Math.min(180, bpm)) / 180
-    return 20 + normalized * 60
+  private updateAltitude(): void {
+    const normalized = Math.max(0, Math.min(180, this.bpm)) / 180
+    const targetAltitude = 15 + normalized * 70
+    this.currentAltitude += (targetAltitude - this.currentAltitude) * 0.18
   }
 
   private calculateEnergy(bpm: number): number {
@@ -30,7 +32,7 @@ export class GameController {
     return {
       bpm: this.bpm,
       energy: Math.round(this.energy),
-      altitude: this.calculateAltitude(this.bpm),
+      altitude: this.currentAltitude,
       isActive: this.isActive,
     }
   }
@@ -39,6 +41,7 @@ export class GameController {
     if (bpm === null || Number.isNaN(bpm)) return
     this.bpm = Math.max(0, Math.min(180, bpm))
     this.energy = this.calculateEnergy(this.bpm)
+    this.updateAltitude()
     this.notify()
   }
 

@@ -1,3 +1,4 @@
+import '@/styles/neuro-animations.css'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { X, Diamond, Pause, Play } from 'lucide-react'
@@ -106,8 +107,12 @@ export function GameEngine({ controller, onExit }: Props) {
             aria-valuemax={100}
           >
             <div
-              className={cn('w-full rounded-full transition-all duration-1000', pulseClass)}
-              style={{ height: `${state.energy}%`, backgroundColor: energyColor }}
+              className="w-full rounded-full transition-all duration-1000"
+              style={{
+                height: `${state.energy}%`,
+                backgroundColor: energyColor,
+                animation: `neuroPulse ${Math.max(0.5, 60 / Math.max(state.bpm, 40))}s ease-in-out infinite`,
+              }}
             />
           </div>
           <span className="text-xs text-[#E6F1FF]/70 mt-2 font-medium">{state.bpm} BPM</span>

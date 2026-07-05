@@ -1,0 +1,21 @@
+@keyframes neuroPulse {
+  0%,
+  100% {
+    transform: scaleY(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scaleY(1.12);
+    opacity: 1;
+  }
+}
+
+@keyframes neuroGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.33);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 255, 255, 0.5);
+  }
+}

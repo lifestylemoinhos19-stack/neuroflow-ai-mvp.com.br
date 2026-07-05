@@ -4,42 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Play, Loader2, CheckCircle2, X, FlaskConical, Sun, Palette } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { BiofeedbackAccuracyTester } from '@/lib/biofeedback-accuracy'
-
-interface TestScenario {
-  id: string
-  name: string
-  lighting: number
-  skinTone: 'Light' | 'Medium' | 'Dark'
-}
-
-const SCENARIOS: TestScenario[] = [
-  { id: 'low-light', name: 'Luz Baixa', lighting: 25, skinTone: 'Medium' },
-  { id: 'bright-light', name: 'Luz Forte', lighting: 90, skinTone: 'Medium' },
-  { id: 'light-skin', name: 'Tom de Pele Claro', lighting: 60, skinTone: 'Light' },
-  { id: 'medium-skin', name: 'Tom de Pele Médio', lighting: 60, skinTone: 'Medium' },
-  { id: 'dark-skin', name: 'Tom de Pele Escuro', lighting: 60, skinTone: 'Dark' },
-]
-
-const DEFAULT_SAMPLES = 30
-
-interface ScenarioResult {
-  scenario: TestScenario
-  mae: number
-  rmse: number
-  accuracy: number
-  sampleCount: number
-}
-
-function simulateBpm(scenario: TestScenario, reference: number): number {
-  const lightDrift = Math.abs(scenario.lighting - 60) / 60
-  const skinDrift =
-    scenario.skinTone === 'Dark' ? 0.15 : scenario.skinTone === 'Light' ? 0.05 : 0.08
-  const totalDrift = lightDrift + skinDrift
-  const noise = (Math.random() - 0.5) * 2 * (1 + totalDrift * 10)
-  return Math.max(40, Math.min(180, Math.round(reference + noise)))
-}
+import { useAuth } from '@/contexts/auth-context'
+import { runAllFieldTests, aggregateResults, type FieldTestResult } from '@/lib/field-test-engine'
+import { captureFieldTestMetrics } from '@/lib/sensitivity-tuning'
 
 interface Props {
   onClose: () => void
@@ -48,37 +15,32 @@ interface Props {
 export function FieldTestRunner({ onClose }: Props) {
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState(0)
-  const [results, setResults] = useState<ScenarioResult[]>([])
+  const [results, setResults] = useState<FieldTestResult[]>([])
   const [completed, setCompleted] = useState(false)
+  const { user } = useAuth()
 
   const handleRun = useCallback(async () => {
     setRunning(true)
     setResults([])
     setProgress(0)
     setCompleted(false)
-    const all: ScenarioResult[] = []
+    const startTime = Date.now()
 
-    for (let i = 0; i < SCENARIOS.length; i++) {
-      const scenario = SCENARIOS[i]
-      const tester = new BiofeedbackAccuracyTester()
+    const all = await runAllFieldTests((prog, partial) => {
+      setResults(partial)
+      setProgress(prog)
+    })
 
-      for (let s = 0; s < DEFAULT_SAMPLES; s++) {
-        const ref = 60 + Math.floor(Math.random() * 40)
-        const cam = simulateBpm(scenario, ref)
-        tester.addSample(cam, ref)
-        await new Promise((r) => setTimeout(r, 15))
-      }
+    const { avgMae, avgRmse, totalSamples } = aggregateResults(all)
+    const durationMs = Date.now() - startTime
 
-      const m = tester.calculate()
-      all.push({
-        scenario,
-        mae: m.mae,
-        rmse: m.rmse,
-        accuracy: m.accuracyPercentage,
-        sampleCount: m.sampleCount,
-      })
-      setResults([...all])
-      setProgress(((i + 1) / SCENARIOS.length) * 100)
+    if (user) {
+      await captureFieldTestMetrics(
+        user.id,
+        { mae: avgMae, rmse: avgRmse, samples: totalSamples, durationMs },
+        null,
+        { scenarios: all.length, type: 'field_test' },
+      )
     }
 
     console.table(
@@ -95,7 +57,7 @@ export function FieldTestRunner({ onClose }: Props) {
 
     setCompleted(true)
     setRunning(false)
-  }, [])
+  }, [user])
 
   return (
     <div className="min-h-screen bg-[#0A192F] text-[#E6F1FF] p-4 sm:p-6">
@@ -121,7 +83,7 @@ export function FieldTestRunner({ onClose }: Props) {
               <div>
                 <CardTitle className="text-[#E6F1FF]">Biofeedback Accuracy Test</CardTitle>
                 <CardDescription className="text-[#E6F1FF]/60">
-                  {SCENARIOS.length} cenários · {DEFAULT_SAMPLES} amostras cada
+                  5 cenários · 30 amostras cada
                 </CardDescription>
               </div>
               <Button
@@ -215,10 +177,12 @@ export function FieldTestRunner({ onClose }: Props) {
 
         {completed && (
           <p className="text-xs text-[#E6F1FF]/40 text-center mt-4">
-            Resultados logged no console em formato table.
+            Resultados salvos em calibration_logs e logged no console.
           </p>
         )}
       </div>
     </div>
   )
 }
+
+FieldTestRunner.runAll = runAllFieldTests

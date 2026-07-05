@@ -24,6 +24,7 @@ import EthicalAuditDashboard from '@/pages/EthicalAuditDashboard'
 import TermsOfUse from '@/pages/TermsOfUse'
 import NotFound from '@/pages/NotFound'
 import FocusSession from '@/pages/FocusSession'
+import { MainDeployment } from '@/components/MainDeployment'
 import SessionSummary from '@/pages/SessionSummary'
 import OpticalOnboarding from '@/pages/OpticalOnboarding'
 
@@ -79,6 +80,14 @@ const App = () => (
             element={
               <AuthGuard>
                 <FocusSession />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/deployment"
+            element={
+              <AuthGuard>
+                <MainDeployment />
               </AuthGuard>
             }
           />
