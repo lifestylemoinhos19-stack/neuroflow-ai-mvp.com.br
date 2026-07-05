@@ -63,6 +63,7 @@ export function useRppg() {
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isMountedRef = useRef(true)
   const connectionIdRef = useRef(0)
+  const retryCountRef = useRef(0)
 
   const isSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia
 
