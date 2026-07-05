@@ -166,7 +166,6 @@ export function useRppg() {
   }, [])
 
   const connect = useCallback(async () => {
-    retryTimeoutRef.current?.clearTimeout
     if (retryTimeoutRef.current) {
       clearTimeout(retryTimeoutRef.current)
       retryTimeoutRef.current = null
