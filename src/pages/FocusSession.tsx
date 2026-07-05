@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useFocusSession } from '@/hooks/use-focus-session'
 import { useBiofeedbackSource } from '@/hooks/use-biofeedback-source'
 import type { BiofeedbackSourceState } from '@/hooks/use-biofeedback-source'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
-import { Settings, X, Pause, Play, Wind, Diamond, Map } from 'lucide-react'
+import { Settings, X, Pause, Play, Wind, Diamond, Map, AlertCircle, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { CrystalParticles } from '@/components/CrystalParticles'
@@ -49,6 +49,7 @@ export default function FocusSession() {
   const [selectedBluetooth, setSelectedBluetooth] = useState(false)
   const [selectedOptical, setSelectedOptical] = useState<'rppg' | 'ppg' | null>(null)
   const source = useBiofeedbackSource()
+  const cameraInitRef = useRef(false)
 
   const captureMethod = pairedSensorId?.startsWith('camera')
     ? pairedSensorId
@@ -86,8 +87,10 @@ export default function FocusSession() {
     if (
       pairedSensorId?.startsWith('camera') &&
       !source.isCameraActive &&
-      !source.cameraConnecting
+      !source.cameraConnecting &&
+      !cameraInitRef.current
     ) {
+      cameraInitRef.current = true
       source.connectCamera()
     } else if (
       pairedSensorId &&
@@ -252,7 +255,7 @@ export default function FocusSession() {
             : 'Respire fundo... O descanso faz parte da jornada.'}
         </p>
         {stateLevel === 'agitated' && phase === 'focus' && (
-          <div className="mt-4 animate-fade-in-up flex items-center bg-white/5 text-white/70 px-4 py-2 rounded-xl border border-white/10 max-w-md">
+          <div className="mt-4 animate-fade-in-up flex items-center bg-white/5 text-white/70 px-4 py-2 rounded-xl border border-white/10 max-w-[calc(100%-3rem)] sm:max-w-md z-10">
             <Wind className="h-5 w-5 mr-2 text-white/50 animate-pulse" />
             <span className="font-medium text-sm text-left">
               Navegando para a zona de descanso. Faça uma micro-pausa para respiração profunda.
@@ -261,7 +264,24 @@ export default function FocusSession() {
         )}
       </header>
 
-      <main className="flex-1 relative flex items-center justify-center w-full max-w-2xl mx-auto px-2 sm:px-8">
+      {source.mode === 'camera' && source.error && !source.isCameraActive && (
+        <div className="mx-4 sm:mx-6 mb-2 p-3 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-between gap-3 z-20 animate-fade-in">
+          <div className="flex items-center gap-2 min-w-0">
+            <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
+            <span className="text-sm text-red-300 truncate">{source.error}</span>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => source.connectCamera()}
+            className="border-red-500/30 text-red-300 hover:bg-red-500/10 shrink-0"
+          >
+            <RefreshCw className="h-4 w-4 mr-1.5" /> Tentar Novamente
+          </Button>
+        </div>
+      )}
+
+      <main className="flex-1 relative flex items-center justify-center w-full max-w-2xl mx-auto px-2 sm:px-8 pr-14 sm:pr-20">
         <div
           className={cn(
             'relative z-10 transition-all duration-1000',
@@ -274,11 +294,11 @@ export default function FocusSession() {
           <img
             src="https://img.usecurling.com/p/512/512?q=hot%20air%20balloon%20cute&color=cyan&dpr=3"
             alt="Explorador da Calma"
-            className="w-80 h-80 md:w-96 md:h-96 object-contain drop-shadow-2xl"
+            className="w-64 h-64 sm:w-80 md:w-96 md:h-96 object-contain drop-shadow-2xl"
             style={{ filter: mascotFilter }}
           />
         </div>
-        <div className="absolute right-1 sm:right-4 md:right-6 top-1/2 -translate-y-1/2">
+        <div className="absolute right-1 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 z-30">
           <EnergyBar bpm={bpm} energy={energy} stateLevel={stateLevel} />
         </div>
         {stateLevel === 'agitated' && phase === 'focus' && (

@@ -1,14 +1,55 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { logCameraError } from '@/lib/camera-error-logger'
 
 export type CameraCaptureMode = 'rppg' | 'ppg'
+
+const MODE_STORAGE_KEY = 'neuroflow_camera_mode'
+const MAX_RETRIES = 3
+const RETRY_DELAYS = [1000, 2000, 4000]
+
+function getStoredMode(): CameraCaptureMode {
+  try {
+    const stored = sessionStorage.getItem(MODE_STORAGE_KEY)
+    if (stored === 'rppg' || stored === 'ppg') return stored
+  } catch {
+    /* sessionStorage may be unavailable */
+  }
+  return 'rppg'
+}
+
+function storeMode(mode: CameraCaptureMode): void {
+  try {
+    sessionStorage.setItem(MODE_STORAGE_KEY, mode)
+  } catch {
+    /* sessionStorage may be unavailable */
+  }
+}
+
+function getCameraErrorMessage(err: any): string {
+  if (err?.name === 'NotAllowedError' || err?.name === 'SecurityError') {
+    return 'Permissão de câmera negada. Habilite o acesso nas configurações do navegador.'
+  }
+  if (err?.name === 'NotFoundError' || err?.name === 'OverconstrainedError') {
+    return 'Nenhuma câmera compatível encontrada no dispositivo.'
+  }
+  if (err?.name === 'NotReadableError') {
+    return 'Câmera em uso por outro aplicativo. Feche outros apps que usam a câmera.'
+  }
+  return err?.message || 'Erro ao acessar câmera.'
+}
+
+function shouldRetry(err: any): boolean {
+  return err?.name !== 'NotAllowedError' && err?.name !== 'SecurityError'
+}
 
 export function useRppg() {
   const [bpm, setBpm] = useState<number | null>(null)
   const [isConnected, setIsConnected] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [captureMode, setCaptureMode] = useState<CameraCaptureMode>('rppg')
+  const [captureMode, setCaptureModeState] = useState<CameraCaptureMode>(getStoredMode)
   const [flashEnabled, setFlashEnabled] = useState(false)
+  const [autoRetrying, setAutoRetrying] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -16,9 +57,12 @@ export function useRppg() {
   const rafRef = useRef<number | null>(null)
   const signalRef = useRef<{ value: number; time: number }[]>([])
   const lastUpdateRef = useRef(0)
-  const modeRef = useRef<CameraCaptureMode>('rppg')
+  const modeRef = useRef<CameraCaptureMode>(getStoredMode())
   const flashRef = useRef(false)
   const trackRef = useRef<MediaStreamTrack | null>(null)
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isMountedRef = useRef(true)
+  const connectionIdRef = useRef(0)
 
   const isSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia
 
@@ -26,6 +70,10 @@ export function useRppg() {
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current)
       rafRef.current = null
+    }
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current)
+      retryTimeoutRef.current = null
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop())
@@ -39,6 +87,7 @@ export function useRppg() {
     trackRef.current = null
     setIsConnected(false)
     setBpm(null)
+    setAutoRetrying(false)
     signalRef.current = []
   }, [])
 
@@ -117,47 +166,106 @@ export function useRppg() {
   }, [])
 
   const connect = useCallback(async () => {
-    setError(null)
-    if (!isSupported) {
-      setError('Câmera não suportada neste dispositivo.')
-      return
+    retryTimeoutRef.current?.clearTimeout
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current)
+      retryTimeoutRef.current = null
     }
-    setIsConnecting(true)
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: modeRef.current === 'ppg' ? 'environment' : 'user',
-          width: 320,
-          height: 240,
-        },
-        audio: false,
-      })
-      streamRef.current = stream
-      const track = stream.getVideoTracks()[0]
-      trackRef.current = track
-      if (modeRef.current === 'ppg' && flashRef.current) await applyFlash(track, true)
+    const currentId = ++connectionIdRef.current
+    retryCountRef.current = 0
+    setAutoRetrying(false)
 
-      const video = document.createElement('video')
-      video.autoplay = true
-      video.playsInline = true
-      video.muted = true
-      video.srcObject = stream
-      videoRef.current = video
-      await video.play()
+    const mode = modeRef.current
 
-      canvasRef.current = document.createElement('canvas')
-      setIsConnected(true)
-      lastUpdateRef.current = 0
-      signalRef.current = []
-      rafRef.current = requestAnimationFrame(analyzeFrame)
-    } catch (err: any) {
-      if (err.name === 'NotAllowedError') setError('Permissão de câmera negada.')
-      else if (err.name === 'NotFoundError') setError('Nenhuma câmera encontrada.')
-      else setError(err.message || 'Erro ao acessar câmera.')
-    } finally {
-      setIsConnecting(false)
+    const attemptConnect = async (attempt: number): Promise<void> => {
+      if (!isMountedRef.current || connectionIdRef.current !== currentId) return
+
+      if (!isSupported) {
+        const msg = 'Câmera não suportada neste dispositivo.'
+        setError(msg)
+        await logCameraError({ message: msg, status: 'unsupported', mode })
+        return
+      }
+
+      setIsConnecting(true)
+      setError(null)
+      let willRetry = false
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: mode === 'ppg' ? 'environment' : 'user',
+            width: { ideal: 320 },
+            height: { ideal: 240 },
+          },
+          audio: false,
+        })
+
+        if (!isMountedRef.current || connectionIdRef.current !== currentId) {
+          stream.getTracks().forEach((t) => t.stop())
+          return
+        }
+
+        streamRef.current = stream
+        const track = stream.getVideoTracks()[0]
+        trackRef.current = track
+
+        if (mode === 'ppg' && flashRef.current) {
+          await applyFlash(track, true)
+        }
+
+        const video = document.createElement('video')
+        video.autoplay = true
+        video.playsInline = true
+        video.muted = true
+        video.srcObject = stream
+        videoRef.current = video
+        await video.play()
+
+        canvasRef.current = document.createElement('canvas')
+        setIsConnected(true)
+        setAutoRetrying(false)
+        lastUpdateRef.current = 0
+        signalRef.current = []
+        rafRef.current = requestAnimationFrame(analyzeFrame)
+      } catch (err: any) {
+        if (!isMountedRef.current || connectionIdRef.current !== currentId) return
+
+        const msg = getCameraErrorMessage(err)
+
+        if (attempt < MAX_RETRIES && shouldRetry(err)) {
+          willRetry = true
+          setAutoRetrying(true)
+          setError(`Tentando reconectar... (${attempt + 1}/${MAX_RETRIES})`)
+
+          const delay = RETRY_DELAYS[attempt] || 4000
+          retryTimeoutRef.current = setTimeout(() => {
+            if (connectionIdRef.current === currentId) {
+              attemptConnect(attempt + 1)
+            }
+          }, delay)
+        } else {
+          setError(msg)
+          setAutoRetrying(false)
+          await logCameraError({
+            message: msg,
+            status: err?.name || 'error',
+            mode,
+          })
+        }
+      } finally {
+        if (isMountedRef.current && !willRetry) {
+          setIsConnecting(false)
+        }
+      }
     }
+
+    await attemptConnect(0)
   }, [isSupported, analyzeFrame, applyFlash])
+
+  const retry = useCallback(async () => {
+    await connect()
+  }, [connect])
 
   const toggleFlash = useCallback(async () => {
     const next = !flashEnabled
@@ -167,11 +275,22 @@ export function useRppg() {
   }, [flashEnabled, applyFlash])
 
   const changeMode = useCallback((mode: CameraCaptureMode) => {
-    setCaptureMode(mode)
+    setCaptureModeState(mode)
     modeRef.current = mode
+    storeMode(mode)
   }, [])
 
-  useEffect(() => () => disconnect(), [disconnect])
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current)
+        retryTimeoutRef.current = null
+      }
+      disconnect()
+    }
+  }, [disconnect])
 
   return {
     bpm,
@@ -185,5 +304,7 @@ export function useRppg() {
     flashEnabled,
     toggleFlash,
     setCaptureMode: changeMode,
+    retry,
+    autoRetrying,
   }
 }

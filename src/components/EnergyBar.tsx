@@ -30,7 +30,7 @@ export function EnergyBar({ bpm, energy, stateLevel }: EnergyBarProps) {
   return (
     <div className="flex flex-col items-center z-20">
       <span
-        className="text-xs font-medium text-[#00FFFF]/70 mb-2 w-16 text-center leading-tight"
+        className="text-xs font-medium text-[#00FFFF] mb-2 w-16 text-center leading-tight"
         id="energy-bar-label"
       >
         Energia da Calma
@@ -98,7 +98,7 @@ export function EnergyBar({ bpm, energy, stateLevel }: EnergyBarProps) {
           )}
           style={{ animationDuration: `${60 / bpm}s` }}
         />
-        <span className="text-[10px] text-white/50 font-medium">BPM</span>
+        <span className="text-[10px] text-white/70 font-medium">BPM</span>
         <span className="font-medium text-white">{bpm}</span>
         <span
           className={cn(
