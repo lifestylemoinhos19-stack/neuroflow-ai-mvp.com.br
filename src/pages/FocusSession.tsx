@@ -119,6 +119,12 @@ export default function FocusSession() {
     if (prolongedAgitation) setShowBreathing(true)
   }, [prolongedAgitation])
 
+  useEffect(() => {
+    return () => {
+      source.disconnectCamera()
+    }
+  }, [])
+
   if (!bleOnboardingCompleted && !selectedBluetooth && !selectedOptical) {
     return (
       <CaptureModeSelector
@@ -202,7 +208,7 @@ export default function FocusSession() {
         />
       </div>
 
-      <header className="p-4 sm:p-6 pb-2 z-10 flex flex-col items-center text-center">
+      <header className="p-4 sm:p-6 pb-2 z-30 flex flex-col items-center text-center">
         <div className="flex items-center gap-2 mb-2 w-full justify-between">
           <div className="flex items-center">
             <Map className="h-5 w-5 text-[#00FFFF] mr-2" />
@@ -267,8 +273,26 @@ export default function FocusSession() {
         )}
       </header>
 
+      {source.mode === 'camera' && source.connectionTimedOut && !source.isCameraActive && (
+        <div className="mx-4 sm:mx-6 mb-2 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-between gap-3 z-30 animate-fade-in">
+          <div className="flex items-center gap-2 min-w-0">
+            <AlertCircle className="h-5 w-5 text-yellow-400 shrink-0" />
+            <span className="text-sm text-yellow-300 truncate">
+              A câmera está demorando para conectar.
+            </span>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => source.connectCamera()}
+            className="border-yellow-500/30 text-yellow-300 hover:bg-yellow-500/10 shrink-0"
+          >
+            <RefreshCw className="h-4 w-4 mr-1.5" /> Reconnect
+          </Button>
+        </div>
+      )}
       {source.mode === 'camera' && source.error && !source.isCameraActive && (
-        <div className="mx-4 sm:mx-6 mb-2 p-3 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-between gap-3 z-20 animate-fade-in">
+        <div className="mx-4 sm:mx-6 mb-2 p-3 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-between gap-3 z-30 animate-fade-in">
           <div className="flex items-center gap-2 min-w-0">
             <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
             <span className="text-sm text-red-300 truncate">{source.error}</span>
@@ -301,7 +325,7 @@ export default function FocusSession() {
             style={{ filter: mascotFilter }}
           />
         </div>
-        <div className="absolute right-1 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 z-10 sm:z-30">
+        <div className="absolute right-1 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 z-30">
           <EnergyBar bpm={bpm} energy={energy} stateLevel={stateLevel} />
         </div>
         {stateLevel === 'agitated' && phase === 'focus' && (
@@ -311,7 +335,7 @@ export default function FocusSession() {
         )}
       </main>
 
-      <footer className="p-4 sm:p-6 z-10 flex flex-col items-center bg-gradient-to-t from-[#0A192F] to-transparent">
+      <footer className="p-4 sm:p-6 z-30 flex flex-col items-center bg-gradient-to-t from-[#0A192F] to-transparent">
         <div className="text-3xl sm:text-4xl font-medium text-[#00FFFF] mb-2 tabular-nums">
           {formatTime(timeLeft)}
         </div>

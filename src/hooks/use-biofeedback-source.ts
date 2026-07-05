@@ -20,6 +20,7 @@ export interface BiofeedbackSourceState {
   cameraBpm: number | null
   cameraCaptureMode: CameraCaptureMode
   flashEnabled: boolean
+  connectionTimedOut: boolean
   captureMethod: string
   connectCamera: () => Promise<void>
   connectBle: () => Promise<void>
@@ -103,6 +104,7 @@ export function useBiofeedbackSource(): BiofeedbackSourceState {
     cameraBpm: rppg.bpm,
     cameraCaptureMode: rppg.captureMode,
     flashEnabled: rppg.flashEnabled,
+    connectionTimedOut: rppg.connectionTimedOut,
     captureMethod,
     connectCamera,
     connectBle,

@@ -75,7 +75,7 @@ export function OpticalCaptureOnboarding({ initialMode, onComplete, onCancel }: 
     if (intervalRef.current) clearInterval(intervalRef.current)
     stopCamera()
     setMode(m)
-    requestCamera(m)
+    setTimeout(() => requestCamera(m), 500)
   }
 
   const completeCapture = async () => {
@@ -131,14 +131,16 @@ export function OpticalCaptureOnboarding({ initialMode, onComplete, onCancel }: 
     setCaptureState('idle')
     setProgress(0)
     setSecondsLeft(CAPTURE_DURATION)
-    requestCamera(mode)
+    stopCamera()
+    setTimeout(() => requestCamera(mode), 500)
   }
 
   const resetAll = () => {
     if (intervalRef.current) clearInterval(intervalRef.current)
     cancelCapture()
+    stopCamera()
     setMode(initialMode)
-    requestCamera(initialMode)
+    setTimeout(() => requestCamera(initialMode), 500)
   }
 
   const isRppg = mode === 'rppg'

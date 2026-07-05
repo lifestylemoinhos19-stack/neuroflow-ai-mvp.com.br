@@ -50,6 +50,7 @@ export function useRppg() {
   const [captureMode, setCaptureModeState] = useState<CameraCaptureMode>(getStoredMode)
   const [flashEnabled, setFlashEnabled] = useState(false)
   const [autoRetrying, setAutoRetrying] = useState(false)
+  const [connectionTimedOut, setConnectionTimedOut] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -64,10 +65,16 @@ export function useRppg() {
   const isMountedRef = useRef(true)
   const connectionIdRef = useRef(0)
   const retryCountRef = useRef(0)
+  const connectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const isSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia
 
   const disconnect = useCallback(() => {
+    if (connectionTimeoutRef.current) {
+      clearTimeout(connectionTimeoutRef.current)
+      connectionTimeoutRef.current = null
+    }
+    setConnectionTimedOut(false)
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current)
       rafRef.current = null
@@ -180,6 +187,16 @@ export function useRppg() {
     const attemptConnect = async (attempt: number): Promise<void> => {
       if (!isMountedRef.current || connectionIdRef.current !== currentId) return
 
+      if (attempt === 0) {
+        setConnectionTimedOut(false)
+        if (connectionTimeoutRef.current) clearTimeout(connectionTimeoutRef.current)
+        connectionTimeoutRef.current = setTimeout(() => {
+          if (isMountedRef.current && connectionIdRef.current === currentId) {
+            setConnectionTimedOut(true)
+          }
+        }, 5000)
+      }
+
       if (!isSupported) {
         const msg = 'Câmera não suportada neste dispositivo.'
         setError(msg)
@@ -225,6 +242,11 @@ export function useRppg() {
         canvasRef.current = document.createElement('canvas')
         setIsConnected(true)
         setAutoRetrying(false)
+        setConnectionTimedOut(false)
+        if (connectionTimeoutRef.current) {
+          clearTimeout(connectionTimeoutRef.current)
+          connectionTimeoutRef.current = null
+        }
         lastUpdateRef.current = 0
         signalRef.current = []
         rafRef.current = requestAnimationFrame(analyzeFrame)
@@ -247,11 +269,11 @@ export function useRppg() {
         } else {
           setError(msg)
           setAutoRetrying(false)
-          await logCameraError({
-            message: msg,
-            status: err?.name || 'error',
-            mode,
-          })
+          if (connectionTimeoutRef.current) {
+            clearTimeout(connectionTimeoutRef.current)
+            connectionTimeoutRef.current = null
+          }
+          await logCameraError({ message: msg, status: err?.name || 'error', mode })
         }
       } finally {
         if (isMountedRef.current && !willRetry) {
@@ -284,6 +306,10 @@ export function useRppg() {
     isMountedRef.current = true
     return () => {
       isMountedRef.current = false
+      if (connectionTimeoutRef.current) {
+        clearTimeout(connectionTimeoutRef.current)
+        connectionTimeoutRef.current = null
+      }
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current)
         retryTimeoutRef.current = null
@@ -306,5 +332,6 @@ export function useRppg() {
     setCaptureMode: changeMode,
     retry,
     autoRetrying,
+    connectionTimedOut,
   }
 }

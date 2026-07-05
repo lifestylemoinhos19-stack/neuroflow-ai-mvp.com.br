@@ -12,23 +12,27 @@ import {
   CardTitle,
   CardFooter,
 } from '@/components/ui/card'
-import { Brain, Loader2, Lock, UserPlus, LogIn, AlertCircle } from 'lucide-react'
+import { Brain, Loader2, Lock, UserPlus, LogIn, AlertCircle, MailCheck } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 export default function Login() {
-  const [email, setEmail] = useState('lifestylemoinhos19@gmail.com')
-  const [password, setPassword] = useState('Skip@Pass')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [privacyConsent, setPrivacyConsent] = useState(false)
   const [isSignUp, setIsSignUp] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false)
   const { signIn, signUp } = useAuth()
   const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoginError(null)
+    setEmailError(null)
+    setShowEmailConfirmation(false)
 
     if (isSignUp) {
       if (password !== confirmPassword) {
@@ -48,9 +52,19 @@ export default function Login() {
     setIsLoading(true)
     try {
       if (isSignUp) {
-        const { error } = await signUp(email, password, privacyConsent)
+        const { error, needsEmailConfirmation } = await signUp(email, password, privacyConsent)
         if (error) {
-          toast({ variant: 'destructive', title: 'Erro no cadastro', description: error })
+          if (error.toLowerCase().includes('já') || error.toLowerCase().includes('already')) {
+            setEmailError('Este e-mail já está cadastrado.')
+          } else {
+            toast({ variant: 'destructive', title: 'Erro no cadastro', description: error })
+          }
+        } else if (needsEmailConfirmation) {
+          setShowEmailConfirmation(true)
+          toast({
+            title: 'Confirmação necessária',
+            description: 'Check your email for a confirmation link',
+          })
         } else {
           toast({ title: 'Conta criada!', description: 'Faça login para continuar.' })
           setIsSignUp(false)
@@ -60,7 +74,7 @@ export default function Login() {
       } else {
         const { error } = await signIn(email, password)
         if (error) {
-          setLoginError('E-mail ou senha incorretos')
+          setLoginError(error)
           toast({ variant: 'destructive', title: 'Erro no login', description: error })
         } else {
           toast({
@@ -70,7 +84,7 @@ export default function Login() {
         }
       }
     } catch (err: any) {
-      setLoginError('E-mail ou senha incorretos')
+      setLoginError('Erro inesperado. Tente novamente.')
       toast({ variant: 'destructive', title: 'Erro', description: err.message })
     } finally {
       setIsLoading(false)
@@ -96,6 +110,20 @@ export default function Login() {
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
+              {showEmailConfirmation && (
+                <div className="flex items-start gap-3 rounded-lg bg-[#00FFFF]/10 p-4 border border-[#00FFFF]/30 animate-fade-in">
+                  <MailCheck className="h-5 w-5 text-[#00FFFF] shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-[#00FFFF]">
+                      Check your email for a confirmation link
+                    </p>
+                    <p className="text-xs text-white/60 mt-1">
+                      Enviamos um link de confirmação para <strong>{email}</strong>. Clique no link
+                      para ativar sua conta.
+                    </p>
+                  </div>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-white/90">
                   Email
@@ -108,10 +136,17 @@ export default function Login() {
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value)
+                    setEmailError(null)
                     setLoginError(null)
                   }}
-                  className="bg-white/5 border-cyan-400/50 text-white placeholder:text-white/30 focus-visible:border-[#00FFFF]"
+                  className="bg-white/5 border-slate-400 text-white placeholder:text-white/30 focus-visible:border-[#00FFFF] focus-visible:ring-[#00FFFF]/30"
                 />
+                {emailError && (
+                  <div className="flex items-center gap-2 text-red-400 text-sm animate-fade-in">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span>{emailError}</span>
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-white/90">
@@ -126,7 +161,7 @@ export default function Login() {
                     setPassword(e.target.value)
                     setLoginError(null)
                   }}
-                  className="bg-white/5 border-cyan-400/50 text-white placeholder:text-white/30 focus-visible:border-[#00FFFF]"
+                  className="bg-white/5 border-slate-400 text-white placeholder:text-white/30 focus-visible:border-[#00FFFF] focus-visible:ring-[#00FFFF]/30"
                 />
                 {loginError && (
                   <div className="flex items-center gap-2 text-red-400 text-sm animate-fade-in">
@@ -146,7 +181,7 @@ export default function Login() {
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="bg-white/5 border-cyan-400/50 text-white placeholder:text-white/30 focus-visible:border-[#00FFFF]"
+                    className="bg-white/5 border-slate-400 text-white placeholder:text-white/30 focus-visible:border-[#00FFFF] focus-visible:ring-[#00FFFF]/30"
                   />
                 </div>
               )}
@@ -198,6 +233,8 @@ export default function Login() {
                       onClick={() => {
                         setIsSignUp(false)
                         setLoginError(null)
+                        setEmailError(null)
+                        setShowEmailConfirmation(false)
                       }}
                       className="text-[#00FFFF] hover:underline font-medium inline-flex items-center"
                     >
@@ -213,6 +250,7 @@ export default function Login() {
                       onClick={() => {
                         setIsSignUp(true)
                         setLoginError(null)
+                        setEmailError(null)
                       }}
                       className="text-[#00FFFF] hover:underline font-medium inline-flex items-center"
                     >

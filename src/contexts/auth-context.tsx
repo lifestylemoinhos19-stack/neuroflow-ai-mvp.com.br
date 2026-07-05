@@ -27,7 +27,7 @@ interface AuthContextType {
     email: string,
     password: string,
     privacyConsent: boolean,
-  ) => Promise<{ error: string | null }>
+  ) => Promise<{ error: string | null; needsEmailConfirmation: boolean }>
   verifyMfa: (code: string) => Promise<void>
   logout: () => Promise<void>
   completeOnboarding: () => Promise<void>
@@ -121,7 +121,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) return { error: error.message }
+    if (error) {
+      const msg = error.message.toLowerCase()
+      if (msg.includes('invalid') || msg.includes('credentials')) {
+        return { error: 'E-mail ou senha incorretos.' }
+      }
+      if (msg.includes('not confirmed') || msg.includes('email not confirmed')) {
+        return { error: 'E-mail não confirmado. Verifique sua caixa de entrada.' }
+      }
+      if (msg.includes('rate') || msg.includes('too many')) {
+        return { error: 'Muitas tentativas. Aguarde alguns minutos.' }
+      }
+      return { error: error.message }
+    }
     setIsMfaVerified(false)
     localStorage.removeItem('neuroflow_mfa_verified')
     return { error: null }
@@ -136,7 +148,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         emailRedirectTo: `${window.location.origin}/`,
       },
     })
-    if (error) return { error: error.message }
+    if (error) {
+      const msg = error.message.toLowerCase()
+      if (msg.includes('already') || msg.includes('registered')) {
+        return { error: 'Este e-mail já está cadastrado.', needsEmailConfirmation: false }
+      }
+      if (msg.includes('weak') || msg.includes('password')) {
+        return {
+          error: 'A senha é muito fraca. Use pelo menos 8 caracteres.',
+          needsEmailConfirmation: false,
+        }
+      }
+      return { error: error.message, needsEmailConfirmation: false }
+    }
 
     if (data.user && data.session) {
       await supabase.from('profiles').upsert(
@@ -149,9 +173,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
         { onConflict: 'id' },
       )
+      return { error: null, needsEmailConfirmation: false }
     }
 
-    return { error: null }
+    return { error: null, needsEmailConfirmation: true }
   }
 
   const verifyMfa = async (code: string) => {
