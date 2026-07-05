@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useFocusSession } from '@/hooks/use-focus-session'
 import { useBiofeedbackSource } from '@/hooks/use-biofeedback-source'
 import type { BiofeedbackSourceState } from '@/hooks/use-biofeedback-source'
@@ -14,6 +15,7 @@ import { BreathingOverlay } from '@/components/BreathingOverlay'
 import { SensorSettings } from '@/components/SensorSettings'
 import { BleOnboardingTutorial } from '@/components/BleOnboardingTutorial'
 import { CaptureModeSelector } from '@/components/CaptureModeSelector'
+import { OpticalCaptureOnboarding } from '@/components/OpticalCaptureOnboarding'
 import { FaceFrameOverlay } from '@/components/FaceFrameOverlay'
 import { FingerPlacementGuide } from '@/components/FingerPlacementGuide'
 import type { BleSensorState } from '@/hooks/use-ble-sensor'
@@ -41,9 +43,11 @@ function mapToSensorState(source: BiofeedbackSourceState): BleSensorState {
 }
 
 export default function FocusSession() {
+  const navigate = useNavigate()
   const { bleOnboardingCompleted, completeBleOnboarding, pairedSensorId } = useAuth()
   const [showBreathing, setShowBreathing] = useState(false)
   const [selectedBluetooth, setSelectedBluetooth] = useState(false)
+  const [selectedOptical, setSelectedOptical] = useState<'rppg' | 'ppg' | null>(null)
   const source = useBiofeedbackSource()
 
   const captureMethod = pairedSensorId?.startsWith('camera')
@@ -109,16 +113,30 @@ export default function FocusSession() {
     if (prolongedAgitation) setShowBreathing(true)
   }, [prolongedAgitation])
 
-  if (!bleOnboardingCompleted && !selectedBluetooth) {
+  if (!bleOnboardingCompleted && !selectedBluetooth && !selectedOptical) {
     return (
       <CaptureModeSelector
         onSelect={async (mode) => {
           if (mode === 'bluetooth') {
             setSelectedBluetooth(true)
-          } else {
-            await completeBleOnboarding(mode)
+          } else if (mode === 'camera_rppg') {
+            setSelectedOptical('rppg')
+          } else if (mode === 'camera_ppg') {
+            setSelectedOptical('ppg')
           }
         }}
+      />
+    )
+  }
+
+  if (!bleOnboardingCompleted && selectedOptical) {
+    return (
+      <OpticalCaptureOnboarding
+        initialMode={selectedOptical}
+        onComplete={async (m) => {
+          await completeBleOnboarding(`camera_${m}`)
+        }}
+        onCancel={() => setSelectedOptical(null)}
       />
     )
   }

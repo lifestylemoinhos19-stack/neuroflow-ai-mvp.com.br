@@ -25,6 +25,7 @@ import TermsOfUse from '@/pages/TermsOfUse'
 import NotFound from '@/pages/NotFound'
 import FocusSession from '@/pages/FocusSession'
 import SessionSummary from '@/pages/SessionSummary'
+import OpticalOnboarding from '@/pages/OpticalOnboarding'
 
 const App = () => (
   <BrowserRouter>
@@ -62,6 +63,14 @@ const App = () => (
             }
           />
 
+          <Route
+            path="/optical-onboarding"
+            element={
+              <AuthGuard>
+                <OpticalOnboarding />
+              </AuthGuard>
+            }
+          />
           <Route
             path="/focus-session"
             element={

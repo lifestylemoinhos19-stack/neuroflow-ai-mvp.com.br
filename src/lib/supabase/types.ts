@@ -432,6 +432,7 @@ export type Database = {
       }
       focus_sessions: {
         Row: {
+          capture_method: string | null
           completed_at: string | null
           crystals_earned: number | null
           id: string
@@ -443,6 +444,7 @@ export type Database = {
           vrc: number | null
         }
         Insert: {
+          capture_method?: string | null
           completed_at?: string | null
           crystals_earned?: number | null
           id?: string
@@ -454,6 +456,7 @@ export type Database = {
           vrc?: number | null
         }
         Update: {
+          capture_method?: string | null
           completed_at?: string | null
           crystals_earned?: number | null
           id?: string
