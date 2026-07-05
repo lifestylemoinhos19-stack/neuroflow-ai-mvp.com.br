@@ -119,16 +119,35 @@ export default function Layout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 relative">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 relative bg-white">
           <div className="animate-fade-in-up max-w-6xl mx-auto pb-20 md:pb-0">
             <Outlet />
-            <footer className="mt-12 pt-6 border-t border-slate-100 text-center">
-              <Link
-                to="/ethics"
-                className="text-sm text-slate-400 hover:text-primary transition-colors"
-              >
-                Código de Ética do NeuroFlow AI
-              </Link>
+            <footer className="mt-12 pt-6 border-t border-slate-100">
+              <div className="flex flex-wrap justify-center gap-4 mb-2">
+                <Link
+                  to="/security"
+                  className="text-sm text-slate-400 hover:text-primary transition-colors"
+                >
+                  Segurança
+                </Link>
+                <span className="text-slate-300">•</span>
+                <Link
+                  to="/about"
+                  className="text-sm text-slate-400 hover:text-primary transition-colors"
+                >
+                  Institucional
+                </Link>
+                <span className="text-slate-300">•</span>
+                <Link
+                  to="/terms"
+                  className="text-sm text-slate-400 hover:text-primary transition-colors"
+                >
+                  Termos de Uso
+                </Link>
+              </div>
+              <p className="text-xs text-slate-400 text-center">
+                NeuroFlow AI — Em conformidade com a LGPD (Lei nº 13.709/2018)
+              </p>
             </footer>
           </div>
         </main>

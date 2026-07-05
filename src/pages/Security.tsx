@@ -1,59 +1,37 @@
 import { useState, useEffect } from 'react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
+import { PublicPageShell } from '@/components/PublicPageShell'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  Shield,
-  Key,
-  Smartphone,
-  Laptop,
-  Download,
-  Lock,
-  FileText,
-  CheckCircle2,
-} from 'lucide-react'
+import { Shield, Lock, Key, HeartPulse, Download, AlertTriangle, Laptop } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 
-interface ProfileData {
-  privacy_consent: boolean | null
-  role: string | null
-  full_name: string | null
-}
-
 export default function Security() {
-  const [profile, setProfile] = useState<ProfileData | null>(null)
+  const [isAuthed, setIsAuthed] = useState(false)
+  const [privacyConsent, setPrivacyConsent] = useState(false)
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const checkAuth = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser()
-      if (!user) {
-        setLoading(false)
-        return
+      if (user) {
+        setIsAuthed(true)
+        const { data } = await supabase
+          .from('profiles')
+          .select('privacy_consent')
+          .eq('id', user.id)
+          .single()
+        if (data) setPrivacyConsent(data.privacy_consent ?? false)
       }
-      const { data } = await supabase
-        .from('profiles')
-        .select('privacy_consent, role, full_name')
-        .eq('id', user.id)
-        .single()
-      if (data) setProfile(data as ProfileData)
       setLoading(false)
     }
-    fetchProfile()
+    checkAuth()
   }, [])
 
   const toggleConsent = async (consent: boolean) => {
@@ -61,186 +39,197 @@ export default function Security() {
       data: { user },
     } = await supabase.auth.getUser()
     if (!user) return
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('profiles')
       .update({
         privacy_consent: consent,
         privacy_consent_accepted_at: consent ? new Date().toISOString() : null,
       })
       .eq('id', user.id)
-      .select('privacy_consent, role, full_name')
-      .single()
     if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro',
-        description: 'Não foi possível atualizar o consentimento.',
-      })
+      toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível atualizar.' })
       return
     }
-    setProfile(data as ProfileData)
-    toast({
-      title: consent ? 'Consentimento ativado' : 'Consentimento revogado',
-      description: consent
-        ? 'Seus dados serão processados conforme a LGPD.'
-        : 'Seus dados não serão processados para fins analíticos.',
-    })
+    setPrivacyConsent(consent)
+    toast({ title: consent ? 'Consentimento ativado' : 'Consentimento revogado' })
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-display font-bold text-slate-900">
-          Segurança & Privacidade
+    <PublicPageShell>
+      <div className="mb-10">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">
+          Segurança &amp; Privacidade
         </h1>
-        <p className="text-slate-500">Gerencie a proteção da sua conta e dados de saúde.</p>
+        <p className="text-base text-white/70 leading-relaxed max-w-2xl">
+          Gerencie a proteção da sua conta e dados de saúde. O NeuroFlow AI segue os mais rigorosos
+          padrões de segurança e conformidade.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="shadow-subtle border-emerald-100 bg-emerald-50/30">
-          <CardHeader>
-            <CardTitle className="flex items-center text-emerald-900">
-              <Shield className="h-5 w-5 mr-2 text-emerald-600" /> Autenticação 2F (MFA)
-            </CardTitle>
-            <CardDescription>Exigir código extra no login.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label className="text-emerald-900 font-bold">MFA via App</Label>
-                <p className="text-sm text-emerald-700/80">Atualmente ativo e obrigatório.</p>
+      <Card className="mb-6 bg-white/5 border-[#00FFFF]/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-xl text-white">
+            <Lock className="h-5 w-5 text-[#00FFFF]" /> Proteção de Dados
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-base text-white/70 leading-relaxed">
+          <p>
+            Seus dados são protegidos com criptografia AES-256 em repouso e TLS 1.3 em trânsito.
+          </p>
+          <ul className="list-disc list-inside space-y-2 ml-2">
+            <li>Dados PII (nome, e-mail, documento) são criptografados no banco de dados</li>
+            <li>Respostas de anamnese utilizam criptografia específica via funções PostgreSQL</li>
+            <li>Acesso controlado por RLS (Row-Level Security) do Supabase</li>
+            <li>Conformidade total com a LGPD (Lei nº 13.709/2018)</li>
+          </ul>
+          <Badge variant="outline" className="text-[#3DFFB0] border-[#3DFFB0]/30 bg-[#3DFFB0]/10">
+            Criptografia Ativa
+          </Badge>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6 bg-white/5 border-[#00FFFF]/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-xl text-white">
+            <Shield className="h-5 w-5 text-[#00FFFF]" /> Política de Privacidade
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-base text-white/70 leading-relaxed">
+          <p>Você tem controle total sobre como seus dados de saúde são processados.</p>
+          <ul className="list-disc list-inside space-y-2 ml-2">
+            <li>Consentimento explícito é necessário para processamento pela IA</li>
+            <li>Você pode revogar o consentimento a qualquer momento</li>
+            <li>Solicite exportação ou exclusão dos seus dados quando desejar</li>
+            <li>Nenhum dado é compartilhado com terceiros sem consentimento</li>
+          </ul>
+          {isAuthed ? (
+            <div className="flex items-center justify-between p-4 rounded-lg bg-[#0A192F] border border-[#00FFFF]/10">
+              <div>
+                <p className="font-medium text-white">Consentimento de Tratamento de Dados</p>
+                <p className="text-sm text-white/50">
+                  Permite processamento dos seus dados para análise pela IA.
+                </p>
               </div>
-              <Switch checked={true} disabled />
+              <Switch checked={privacyConsent} disabled={loading} onCheckedChange={toggleConsent} />
             </div>
-            <div className="pt-4 border-t border-emerald-100">
+          ) : (
+            <div className="p-4 rounded-lg bg-[#0A192F] border border-[#00FFFF]/10">
+              <p className="text-sm text-white/50">
+                <Link to="/login" className="text-[#00FFFF] hover:underline">
+                  Faça login
+                </Link>{' '}
+                para gerenciar seu consentimento.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6 bg-white/5 border-[#00FFFF]/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-xl text-white">
+            <HeartPulse className="h-5 w-5 text-[#00FFFF]" /> Segurança do Biofeedback
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-base text-white/70 leading-relaxed">
+          <p>
+            O sistema de biofeedback foi projetado com orientação clínica para máxima segurança.
+          </p>
+          <ul className="list-disc list-inside space-y-2 ml-2">
+            <li>Sensores não invasivos: câmera (rPPG) ou sensor Bluetooth de dedo</li>
+            <li>Não há estimulação elétrica ou intervenção física no usuário</li>
+            <li>Dados de frequência cardíaca processados localmente quando possível</li>
+            <li>Sessões são limitadas em duração para evitar fadiga</li>
+            <li>Sistema não substitui avaliação médica presencial</li>
+          </ul>
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-[#FF5C5C]/5 border border-[#FF5C5C]/20">
+            <AlertTriangle className="h-5 w-5 text-[#FF5C5C] shrink-0 mt-0.5" />
+            <p className="text-sm text-white/60">
+              Este sistema é uma ferramenta de apoio e NÃO substitui a avaliação médica para
+              diagnóstico.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {isAuthed && (
+        <>
+          <Card className="mb-6 bg-white/5 border-[#00FFFF]/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-xl text-white">
+                <Key className="h-5 w-5 text-[#00FFFF]" /> Autenticação 2F (MFA)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-base text-white/70 leading-relaxed">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-white">MFA via App</p>
+                  <p className="text-sm text-white/50">Atualmente ativo e obrigatório.</p>
+                </div>
+                <Badge
+                  variant="outline"
+                  className="text-[#3DFFB0] border-[#3DFFB0]/30 bg-[#3DFFB0]/10"
+                >
+                  Ativo
+                </Badge>
+              </div>
               <Button
                 variant="outline"
-                className="w-full text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                className="w-full border-[#00FFFF]/20 text-[#00FFFF] hover:bg-[#00FFFF]/5"
               >
-                <Key className="h-4 w-4 mr-2" /> Gerenciar Chaves
+                <Download className="h-4 w-4 mr-2" /> Baixar Códigos de Recuperação
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="shadow-subtle border-slate-100">
-          <CardHeader>
-            <CardTitle>Códigos de Recuperação</CardTitle>
-            <CardDescription>Use caso perca acesso ao seu app MFA.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-slate-500 mb-4">
-              Você tem 8 códigos não utilizados. Guarde-os em um local seguro.
-            </p>
-            <Button variant="secondary" className="w-full">
-              <Download className="h-4 w-4 mr-2" /> Baixar Códigos
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="mb-6 bg-white/5 border-[#00FFFF]/10">
+            <CardHeader>
+              <CardTitle className="text-xl text-white">Sessões Ativas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 rounded-lg bg-[#0A192F] border border-[#00FFFF]/10">
+                <div className="flex items-center gap-3">
+                  <Laptop className="h-6 w-6 text-white/40" />
+                  <div>
+                    <p className="font-medium text-white">Navegador Web</p>
+                    <p className="text-xs text-white/50">Sessão atual</p>
+                  </div>
+                </div>
+                <Badge
+                  variant="outline"
+                  className="text-[#3DFFB0] border-[#3DFFB0]/30 bg-[#3DFFB0]/10"
+                >
+                  Ativo
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
 
-      <Card className="shadow-subtle border-indigo-100 bg-indigo-50/20">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Lock className="h-5 w-5 mr-2 text-indigo-600" /> Privacidade & LGPD
-          </CardTitle>
-          <CardDescription>Gerencie seu consentimento de tratamento de dados.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-lg bg-white border border-slate-100">
-            <div className="flex items-start space-x-3">
-              <FileText className="h-5 w-5 text-indigo-500 mt-0.5" />
-              <div>
-                <p className="font-medium text-slate-900">Consentimento de Tratamento de Dados</p>
-                <p className="text-sm text-slate-500">
-                  Permite o processamento dos seus dados de saúde para análise pela IA.
-                </p>
-              </div>
-            </div>
-            <Switch
-              checked={profile?.privacy_consent ?? false}
-              disabled={loading}
-              onCheckedChange={toggleConsent}
-            />
-          </div>
-          <div className="flex items-center justify-between p-4 rounded-lg bg-white border border-slate-100">
-            <div className="flex items-start space-x-3">
-              <CheckCircle2 className="h-5 w-5 text-emerald-500 mt-0.5" />
-              <div>
-                <p className="font-medium text-slate-900">Criptografia AES-256</p>
-                <p className="text-sm text-slate-500">
-                  Seus dados PII e respostas de anamnese são criptografados em repouso.
-                </p>
-              </div>
-            </div>
-            <Badge variant="outline" className="text-emerald-600 bg-emerald-50 border-emerald-200">
-              Ativo
-            </Badge>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <Button variant="outline" className="flex-1">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              variant="outline"
+              className="flex-1 border-[#00FFFF]/20 text-white hover:bg-white/5"
+            >
               <Download className="h-4 w-4 mr-2" /> Exportar Meus Dados
             </Button>
             <Button
               variant="outline"
-              className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
+              className="flex-1 border-[#FF5C5C]/20 text-[#FF5C5C] hover:bg-[#FF5C5C]/5"
             >
               Solicitar Exclusão
             </Button>
           </div>
-        </CardContent>
-        <CardFooter className="text-xs text-slate-400 border-t border-slate-100 pt-4 flex flex-col gap-2 items-start">
-          <div className="flex gap-3">
-            <Link to="/terms" className="text-primary hover:underline">
-              Termos de Uso
-            </Link>
-            <span>•</span>
-            <Link to="/ethics" className="text-primary hover:underline">
-              Código de Ética
-            </Link>
-          </div>
-          <span>
-            Em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).
-          </span>
-        </CardFooter>
-      </Card>
+        </>
+      )}
 
-      <Card className="shadow-subtle border-slate-100">
-        <CardHeader>
-          <CardTitle>Sessões Ativas</CardTitle>
-          <CardDescription>Dispositivos atualmente conectados à sua conta.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-lg bg-slate-50 border border-slate-100">
-            <div className="flex items-center">
-              <Laptop className="h-8 w-8 text-slate-400 mr-4" />
-              <div>
-                <p className="font-medium text-slate-900">MacBook Pro - Safari</p>
-                <p className="text-xs text-slate-500">São Paulo, BR • Sessão atual</p>
-              </div>
-            </div>
-            <Badge variant="outline" className="text-emerald-600 bg-emerald-50 border-emerald-200">
-              Ativo
-            </Badge>
-          </div>
-          <div className="flex items-center justify-between p-4 rounded-lg border border-slate-100">
-            <div className="flex items-center">
-              <Smartphone className="h-8 w-8 text-slate-400 mr-4" />
-              <div>
-                <p className="font-medium text-slate-900">iPhone 14 - App Nativo</p>
-                <p className="text-xs text-slate-500">São Paulo, BR • Há 2 dias</p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-            >
-              Revogar
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+      <div className="mt-10 pt-6 border-t border-[#00FFFF]/10 flex flex-wrap gap-4 text-sm">
+        <Link to="/terms" className="text-white/50 hover:text-[#00FFFF] transition-colors">
+          Termos de Uso
+        </Link>
+        <Link to="/about" className="text-white/50 hover:text-[#00FFFF] transition-colors">
+          Institucional
+        </Link>
+      </div>
+    </PublicPageShell>
   )
 }

@@ -195,4 +195,23 @@
   .animate-spotlight {
     animation: spotlight 2s ease 0.75s 1 forwards;
   }
+
+  .text-readable-body {
+    font-size: 1rem;
+    line-height: 1.7;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+  }
+
+  .text-readable-header {
+    font-size: 1.5rem;
+    line-height: 1.3;
+    font-weight: 700;
+  }
+
+  .text-readable-section {
+    font-size: 1.25rem;
+    line-height: 1.4;
+    font-weight: 600;
+  }
 }

@@ -44,6 +44,9 @@ const App = () => (
             }
           />
           <Route path="/terms" element={<TermsOfUse />} />
+          <Route path="/security" element={<Security />} />
+          <Route path="/ethics" element={<Ethics />} />
+          <Route path="/about" element={<Ethics />} />
           <Route
             path="/mfa"
             element={
@@ -118,9 +121,6 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/insights" element={<Insights />} />
             <Route path="/logs" element={<HealthLogs />} />
-            <Route path="/ethics" element={<Ethics />} />
-            <Route path="/about" element={<Ethics />} />
-            <Route path="/security" element={<Security />} />
             <Route path="/neuro-validation" element={<NeuroValidationPage />} />
             <Route path="/stress-test" element={<StressTestDashboard />} />
             <Route
