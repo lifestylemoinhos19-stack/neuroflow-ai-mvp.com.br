@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -79,7 +79,7 @@ const App = () => (
             path="/focus-session"
             element={
               <AuthGuard>
-                <FocusSession />
+                <MainDeployment />
               </AuthGuard>
             }
           />
@@ -117,6 +117,7 @@ const App = () => (
           />
 
           {/* Protected Routes (require Auth + MFA + Onboarding) */}
+          <Route path="/" element={<Navigate to="/focus-session" replace />} />
           <Route
             element={
               <AuthGuard>
@@ -124,7 +125,6 @@ const App = () => (
               </AuthGuard>
             }
           >
-            <Route path="/" element={<Index />} />
             <Route path="/anamnesis" element={<Anamnesis />} />
             <Route path="/scales" element={<Scales />} />
             <Route path="/dashboard" element={<Dashboard />} />
@@ -150,7 +150,7 @@ const App = () => (
             />
           </Route>
 
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<Navigate to="/focus-session" replace />} />
         </Routes>
       </AuthProvider>
     </TooltipProvider>

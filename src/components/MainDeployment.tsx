@@ -5,6 +5,8 @@ import { GameEngine } from '@/components/GameEngine'
 import type { GameController } from '@/lib/game-controller'
 import { useAuth } from '@/contexts/auth-context'
 import { Rocket, BarChart3, RotateCcw } from 'lucide-react'
+import { FieldTestBatchPanel } from '@/components/FieldTestBatchPanel'
+import { FeedbackMonitorPanel } from '@/components/FeedbackMonitorPanel'
 
 type DeploymentState = 'idle' | 'onboarding' | 'focus' | 'ended'
 
@@ -83,33 +85,43 @@ export function MainDeployment({ sessionId, userId, autoStart = false }: MainDep
   if (deployState === 'idle') {
     return (
       <div className="min-h-screen bg-[#0A192F] text-[#E6F1FF] flex items-center justify-center p-6">
-        <div className="max-w-md w-full text-center">
-          <div
-            className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center"
-            style={{
-              backgroundColor: 'rgba(0, 255, 255, 0.1)',
-              border: '2px solid #00FFFF',
-              boxShadow: '0 0 30px rgba(0, 255, 255, 0.33)',
-            }}
-          >
-            <Rocket className="h-10 w-10 text-[#00FFFF]" />
+        <div className="max-w-4xl w-full">
+          <div className="text-center">
+            <div
+              className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center"
+              style={{
+                backgroundColor: 'rgba(0, 255, 255, 0.1)',
+                border: '2px solid #00FFFF',
+                boxShadow: '0 0 30px rgba(0, 255, 255, 0.33)',
+              }}
+            >
+              <Rocket className="h-10 w-10 text-[#00FFFF]" />
+            </div>
+            <h1 className="text-2xl font-bold text-[#E6F1FF] mb-2">
+              NeuroFlow AI - Sessao de Foco
+            </h1>
+            <p className="text-sm text-[#00FFFF]/70 mb-8">
+              Pronto para testes de campo e calibracao de dispositivos
+            </p>
+            <Button
+              onClick={handleStart}
+              className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/90 rounded-full px-8 py-3 text-base font-semibold"
+              style={{ boxShadow: '0 0 20px rgba(0, 255, 255, 0.33)' }}
+            >
+              <Rocket className="h-5 w-5 mr-2" />
+              Iniciar Deploy
+            </Button>
+            {effectiveUserId && (
+              <p className="text-xs text-white/40 mt-4">User: {effectiveUserId.slice(0, 8)}...</p>
+            )}
+            {sessionId && (
+              <p className="text-xs text-white/40 mt-1">Session: {sessionId.slice(0, 8)}...</p>
+            )}
           </div>
-          <h1 className="text-2xl font-bold text-[#E6F1FF] mb-2">NeuroFlow AI</h1>
-          <p className="text-sm text-[#00FFFF]/70 mb-8">Main Deployment Controller</p>
-          <Button
-            onClick={handleStart}
-            className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/90 rounded-full px-8 py-3 text-base font-semibold"
-            style={{ boxShadow: '0 0 20px rgba(0, 255, 255, 0.33)' }}
-          >
-            <Rocket className="h-5 w-5 mr-2" />
-            Iniciar Deploy
-          </Button>
-          {effectiveUserId && (
-            <p className="text-xs text-white/40 mt-4">User: {effectiveUserId.slice(0, 8)}...</p>
-          )}
-          {sessionId && (
-            <p className="text-xs text-white/40 mt-1">Session: {sessionId.slice(0, 8)}...</p>
-          )}
+          <div className="mt-8 space-y-6">
+            <FieldTestBatchPanel userId={effectiveUserId || undefined} />
+            <FeedbackMonitorPanel />
+          </div>
         </div>
       </div>
     )

@@ -156,6 +156,59 @@ export type Database = {
           },
         ]
       }
+      calibration_logs: {
+        Row: {
+          created_at: string
+          device_id: string | null
+          device_model: string | null
+          duration_ms: number | null
+          id: string
+          mae: number | null
+          metadata: Json | null
+          platform: string | null
+          rmse: number | null
+          samples: number | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_id?: string | null
+          device_model?: string | null
+          duration_ms?: number | null
+          id?: string
+          mae?: number | null
+          metadata?: Json | null
+          platform?: string | null
+          rmse?: number | null
+          samples?: number | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_id?: string | null
+          device_model?: string | null
+          duration_ms?: number | null
+          id?: string
+          mae?: number | null
+          metadata?: Json | null
+          platform?: string | null
+          rmse?: number | null
+          samples?: number | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'calibration_logs_session_id_fkey'
+            columns: ['session_id']
+            isOneToOne: false
+            referencedRelation: 'focus_sessions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       checkout_sessions: {
         Row: {
           channel: string | null
