@@ -28,7 +28,7 @@ export function EnergyBar({ bpm, energy, stateLevel }: EnergyBarProps) {
   const activePattern = stateLevel === 'calm' ? waveId : stateLevel === 'agitated' ? geoId : dotId
 
   return (
-    <div className="flex flex-col items-center z-20">
+    <div className="flex flex-col items-center z-10 sm:z-20">
       <span
         className="text-xs font-medium text-[#00FFFF] mb-2 w-16 text-center leading-tight"
         id="energy-bar-label"

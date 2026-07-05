@@ -44,7 +44,11 @@ export function OpticalCaptureOnboarding({ initialMode, onComplete, onCancel }: 
     setSecondsLeft(CAPTURE_DURATION)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: m === 'rppg' ? 'user' : 'environment', width: 320, height: 240 },
+        video: {
+          facingMode: m === 'rppg' ? 'user' : 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
         audio: false,
       })
       streamRef.current = stream

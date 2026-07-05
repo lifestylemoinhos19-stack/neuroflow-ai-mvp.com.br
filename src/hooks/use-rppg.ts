@@ -195,8 +195,8 @@ export function useRppg() {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: mode === 'ppg' ? 'environment' : 'user',
-            width: { ideal: 320 },
-            height: { ideal: 240 },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
           },
           audio: false,
         })

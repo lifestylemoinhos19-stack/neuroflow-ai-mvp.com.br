@@ -91,7 +91,10 @@ export default function FocusSession() {
       !cameraInitRef.current
     ) {
       cameraInitRef.current = true
-      source.connectCamera()
+      const cameraTimer = setTimeout(() => {
+        source.connectCamera()
+      }, 500)
+      return () => clearTimeout(cameraTimer)
     } else if (
       pairedSensorId &&
       !pairedSensorId.startsWith('camera') &&
@@ -298,7 +301,7 @@ export default function FocusSession() {
             style={{ filter: mascotFilter }}
           />
         </div>
-        <div className="absolute right-1 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 z-30">
+        <div className="absolute right-1 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 z-10 sm:z-30">
           <EnergyBar bpm={bpm} energy={energy} stateLevel={stateLevel} />
         </div>
         {stateLevel === 'agitated' && phase === 'focus' && (

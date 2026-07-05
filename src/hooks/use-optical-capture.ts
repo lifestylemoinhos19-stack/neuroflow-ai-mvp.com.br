@@ -297,6 +297,11 @@ export function useOpticalCapture(initialMode: CaptureMode = 'rppg') {
         cancelAnimationFrame(rafRef.current)
         rafRef.current = null
       }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop())
+        streamRef.current = null
+      }
+      if (videoRef.current) videoRef.current.srcObject = null
     }
   }, [phase])
 
