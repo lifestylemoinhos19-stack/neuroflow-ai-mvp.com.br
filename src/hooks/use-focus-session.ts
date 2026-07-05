@@ -119,6 +119,14 @@ export function useFocusSession() {
             crystalsRef.current += 1
             setCrystals(crystalsRef.current)
             triggerParticles()
+            supabase
+              .from('focus_sessions')
+              .update({
+                crystals_earned: crystalsRef.current,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', sessionIdRef.current)
+              .then(() => {})
           }
         }
       } else {
@@ -242,6 +250,14 @@ export function useFocusSession() {
           masterRef.current += 1
           setMasterCrystals(masterRef.current)
           triggerParticles()
+          supabase
+            .from('focus_sessions')
+            .update({
+              master_crystals: masterRef.current,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', sessionIdRef.current)
+            .then(() => {})
         }
         toast({
           title: 'Bloco de Foco Concluído!',
