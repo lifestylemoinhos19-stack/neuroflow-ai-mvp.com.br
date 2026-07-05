@@ -1,49 +1,45 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useFocusSession } from '@/hooks/use-focus-session'
-import { useHeartRate } from '@/hooks/use-heart-rate'
+import { useBiofeedbackSource } from '@/hooks/use-biofeedback-source'
+import type { BiofeedbackSourceState } from '@/hooks/use-biofeedback-source'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
-import {
-  Heart,
-  Settings,
-  X,
-  Pause,
-  Play,
-  Wind,
-  Diamond,
-  Map,
-  Bluetooth,
-  BluetoothConnected,
-  Loader2,
-  Waves,
-  Zap,
-} from 'lucide-react'
+import { Heart, Settings, X, Pause, Play, Wind, Diamond, Map, Waves, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { CrystalParticles } from '@/components/CrystalParticles'
 import { ConnectionStatusTooltip } from '@/components/ConnectionStatusTooltip'
-import type { BleSensorState } from '@/hooks/use-ble-sensor'
+import { BreathingOverlay } from '@/components/BreathingOverlay'
+import { SensorSettings } from '@/components/SensorSettings'
 import { BleOnboardingTutorial } from '@/components/BleOnboardingTutorial'
+import type { BleSensorState } from '@/hooks/use-ble-sensor'
 
 const formatTime = (s: number) =>
   `${Math.floor(s / 60)
     .toString()
     .padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`
 
-function mapToSensorState(
-  connectionState: any,
-  isConnecting: boolean,
-  error: string | null,
-): BleSensorState {
-  if (connectionState === 'connected') return 'connected'
-  if (isConnecting) return 'connecting'
-  if (connectionState === 'searching') return 'scanning'
-  if (error) return 'error'
+function mapToSensorState(source: BiofeedbackSourceState): BleSensorState {
+  if (source.mode === 'bluetooth') {
+    if (source.bleConnectionState === 'connected') return 'connected'
+    if (source.bleConnecting) return 'connecting'
+    if (source.bleConnectionState === 'searching') return 'scanning'
+    if (source.bleError) return 'error'
+    return 'idle'
+  }
+  if (source.mode === 'camera') {
+    if (source.isCameraActive) return 'connected'
+    if (source.cameraConnecting) return 'connecting'
+    if (source.error) return 'error'
+    return 'idle'
+  }
   return 'idle'
 }
 
 export default function FocusSession() {
   const { bleOnboardingCompleted, completeBleOnboarding } = useAuth()
+  const [showBreathing, setShowBreathing] = useState(false)
+  const source = useBiofeedbackSource()
 
   const {
     timeLeft,
@@ -56,48 +52,40 @@ export default function FocusSession() {
     showParticles,
     mockSensor,
     stateLevel,
+    prolongedAgitation,
     setMockSensor,
     setExternalBpm,
     toggleActive,
     handleCancel,
   } = useFocusSession()
 
-  const {
-    bpm: bleBpm,
-    connectionState,
-    isConnecting,
-    isSupported: bleSupported,
-    connect: bleConnect,
-    disconnect: bleDisconnect,
-    autoReconnect,
-    error: bleError,
-  } = useHeartRate()
+  useEffect(() => {
+    source.autoReconnectBle()
+  }, [source.autoReconnectBle])
 
   useEffect(() => {
-    autoReconnect()
-  }, [autoReconnect])
-
-  useEffect(() => {
-    if (bleBpm !== null) {
-      setExternalBpm(bleBpm)
+    if (source.bpm !== null) {
+      setExternalBpm(source.bpm)
       if (mockSensor) setMockSensor(false)
     }
-  }, [bleBpm, mockSensor, setExternalBpm, setMockSensor])
+  }, [source.bpm, mockSensor, setExternalBpm, setMockSensor])
 
   useEffect(() => {
-    if (connectionState === 'disconnected' && !mockSensor) {
-      setMockSensor(true)
-    }
-  }, [connectionState, mockSensor, setMockSensor])
+    if (source.bpm === null && !mockSensor) setMockSensor(true)
+  }, [source.bpm, mockSensor, setMockSensor])
+
+  useEffect(() => {
+    if (prolongedAgitation) setShowBreathing(true)
+  }, [prolongedAgitation])
 
   if (!bleOnboardingCompleted) {
     return (
       <BleOnboardingTutorial
-        connectionState={connectionState}
-        isConnecting={isConnecting}
-        isSupported={bleSupported}
-        error={bleError}
-        onConnect={bleConnect}
+        connectionState={source.bleConnectionState}
+        isConnecting={source.bleConnecting}
+        isSupported={source.isBleSupported}
+        error={source.bleError}
+        onConnect={source.connectBle}
         onComplete={completeBleOnboarding}
         onSkip={async () => {
           await completeBleOnboarding('simulation')
@@ -107,7 +95,6 @@ export default function FocusSession() {
   }
 
   const energyColor = bpm < 70 ? 'bg-[#00FFFF]/80' : bpm >= 90 ? 'bg-[#0A192F]' : 'bg-blue-400/70'
-  const energyPattern = bpm < 70 ? 'pattern-calm' : bpm >= 90 ? 'pattern-agitated' : ''
   const energyPulse = bpm < 70 ? 'animate-pulse-slow' : bpm >= 90 ? 'animate-pulse-fast' : ''
   const mascotFilter = stateLevel === 'agitated' ? 'grayscale(0.3) brightness(0.8)' : 'none'
   const floatDuration = stateLevel === 'calm' ? '6s' : stateLevel === 'alert' ? '4s' : '2s'
@@ -118,23 +105,27 @@ export default function FocusSession() {
       : stateLevel === 'agitated'
         ? 'Padrão Geométrico'
         : 'Neutro'
+  const sensorState = mapToSensorState(source)
 
   return (
     <div className="min-h-screen bg-[#0A192F] text-white flex flex-col relative overflow-hidden font-medium">
       <CrystalParticles show={showParticles} />
+      {showBreathing && prolongedAgitation && phase === 'focus' && (
+        <BreathingOverlay onClose={() => setShowBreathing(false)} />
+      )}
 
       <div className="absolute inset-0 pointer-events-none opacity-20">
         <Diamond
-          className="absolute top-20 sm:top-32 left-6 sm:left-10 text-[#00FFFF] h-5 w-5 sm:h-6 sm:w-6 animate-float"
+          className="absolute top-20 left-6 text-[#00FFFF] h-5 w-5 animate-float"
           fill="currentColor"
         />
         <Diamond
-          className="absolute top-48 sm:top-64 right-12 sm:right-20 text-[#00FFFF]/60 h-3 w-3 sm:h-4 sm:w-4 animate-float"
+          className="absolute top-48 right-12 text-[#00FFFF]/60 h-3 w-3 animate-float"
           fill="currentColor"
           style={{ animationDuration: '6s' }}
         />
         <Diamond
-          className="absolute bottom-32 sm:bottom-40 left-12 sm:left-20 text-[#00FFFF]/40 h-4 w-4 sm:h-5 sm:w-5 animate-float"
+          className="absolute bottom-32 left-12 text-[#00FFFF]/40 h-4 w-4 animate-float"
           fill="currentColor"
           style={{ animationDuration: '2s' }}
         />
@@ -147,15 +138,16 @@ export default function FocusSession() {
             <span className="font-medium text-white/90 tracking-tight text-sm">NeuroFlow AI</span>
           </div>
           <div className="sr-only" aria-live="polite" aria-atomic="true">
-            Estado atual: {stateLabel}. Frequência cardíaca: {bpm} batimentos por minuto. Energia da
-            calma: {Math.round(energy)} por cento. Cristais de foco: {crystals}. Cristais mestres:{' '}
-            {masterCrystals}.
+            Estado: {stateLabel}. BPM: {bpm}. Energia: {Math.round(energy)}%. Cristais:{' '}
+            {crystals + masterCrystals}.
           </div>
           <div className="flex items-center gap-3">
             <ConnectionStatusTooltip
-              state={mapToSensorState(connectionState, isConnecting, bleError)}
-              error={bleError}
-              onRetry={() => bleConnect()}
+              state={sensorState}
+              error={source.error}
+              onRetry={() =>
+                source.mode === 'camera' ? source.connectCamera() : source.connectBle()
+              }
             />
             <div className="bg-[#00FFFF]/10 px-3 py-1 rounded-full flex items-center text-sm font-medium text-[#00FFFF]">
               <Diamond className="h-4 w-4 mr-1" fill="currentColor" /> {crystals + masterCrystals}
@@ -174,43 +166,11 @@ export default function FocusSession() {
                 className="w-72 p-4 bg-[#0A192F] border-[#00FFFF]/20 text-white"
                 align="end"
               >
-                <div className="space-y-3">
-                  <h4 className="font-medium text-[#00FFFF]">Sensor Bluetooth (BLE)</h4>
-                  <Button
-                    variant={connectionState === 'connected' ? 'outline' : 'default'}
-                    size="sm"
-                    className="w-full"
-                    onClick={connectionState === 'connected' ? bleDisconnect : bleConnect}
-                    disabled={isConnecting || !bleSupported}
-                  >
-                    {isConnecting ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : connectionState === 'connected' ? (
-                      <BluetoothConnected className="h-4 w-4 mr-2" />
-                    ) : (
-                      <Bluetooth className="h-4 w-4 mr-2" />
-                    )}
-                    {isConnecting
-                      ? 'Conectando...'
-                      : connectionState === 'connected'
-                        ? 'Conectado'
-                        : 'Conectar Sensor'}
-                  </Button>
-                  {bleError && <p className="text-xs text-red-400">{bleError}</p>}
-                  {connectionState === 'connected' && bleBpm && (
-                    <p className="text-xs text-[#00FFFF]">BPM em tempo real: {bleBpm}</p>
-                  )}
-                  {!bleSupported && (
-                    <p className="text-xs text-amber-400">
-                      Bluetooth não suportado. Usando modo simulação.
-                    </p>
-                  )}
-                </div>
+                <SensorSettings source={source} />
               </PopoverContent>
             </Popover>
           </div>
         </div>
-
         <h1 className="text-xl sm:text-2xl md:text-3xl font-medium text-white tracking-tight mt-2">
           O EXPLORADOR DA CALMA
         </h1>
@@ -226,7 +186,6 @@ export default function FocusSession() {
             ? 'Objetivo: Mantenha a calma para ganhar cristais a cada 2 minutos!'
             : 'Respire fundo... O descanso faz parte da jornada.'}
         </p>
-
         {stateLevel === 'agitated' && phase === 'focus' && (
           <div className="mt-4 animate-fade-in-up flex items-center bg-white/5 text-white/70 px-4 py-2 rounded-xl border border-white/10 max-w-md">
             <Wind className="h-5 w-5 mr-2 text-white/50 animate-pulse" />
@@ -250,11 +209,10 @@ export default function FocusSession() {
           <img
             src="https://img.usecurling.com/p/512/512?q=hot%20air%20balloon%20cute&color=cyan&dpr=3"
             alt="Explorador da Calma"
-            className="w-56 h-56 sm:w-80 sm:h-80 md:w-96 md:h-96 object-contain drop-shadow-2xl"
+            className="w-80 h-80 md:w-96 md:h-96 object-contain drop-shadow-2xl"
             style={{ filter: mascotFilter }}
           />
         </div>
-
         <div className="absolute right-1 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center z-20">
           <span
             className="text-xs font-medium text-[#00FFFF]/70 mb-2 w-16 text-center leading-tight"
@@ -279,7 +237,6 @@ export default function FocusSession() {
               )}
               style={{ height: `${energy}%` }}
             >
-              <div className={cn('absolute inset-0 rounded-full', energyPattern)} />
               <span className="text-white text-[9px] font-medium flex justify-center pt-1 relative z-10">
                 {Math.round(energy)}%
               </span>
@@ -317,7 +274,6 @@ export default function FocusSession() {
             </span>
           </div>
         </div>
-
         {stateLevel === 'agitated' && phase === 'focus' && (
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/30 text-xs font-medium animate-pulse">
             Zona de Descanso

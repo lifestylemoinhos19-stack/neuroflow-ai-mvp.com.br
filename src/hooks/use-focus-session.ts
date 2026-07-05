@@ -11,6 +11,7 @@ const STABILITY_DURATION_REQUIRED = 30
 const CALM_THRESHOLD = 70
 const AGITATION_THRESHOLD = 90
 const STABILITY_SDNN_THRESHOLD = 15
+const AGITATION_ADAPTIVE_THRESHOLD = 60
 
 export type SessionPhase = 'focus' | 'break'
 export type BioState = 'calm' | 'alert' | 'agitated'
@@ -44,6 +45,9 @@ export function useFocusSession() {
   const masterRef = useRef(0)
   const externalBpmRef = useRef<number | null>(null)
   const bpmHistoryRef = useRef<number[]>([])
+  const agitationStreakRef = useRef(0)
+  const prolongedAgitationRef = useRef(false)
+  const [prolongedAgitation, setProlongedAgitation] = useState(false)
 
   const stateLevel: BioState =
     bpm < CALM_THRESHOLD ? 'calm' : bpm < AGITATION_THRESHOLD ? 'alert' : 'agitated'
@@ -103,6 +107,11 @@ export function useFocusSession() {
       const isStable = curBpm < AGITATION_THRESHOLD && sdnn < STABILITY_SDNN_THRESHOLD
       if (isStable) {
         stableDurationRef.current += 1
+        if (agitationStreakRef.current > 0) {
+          agitationStreakRef.current = 0
+          prolongedAgitationRef.current = false
+          setProlongedAgitation(false)
+        }
         if (stableDurationRef.current >= STABILITY_DURATION_REQUIRED) {
           stableTimeRef.current += 1
           if (stableTimeRef.current >= CRYSTAL_INTERVAL) {
@@ -117,6 +126,14 @@ export function useFocusSession() {
         if (curBpm >= AGITATION_THRESHOLD) {
           stableTimeRef.current = 0
           spikesRef.current += 1
+          agitationStreakRef.current += 1
+          if (
+            agitationStreakRef.current >= AGITATION_ADAPTIVE_THRESHOLD &&
+            !prolongedAgitationRef.current
+          ) {
+            prolongedAgitationRef.current = true
+            setProlongedAgitation(true)
+          }
         }
       }
     },
@@ -271,6 +288,7 @@ export function useFocusSession() {
     crystals,
     masterCrystals,
     showParticles,
+    prolongedAgitation,
     mockSensor,
     mockBpmTarget,
     stateLevel,
