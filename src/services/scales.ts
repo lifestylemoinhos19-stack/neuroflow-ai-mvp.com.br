@@ -1,5 +1,19 @@
 import { supabase } from '@/lib/supabase/client'
 import { saveAnamnesisResponses, AnamnesisResponseInput } from '@/services/anamnesis'
+import { mchatQuestions, snapivQuestions, MChatQuestion, SNAPQuestion } from '@/lib/scales-data'
+
+export interface ScaleQuestions {
+  mchat: MChatQuestion[]
+  snapiv: SNAPQuestion[]
+}
+
+export async function fetchScaleQuestions(): Promise<ScaleQuestions> {
+  await new Promise((resolve) => setTimeout(resolve, 300))
+  return {
+    mchat: [...mchatQuestions],
+    snapiv: [...snapivQuestions],
+  }
+}
 
 export async function saveSingleResponse(
   sessionId: string,
