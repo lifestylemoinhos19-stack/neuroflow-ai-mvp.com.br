@@ -1,11 +1,17 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRppg, type CameraCaptureMode } from '@/hooks/use-rppg'
 import { useHeartRate, BleConnectionState } from '@/hooks/use-heart-rate'
+import {
+  BiofeedbackAccuracyTester,
+  calculateFusedBpm,
+  type AccuracyMetrics,
+} from '@/lib/biofeedback-accuracy'
 
 export type SensorMode = 'camera' | 'bluetooth' | 'simulation'
 
 export interface BiofeedbackSourceState {
   bpm: number | null
+  fusedBpm: number | null
   mode: SensorMode
   isConnecting: boolean
   error: string | null
@@ -22,6 +28,7 @@ export interface BiofeedbackSourceState {
   flashEnabled: boolean
   connectionTimedOut: boolean
   captureMethod: string
+  accuracyMetrics: AccuracyMetrics | null
   connectCamera: () => Promise<void>
   connectBle: () => Promise<void>
   disconnectCamera: () => void
@@ -30,12 +37,16 @@ export interface BiofeedbackSourceState {
   setCameraCaptureMode: (mode: CameraCaptureMode) => void
   toggleFlash: () => Promise<void>
   autoReconnectBle: (sensorId?: string | null) => Promise<void>
+  generateAccuracyReport: () => string
 }
 
 export function useBiofeedbackSource(): BiofeedbackSourceState {
   const rppg = useRppg()
   const ble = useHeartRate()
   const [mode, setMode] = useState<SensorMode>('camera')
+  const accuracyTesterRef = useRef(new BiofeedbackAccuracyTester())
+
+  const bothConnected = rppg.isConnected && ble.connectionState === 'connected'
 
   useEffect(() => {
     if (rppg.isConnected && mode !== 'camera') {
@@ -45,11 +56,17 @@ export function useBiofeedbackSource(): BiofeedbackSourceState {
     }
   }, [ble.connectionState, rppg.isConnected, mode])
 
-  const bpm = mode === 'bluetooth' ? ble.bpm : mode === 'camera' ? rppg.bpm : null
+  useEffect(() => {
+    if (bothConnected) {
+      accuracyTesterRef.current.addSample(rppg.bpm, ble.bpm)
+    }
+  }, [bothConnected, rppg.bpm, ble.bpm])
+
+  const fusedBpm = bothConnected ? calculateFusedBpm(rppg.bpm, ble.bpm) : null
+  const bpm = fusedBpm ?? (mode === 'bluetooth' ? ble.bpm : mode === 'camera' ? rppg.bpm : null)
   const isConnecting =
     mode === 'camera' ? rppg.isConnecting : mode === 'bluetooth' ? ble.isConnecting : false
   const error = mode === 'camera' ? rppg.error : mode === 'bluetooth' ? ble.error : null
-
   const captureMethod =
     mode === 'camera'
       ? `camera_${rppg.captureMode}`
@@ -88,8 +105,11 @@ export function useBiofeedbackSource(): BiofeedbackSourceState {
     await rppg.toggleFlash()
   }, [rppg])
 
+  const generateAccuracyReport = useCallback(() => accuracyTesterRef.current.generateReport(), [])
+
   return {
     bpm,
+    fusedBpm,
     mode,
     isConnecting,
     error,
@@ -106,6 +126,7 @@ export function useBiofeedbackSource(): BiofeedbackSourceState {
     flashEnabled: rppg.flashEnabled,
     connectionTimedOut: rppg.connectionTimedOut,
     captureMethod,
+    accuracyMetrics: accuracyTesterRef.current.calculate(),
     connectCamera,
     connectBle,
     disconnectCamera,
@@ -114,5 +135,6 @@ export function useBiofeedbackSource(): BiofeedbackSourceState {
     setCameraCaptureMode,
     toggleFlash,
     autoReconnectBle: ble.autoReconnect,
+    generateAccuracyReport,
   }
 }

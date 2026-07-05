@@ -185,10 +185,18 @@ export function useOpticalCapture(initialMode: CaptureMode = 'rppg') {
       resetState()
       try {
         const facingMode = selectedMode === 'rppg' ? 'user' : { ideal: 'environment' as const }
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
-          audio: false,
-        })
+        let stream: MediaStream
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+            audio: false,
+          })
+        } catch {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode, width: { ideal: 640 }, height: { ideal: 480 } },
+            audio: false,
+          })
+        }
         streamRef.current = stream
         if (videoRef.current) {
           videoRef.current.srcObject = stream

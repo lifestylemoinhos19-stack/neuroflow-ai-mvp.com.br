@@ -149,6 +149,9 @@ export default function FocusSession() {
           await completeBleOnboarding(`camera_${m}`)
         }}
         onCancel={() => setSelectedOptical(null)}
+        onSkip={async () => {
+          await completeBleOnboarding('simulation')
+        }}
       />
     )
   }

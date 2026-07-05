@@ -15,9 +15,10 @@ interface Props {
   initialMode: CaptureMode
   onComplete: (mode: CaptureMode) => Promise<void>
   onCancel: () => void
+  onSkip?: () => void
 }
 
-export function OpticalCaptureOnboarding({ initialMode, onComplete, onCancel }: Props) {
+export function OpticalCaptureOnboarding({ initialMode, onComplete, onCancel, onSkip }: Props) {
   const [mode, setMode] = useState<CaptureMode>(initialMode)
   const [permState, setPermState] = useState<PermissionState>('idle')
   const [captureState, setCaptureState] = useState<CaptureState>('idle')
@@ -43,14 +44,26 @@ export function OpticalCaptureOnboarding({ initialMode, onComplete, onCancel }: 
     setProgress(0)
     setSecondsLeft(CAPTURE_DURATION)
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: m === 'rppg' ? 'user' : 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
-      })
+      let stream: MediaStream
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: m === 'rppg' ? 'user' : 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        })
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: m === 'rppg' ? 'user' : 'environment',
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+          },
+          audio: false,
+        })
+      }
       streamRef.current = stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream
@@ -81,6 +94,7 @@ export function OpticalCaptureOnboarding({ initialMode, onComplete, onCancel }: 
   const completeCapture = async () => {
     setCaptureState('completed')
     stopCamera()
+    await new Promise((resolve) => setTimeout(resolve, 500))
     setSaving(true)
     try {
       const {
@@ -296,9 +310,24 @@ export function OpticalCaptureOnboarding({ initialMode, onComplete, onCancel }: 
               >
                 Iniciar Leitura (10s)
               </Button>
-              <Button variant="ghost" onClick={onCancel} className="text-white/60 hover:text-white">
-                Voltar
-              </Button>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  onClick={onCancel}
+                  className="text-white/60 hover:text-white"
+                >
+                  Voltar
+                </Button>
+                {onSkip && (
+                  <Button
+                    variant="ghost"
+                    onClick={onSkip}
+                    className="text-white/40 hover:text-[#00FFFF] text-xs"
+                  >
+                    Pular (BPM: 72)
+                  </Button>
+                )}
+              </div>
             </>
           )}
           {captureState === 'capturing' && (

@@ -179,12 +179,28 @@ export default function OpticalOnboarding() {
 
         <div className="flex gap-3 justify-center flex-wrap">
           {capture.phase === 'intro' && (
-            <Button
-              onClick={() => capture.requestCamera(capture.mode)}
-              className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/90 rounded-full px-6"
-            >
-              <Camera className="h-4 w-4 mr-2" /> Ativar Câmera
-            </Button>
+            <>
+              <Button
+                onClick={() => capture.requestCamera(capture.mode)}
+                className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/90 rounded-full px-6"
+              >
+                <Camera className="h-4 w-4 mr-2" /> Ativar Câmera
+              </Button>
+              <button
+                type="button"
+                onClick={() => {
+                  completeBleOnboarding('simulation')
+                  setTimeout(() => {
+                    navigate('/focus-session', {
+                      state: { captureMethod: 'simulation', fallbackBpm: 72 },
+                    })
+                  }, 500)
+                }}
+                className="text-xs text-white/40 hover:text-[#00FFFF] underline transition-colors mt-2"
+              >
+                Pular calibração (BPM padrão: 72)
+              </button>
+            </>
           )}
 
           {capture.phase === 'camera_active' &&
@@ -217,11 +233,16 @@ export default function OpticalOnboarding() {
 
           {capture.phase === 'success' && (
             <Button
-              onClick={() =>
-                navigate('/focus-session', {
-                  state: { captureMethod: capture.mode === 'rppg' ? 'camera_rppg' : 'camera_ppg' },
-                })
-              }
+              onClick={() => {
+                capture.stopCamera()
+                setTimeout(() => {
+                  navigate('/focus-session', {
+                    state: {
+                      captureMethod: capture.mode === 'rppg' ? 'camera_rppg' : 'camera_ppg',
+                    },
+                  })
+                }, 500)
+              }}
               className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/90 rounded-full px-6"
             >
               Continuar <ArrowRight className="h-4 w-4 ml-2" />

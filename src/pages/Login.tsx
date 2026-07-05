@@ -139,7 +139,7 @@ export default function Login() {
                     setEmailError(null)
                     setLoginError(null)
                   }}
-                  className="bg-white/5 border-slate-400 text-white placeholder:text-white/30 focus-visible:border-[#00FFFF] focus-visible:ring-[#00FFFF]/30"
+                  className="bg-white/5 border-[#00FFFF]/40 text-[#E6F1FF] placeholder:text-white/40 focus-visible:border-[#00FFFF] focus-visible:ring-[#00FFFF]/30"
                 />
                 {emailError && (
                   <div className="flex items-center gap-2 text-red-400 text-sm animate-fade-in">
@@ -161,7 +161,7 @@ export default function Login() {
                     setPassword(e.target.value)
                     setLoginError(null)
                   }}
-                  className="bg-white/5 border-slate-400 text-white placeholder:text-white/30 focus-visible:border-[#00FFFF] focus-visible:ring-[#00FFFF]/30"
+                  className="bg-white/5 border-[#00FFFF]/40 text-[#E6F1FF] placeholder:text-white/40 focus-visible:border-[#00FFFF] focus-visible:ring-[#00FFFF]/30"
                 />
                 {loginError && (
                   <div className="flex items-center gap-2 text-red-400 text-sm animate-fade-in">
@@ -181,7 +181,7 @@ export default function Login() {
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="bg-white/5 border-slate-400 text-white placeholder:text-white/30 focus-visible:border-[#00FFFF] focus-visible:ring-[#00FFFF]/30"
+                    className="bg-white/5 border-[#00FFFF]/40 text-[#E6F1FF] placeholder:text-white/40 focus-visible:border-[#00FFFF] focus-visible:ring-[#00FFFF]/30"
                   />
                 </div>
               )}
