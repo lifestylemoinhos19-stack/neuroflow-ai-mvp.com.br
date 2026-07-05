@@ -1,10 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 
+export type CameraCaptureMode = 'rppg' | 'ppg'
+
 export function useRppg() {
   const [bpm, setBpm] = useState<number | null>(null)
   const [isConnected, setIsConnected] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [captureMode, setCaptureMode] = useState<CameraCaptureMode>('rppg')
+  const [flashEnabled, setFlashEnabled] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -12,6 +16,9 @@ export function useRppg() {
   const rafRef = useRef<number | null>(null)
   const signalRef = useRef<{ value: number; time: number }[]>([])
   const lastUpdateRef = useRef(0)
+  const modeRef = useRef<CameraCaptureMode>('rppg')
+  const flashRef = useRef(false)
+  const trackRef = useRef<MediaStreamTrack | null>(null)
 
   const isSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia
 
@@ -29,6 +36,7 @@ export function useRppg() {
       videoRef.current = null
     }
     canvasRef.current = null
+    trackRef.current = null
     setIsConnected(false)
     setBpm(null)
     signalRef.current = []
@@ -41,7 +49,6 @@ export function useRppg() {
       rafRef.current = requestAnimationFrame(analyzeFrame)
       return
     }
-
     const ctx = canvas.getContext('2d', { willReadFrequently: true })
     if (!ctx) {
       rafRef.current = requestAnimationFrame(analyzeFrame)
@@ -51,19 +58,19 @@ export function useRppg() {
     canvas.width = 80
     canvas.height = 60
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    const data = imageData.data
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
 
-    let greenSum = 0
-    let pixelCount = 0
+    const channelOffset = modeRef.current === 'ppg' ? 0 : 1
+    let sum = 0
+    let count = 0
     for (let i = 0; i < data.length; i += 4) {
-      greenSum += data[i + 1]
-      pixelCount++
+      sum += data[i + channelOffset]
+      count++
     }
-    const avgGreen = greenSum / pixelCount
+    const avg = sum / count
     const now = performance.now()
 
-    signalRef.current.push({ value: avgGreen, time: now })
+    signalRef.current.push({ value: avg, time: now })
     const cutoff = now - 6000
     while (signalRef.current.length > 0 && signalRef.current[0].time < cutoff) {
       signalRef.current.shift()
@@ -98,6 +105,17 @@ export function useRppg() {
     rafRef.current = requestAnimationFrame(analyzeFrame)
   }, [])
 
+  const applyFlash = useCallback(async (track: MediaStreamTrack, enabled: boolean) => {
+    try {
+      const caps = track.getCapabilities?.() as any
+      if (caps?.torch) {
+        await track.applyConstraints({ advanced: [{ torch: enabled } as any] })
+      }
+    } catch {
+      /* torch not supported */
+    }
+  }, [])
+
   const connect = useCallback(async () => {
     setError(null)
     if (!isSupported) {
@@ -111,6 +129,9 @@ export function useRppg() {
         audio: false,
       })
       streamRef.current = stream
+      const track = stream.getVideoTracks()[0]
+      trackRef.current = track
+      if (modeRef.current === 'ppg' && flashRef.current) await applyFlash(track, true)
 
       const video = document.createElement('video')
       video.autoplay = true
@@ -126,19 +147,39 @@ export function useRppg() {
       signalRef.current = []
       rafRef.current = requestAnimationFrame(analyzeFrame)
     } catch (err: any) {
-      if (err.name === 'NotAllowedError') {
-        setError('Permissão de câmera negada.')
-      } else if (err.name === 'NotFoundError') {
-        setError('Nenhuma câmera encontrada.')
-      } else {
-        setError(err.message || 'Erro ao acessar câmera.')
-      }
+      if (err.name === 'NotAllowedError') setError('Permissão de câmera negada.')
+      else if (err.name === 'NotFoundError') setError('Nenhuma câmera encontrada.')
+      else setError(err.message || 'Erro ao acessar câmera.')
     } finally {
       setIsConnecting(false)
     }
-  }, [isSupported, analyzeFrame])
+  }, [isSupported, analyzeFrame, applyFlash])
+
+  const toggleFlash = useCallback(async () => {
+    const next = !flashEnabled
+    setFlashEnabled(next)
+    flashRef.current = next
+    if (trackRef.current) await applyFlash(trackRef.current, next)
+  }, [flashEnabled, applyFlash])
+
+  const changeMode = useCallback((mode: CameraCaptureMode) => {
+    setCaptureMode(mode)
+    modeRef.current = mode
+  }, [])
 
   useEffect(() => () => disconnect(), [disconnect])
 
-  return { bpm, isConnected, isConnecting, isSupported, connect, disconnect, error }
+  return {
+    bpm,
+    isConnected,
+    isConnecting,
+    isSupported,
+    connect,
+    disconnect,
+    error,
+    captureMode,
+    flashEnabled,
+    toggleFlash,
+    setCaptureMode: changeMode,
+  }
 }

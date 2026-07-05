@@ -13,6 +13,9 @@ import { ConnectionStatusTooltip } from '@/components/ConnectionStatusTooltip'
 import { BreathingOverlay } from '@/components/BreathingOverlay'
 import { SensorSettings } from '@/components/SensorSettings'
 import { BleOnboardingTutorial } from '@/components/BleOnboardingTutorial'
+import { CaptureModeSelector } from '@/components/CaptureModeSelector'
+import { FaceFrameOverlay } from '@/components/FaceFrameOverlay'
+import { FingerPlacementGuide } from '@/components/FingerPlacementGuide'
 import type { BleSensorState } from '@/hooks/use-ble-sensor'
 
 const formatTime = (s: number) =>
@@ -40,7 +43,14 @@ function mapToSensorState(source: BiofeedbackSourceState): BleSensorState {
 export default function FocusSession() {
   const { bleOnboardingCompleted, completeBleOnboarding, pairedSensorId } = useAuth()
   const [showBreathing, setShowBreathing] = useState(false)
+  const [selectedBluetooth, setSelectedBluetooth] = useState(false)
   const source = useBiofeedbackSource()
+
+  const captureMethod = pairedSensorId?.startsWith('camera')
+    ? pairedSensorId
+    : pairedSensorId && pairedSensorId !== 'simulation'
+      ? 'bluetooth_ble'
+      : source.captureMethod || 'camera_rppg'
 
   const {
     timeLeft,
@@ -58,11 +68,31 @@ export default function FocusSession() {
     setExternalBpm,
     toggleActive,
     handleCancel,
-  } = useFocusSession()
+  } = useFocusSession(captureMethod)
+
+  const isCameraMode = pairedSensorId?.startsWith('camera') ?? false
+  const isPpgMode = pairedSensorId === 'camera_ppg'
 
   useEffect(() => {
-    source.autoReconnectBle(pairedSensorId)
-  }, [source.autoReconnectBle, pairedSensorId])
+    if (pairedSensorId === 'camera_ppg') source.setCameraCaptureMode('ppg')
+    else if (pairedSensorId === 'camera_rppg') source.setCameraCaptureMode('rppg')
+  }, [pairedSensorId])
+
+  useEffect(() => {
+    if (
+      pairedSensorId?.startsWith('camera') &&
+      !source.isCameraActive &&
+      !source.cameraConnecting
+    ) {
+      source.connectCamera()
+    } else if (
+      pairedSensorId &&
+      !pairedSensorId.startsWith('camera') &&
+      pairedSensorId !== 'simulation'
+    ) {
+      source.autoReconnectBle(pairedSensorId)
+    }
+  }, [pairedSensorId])
 
   useEffect(() => {
     if (source.bpm !== null) {
@@ -79,7 +109,21 @@ export default function FocusSession() {
     if (prolongedAgitation) setShowBreathing(true)
   }, [prolongedAgitation])
 
-  if (!bleOnboardingCompleted) {
+  if (!bleOnboardingCompleted && !selectedBluetooth) {
+    return (
+      <CaptureModeSelector
+        onSelect={async (mode) => {
+          if (mode === 'bluetooth') {
+            setSelectedBluetooth(true)
+          } else {
+            await completeBleOnboarding(mode)
+          }
+        }}
+      />
+    )
+  }
+
+  if (!bleOnboardingCompleted && selectedBluetooth) {
     return (
       <BleOnboardingTutorial
         connectionState={source.bleConnectionState}
@@ -105,6 +149,16 @@ export default function FocusSession() {
       <CrystalParticles show={showParticles} />
       {showBreathing && prolongedAgitation && phase === 'focus' && (
         <BreathingOverlay onClose={() => setShowBreathing(false)} />
+      )}
+
+      {isCameraMode && source.isCameraActive && !isPpgMode && phase === 'focus' && (
+        <FaceFrameOverlay />
+      )}
+      {isCameraMode && source.isCameraActive && isPpgMode && phase === 'focus' && (
+        <FingerPlacementGuide
+          flashEnabled={source.flashEnabled}
+          onToggleFlash={source.toggleFlash}
+        />
       )}
 
       <div className="absolute inset-0 pointer-events-none opacity-20">

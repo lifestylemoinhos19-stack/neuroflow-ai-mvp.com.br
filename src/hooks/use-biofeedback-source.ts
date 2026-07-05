@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useRppg } from '@/hooks/use-rppg'
+import { useRppg, type CameraCaptureMode } from '@/hooks/use-rppg'
 import { useHeartRate, BleConnectionState } from '@/hooks/use-heart-rate'
 
 export type SensorMode = 'camera' | 'bluetooth' | 'simulation'
@@ -18,11 +18,16 @@ export interface BiofeedbackSourceState {
   isCameraSupported: boolean
   bleBpm: number | null
   cameraBpm: number | null
+  cameraCaptureMode: CameraCaptureMode
+  flashEnabled: boolean
+  captureMethod: string
   connectCamera: () => Promise<void>
   connectBle: () => Promise<void>
   disconnectCamera: () => void
   disconnectBle: () => void
   setMode: (mode: SensorMode) => void
+  setCameraCaptureMode: (mode: CameraCaptureMode) => void
+  toggleFlash: () => Promise<void>
   autoReconnectBle: (sensorId?: string | null) => Promise<void>
 }
 
@@ -44,6 +49,13 @@ export function useBiofeedbackSource(): BiofeedbackSourceState {
     mode === 'camera' ? rppg.isConnecting : mode === 'bluetooth' ? ble.isConnecting : false
   const error = mode === 'camera' ? rppg.error : mode === 'bluetooth' ? ble.error : null
 
+  const captureMethod =
+    mode === 'camera'
+      ? `camera_${rppg.captureMode}`
+      : mode === 'bluetooth'
+        ? 'bluetooth_ble'
+        : 'simulation'
+
   const connectCamera = useCallback(async () => {
     setMode('camera')
     await rppg.connect()
@@ -64,6 +76,17 @@ export function useBiofeedbackSource(): BiofeedbackSourceState {
     setMode('camera')
   }, [ble])
 
+  const setCameraCaptureMode = useCallback(
+    (m: CameraCaptureMode) => {
+      rppg.setCaptureMode(m)
+    },
+    [rppg],
+  )
+
+  const toggleFlash = useCallback(async () => {
+    await rppg.toggleFlash()
+  }, [rppg])
+
   return {
     bpm,
     mode,
@@ -78,11 +101,16 @@ export function useBiofeedbackSource(): BiofeedbackSourceState {
     isCameraSupported: rppg.isSupported,
     bleBpm: ble.bpm,
     cameraBpm: rppg.bpm,
+    cameraCaptureMode: rppg.captureMode,
+    flashEnabled: rppg.flashEnabled,
+    captureMethod,
     connectCamera,
     connectBle,
     disconnectCamera,
     disconnectBle,
     setMode,
+    setCameraCaptureMode,
+    toggleFlash,
     autoReconnectBle: ble.autoReconnect,
   }
 }

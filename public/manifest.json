@@ -1,0 +1,24 @@
+{
+  "name": "NeuroFlow AI",
+  "short_name": "NeuroFlow",
+  "description": "Inteligência de Suporte ao Neurodesenvolvimento",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A192F",
+  "theme_color": "#0A192F",
+  "icons": [
+    {
+      "src": "/skip.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/skip.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

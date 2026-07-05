@@ -16,7 +16,7 @@ const AGITATION_ADAPTIVE_THRESHOLD = 60
 export type SessionPhase = 'focus' | 'break'
 export type BioState = 'calm' | 'alert' | 'agitated'
 
-export function useFocusSession() {
+export function useFocusSession(captureMethod: string = 'camera_rppg') {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { toast } = useToast()
@@ -67,7 +67,11 @@ export function useFocusSession() {
     let mounted = true
     supabase
       .from('focus_sessions')
-      .insert({ user_id: user.id, settings: { duration: FOCUS_DURATION, mode: 'pomodoro' } })
+      .insert({
+        user_id: user.id,
+        settings: { duration: FOCUS_DURATION, mode: 'pomodoro' },
+        capture_method: captureMethod,
+      })
       .select('id')
       .single()
       .then(({ data }) => {

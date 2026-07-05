@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Bluetooth, Check, ChevronRight, Loader2 } from 'lucide-react'
+import { Bluetooth, Check, ChevronRight, Loader2, ExternalLink } from 'lucide-react'
 import type { BleConnectionState } from '@/hooks/use-heart-rate'
 import { cn } from '@/lib/utils'
 
@@ -109,9 +109,26 @@ export function BleOnboardingTutorial({
             )}
             {error && <p className="text-xs text-red-400 text-center">{error}</p>}
             {!isSupported && (
-              <p className="text-xs text-amber-400 text-center">
-                Bluetooth não suportado neste navegador. Você pode continuar em modo simulação.
-              </p>
+              <div className="space-y-2">
+                <p className="text-xs text-amber-400 text-center">
+                  Bluetooth não suportado neste navegador. Você pode continuar em modo simulação.
+                </p>
+                <div className="p-3 rounded-lg bg-amber-400/10 border border-amber-400/20">
+                  <p className="text-xs text-amber-300/80 text-center leading-relaxed">
+                    Usuários iOS podem usar o navegador{' '}
+                    <a
+                      href="https://apps.apple.com/app/bluefy-web-ble-browser/id1492822055"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline font-medium inline-flex items-center gap-0.5"
+                    >
+                      Bluefy
+                      <ExternalLink className="h-3 w-3" />
+                    </a>{' '}
+                    ou Safari (iOS 16.4+) para Bluetooth.
+                  </p>
+                </div>
+              </div>
             )}
           </div>
         )}
