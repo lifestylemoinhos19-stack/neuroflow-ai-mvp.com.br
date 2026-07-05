@@ -4,10 +4,11 @@ import { useBiofeedbackSource } from '@/hooks/use-biofeedback-source'
 import type { BiofeedbackSourceState } from '@/hooks/use-biofeedback-source'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
-import { Heart, Settings, X, Pause, Play, Wind, Diamond, Map, Waves, Zap } from 'lucide-react'
+import { Settings, X, Pause, Play, Wind, Diamond, Map } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { CrystalParticles } from '@/components/CrystalParticles'
+import { EnergyBar } from '@/components/EnergyBar'
 import { ConnectionStatusTooltip } from '@/components/ConnectionStatusTooltip'
 import { BreathingOverlay } from '@/components/BreathingOverlay'
 import { SensorSettings } from '@/components/SensorSettings'
@@ -37,7 +38,7 @@ function mapToSensorState(source: BiofeedbackSourceState): BleSensorState {
 }
 
 export default function FocusSession() {
-  const { bleOnboardingCompleted, completeBleOnboarding } = useAuth()
+  const { bleOnboardingCompleted, completeBleOnboarding, pairedSensorId } = useAuth()
   const [showBreathing, setShowBreathing] = useState(false)
   const source = useBiofeedbackSource()
 
@@ -60,8 +61,8 @@ export default function FocusSession() {
   } = useFocusSession()
 
   useEffect(() => {
-    source.autoReconnectBle()
-  }, [source.autoReconnectBle])
+    source.autoReconnectBle(pairedSensorId)
+  }, [source.autoReconnectBle, pairedSensorId])
 
   useEffect(() => {
     if (source.bpm !== null) {
@@ -94,17 +95,9 @@ export default function FocusSession() {
     )
   }
 
-  const energyColor = bpm < 70 ? 'bg-[#00FFFF]/80' : bpm >= 90 ? 'bg-[#0A192F]' : 'bg-blue-400/70'
-  const energyPulse = bpm < 70 ? 'animate-pulse-slow' : bpm >= 90 ? 'animate-pulse-fast' : ''
   const mascotFilter = stateLevel === 'agitated' ? 'grayscale(0.3) brightness(0.8)' : 'none'
   const floatDuration = stateLevel === 'calm' ? '6s' : stateLevel === 'alert' ? '4s' : '2s'
   const stateLabel = stateLevel === 'calm' ? 'Calmo' : stateLevel === 'alert' ? 'Atento' : 'Agitado'
-  const stateTextureLabel =
-    stateLevel === 'calm'
-      ? 'Ondas Suaves'
-      : stateLevel === 'agitated'
-        ? 'Padrão Geométrico'
-        : 'Neutro'
   const sensorState = mapToSensorState(source)
 
   return (
@@ -213,66 +206,8 @@ export default function FocusSession() {
             style={{ filter: mascotFilter }}
           />
         </div>
-        <div className="absolute right-1 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center z-20">
-          <span
-            className="text-xs font-medium text-[#00FFFF]/70 mb-2 w-16 text-center leading-tight"
-            id="energy-bar-label"
-          >
-            Energia da Calma
-          </span>
-          <div
-            className="h-44 sm:h-56 w-7 sm:w-8 bg-white/10 rounded-full border border-[#00FFFF]/20 p-1 flex flex-col justify-end overflow-hidden relative"
-            role="progressbar"
-            aria-labelledby="energy-bar-label"
-            aria-valuenow={Math.round(energy)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <div
-              className={cn(
-                'w-full rounded-full transition-all duration-1000 relative overflow-hidden',
-                energyColor,
-                energyPulse,
-                bpm >= 90 && 'border border-white/30',
-              )}
-              style={{ height: `${energy}%` }}
-            >
-              <span className="text-white text-[9px] font-medium flex justify-center pt-1 relative z-10">
-                {Math.round(energy)}%
-              </span>
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-4 flex flex-col items-center bg-white/5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-[#00FFFF]/10">
-            <Heart
-              className={cn(
-                'h-5 w-5 mb-1',
-                stateLevel === 'calm'
-                  ? 'text-[#00FFFF]'
-                  : stateLevel === 'alert'
-                    ? 'text-blue-400'
-                    : 'text-white/40 animate-pulse',
-              )}
-              style={{ animationDuration: `${60 / bpm}s` }}
-            />
-            <span className="text-[10px] text-white/50 font-medium">BPM</span>
-            <span className="font-medium text-white">{bpm}</span>
-            <span
-              className={cn(
-                'text-[9px] mt-0.5 px-1.5 py-0.5 rounded-full font-medium flex items-center gap-1',
-                stateLevel === 'calm'
-                  ? 'bg-[#00FFFF]/20 text-[#00FFFF]'
-                  : stateLevel === 'alert'
-                    ? 'bg-blue-400/20 text-blue-300'
-                    : 'bg-white/15 text-white/70',
-              )}
-              aria-live="polite"
-              aria-label={`Estado: ${stateLabel}, Textura: ${stateTextureLabel}`}
-            >
-              {stateLevel === 'calm' && <Waves className="h-2.5 w-2.5" />}
-              {stateLevel === 'agitated' && <Zap className="h-2.5 w-2.5" />}
-              {stateLabel} · {stateTextureLabel}
-            </span>
-          </div>
+        <div className="absolute right-1 sm:right-4 md:right-6 top-1/2 -translate-y-1/2">
+          <EnergyBar bpm={bpm} energy={energy} stateLevel={stateLevel} />
         </div>
         {stateLevel === 'agitated' && phase === 'focus' && (
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/30 text-xs font-medium animate-pulse">

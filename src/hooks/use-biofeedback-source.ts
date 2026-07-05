@@ -23,7 +23,7 @@ export interface BiofeedbackSourceState {
   disconnectCamera: () => void
   disconnectBle: () => void
   setMode: (mode: SensorMode) => void
-  autoReconnectBle: () => Promise<void>
+  autoReconnectBle: (sensorId?: string | null) => Promise<void>
 }
 
 export function useBiofeedbackSource(): BiofeedbackSourceState {
@@ -32,10 +32,12 @@ export function useBiofeedbackSource(): BiofeedbackSourceState {
   const [mode, setMode] = useState<SensorMode>('camera')
 
   useEffect(() => {
-    if (ble.connectionState === 'connected' && mode !== 'bluetooth') {
+    if (rppg.isConnected && mode !== 'camera') {
+      setMode('camera')
+    } else if (!rppg.isConnected && ble.connectionState === 'connected' && mode !== 'bluetooth') {
       setMode('bluetooth')
     }
-  }, [ble.connectionState, mode])
+  }, [ble.connectionState, rppg.isConnected, mode])
 
   const bpm = mode === 'bluetooth' ? ble.bpm : mode === 'camera' ? rppg.bpm : null
   const isConnecting =

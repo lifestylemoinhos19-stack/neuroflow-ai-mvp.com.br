@@ -44,27 +44,33 @@ export function useHeartRate() {
     [setupCharacteristic],
   )
 
-  const autoReconnect = useCallback(async () => {
-    if (!isSupported) return
-    const storedId = localStorage.getItem(DEVICE_ID_KEY)
-    if (!storedId) return
+  const autoReconnect = useCallback(
+    async (sensorId?: string | null) => {
+      if (!isSupported) return
+      const storedId =
+        sensorId ||
+        localStorage.getItem(DEVICE_ID_KEY) ||
+        localStorage.getItem('neuroflow_paired_sensor_id')
+      if (!storedId) return
 
-    setConnectionState('searching')
-    try {
-      const nav = navigator as any
-      if (typeof nav.bluetooth.getDevices === 'function') {
-        const devices = await nav.bluetooth.getDevices()
-        const device = devices.find((d: any) => d.id === storedId)
-        if (device) {
-          await connectToDevice(device)
-          return
+      setConnectionState('searching')
+      try {
+        const nav = navigator as any
+        if (typeof nav.bluetooth.getDevices === 'function') {
+          const devices = await nav.bluetooth.getDevices()
+          const device = devices.find((d: any) => d.id === storedId)
+          if (device) {
+            await connectToDevice(device)
+            return
+          }
         }
+      } catch {
+        // Silent failure — no pop-ups during auto-reconnection
       }
-    } catch {
-      // Silent failure — no pop-ups during auto-reconnection
-    }
-    setConnectionState('disconnected')
-  }, [isSupported, connectToDevice])
+      setConnectionState('disconnected')
+    },
+    [isSupported, connectToDevice],
+  )
 
   const disconnect = useCallback(() => {
     if (deviceRef.current?.gatt?.connected) {
@@ -94,6 +100,7 @@ export function useHeartRate() {
         filters: [{ services: ['heart_rate'] }],
       })
       localStorage.setItem(DEVICE_ID_KEY, device.id)
+      localStorage.setItem('neuroflow_paired_sensor_id', device.id)
       await connectToDevice(device)
     } catch (err: any) {
       setConnectionState('disconnected')
