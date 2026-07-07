@@ -54,11 +54,12 @@ export class GameController {
   }
 
   private calculateEnergy(bpm: number): number {
-    return Math.max(10, Math.min(100, 100 - Math.abs(bpm - BASELINE_BPM) * 2.5))
+    return Math.max(10, Math.min(100, 100 - Math.abs(bpm - BASELINE_BPM) * 4))
   }
 
   private calculateBalloonOffset(bpm: number): number {
-    return Math.max(-20, Math.min(20, (BASELINE_BPM - bpm) * 0.8))
+    const clampedDelta = Math.max(-20, Math.min(20, bpm - BASELINE_BPM))
+    return -(clampedDelta * 2.2)
   }
 
   private checkWatchdog(): void {
