@@ -64,7 +64,14 @@ export default function FocusSession() {
   }
 
   if (phase === 'focus' && controller) {
-    return <GameEngine controller={controller} onExit={handleExit} />
+    return (
+      <GameEngine
+        controller={controller}
+        onExit={handleExit}
+        externalBpm={null}
+        biometricConnected={false}
+      />
+    )
   }
 
   return null

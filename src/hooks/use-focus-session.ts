@@ -6,10 +6,10 @@ import { useToast } from '@/hooks/use-toast'
 
 const FOCUS_DURATION = 25 * 60
 const BREAK_DURATION = 5 * 60
-const CRYSTAL_INTERVAL = 120
+const CRYSTAL_INTERVAL = 30
 const STABILITY_DURATION_REQUIRED = 30
-const CALM_THRESHOLD = 70
-const AGITATION_THRESHOLD = 90
+const CALM_THRESHOLD = 60
+const AGITATION_THRESHOLD = 85
 const STABILITY_SDNN_THRESHOLD = 15
 const AGITATION_ADAPTIVE_THRESHOLD = 60
 
@@ -118,20 +118,6 @@ export function useFocusSession(captureMethod: string = 'camera_rppg') {
         }
         if (stableDurationRef.current >= STABILITY_DURATION_REQUIRED) {
           stableTimeRef.current += 1
-          if (stableTimeRef.current >= CRYSTAL_INTERVAL) {
-            stableTimeRef.current -= CRYSTAL_INTERVAL
-            crystalsRef.current += 1
-            setCrystals(crystalsRef.current)
-            triggerParticles()
-            supabase
-              .from('focus_sessions')
-              .update({
-                crystals_earned: crystalsRef.current,
-                updated_at: new Date().toISOString(),
-              })
-              .eq('id', sessionIdRef.current)
-              .then(() => {})
-          }
         }
       } else {
         stableDurationRef.current = 0
@@ -283,6 +269,19 @@ export function useFocusSession(captureMethod: string = 'camera_rppg') {
     return () => clearInterval(interval)
   }, [isActive, timeLeft, phase])
 
+  const addCrystal = useCallback(() => {
+    crystalsRef.current += 1
+    setCrystals(crystalsRef.current)
+    supabase
+      .from('focus_sessions')
+      .update({
+        crystals_earned: crystalsRef.current,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', sessionIdRef.current)
+      .then(() => {})
+  }, [])
+
   const handleCancel = async () => {
     setIsActive(false)
     if (sessionIdRef.current) {
@@ -327,6 +326,7 @@ export function useFocusSession(captureMethod: string = 'camera_rppg') {
       }
       setIsActive((a) => !a)
     },
+    addCrystal,
     handleCancel,
   }
 }
