@@ -29,7 +29,7 @@ import FocusSession from '@/pages/FocusSession'
 import { MainDeployment } from '@/components/MainDeployment'
 import SessionSummary from '@/pages/SessionSummary'
 import OpticalOnboarding from '@/pages/OpticalOnboarding'
-import Avaliacao from '@/pages/Avaliacao'
+import PublicAssessment from '@/pages/PublicAssessment'
 
 const App = () => (
   <BrowserRouter>
@@ -53,6 +53,8 @@ const App = () => (
             <Route path="/security" element={<Security />} />
             <Route path="/ethics" element={<Ethics />} />
             <Route path="/about" element={<Ethics />} />
+            <Route path="/avaliacao" element={<Avaliacao />} />
+            <Route path="/avaliacao" element={<PublicAssessment />} />
             <Route
               path="/mfa"
               element={
@@ -132,7 +134,6 @@ const App = () => (
             >
               <Route path="/anamnesis" element={<Anamnesis />} />
               <Route path="/scales" element={<Scales />} />
-              <Route path="/avaliacao" element={<Avaliacao />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/insights" element={<Insights />} />
               <Route path="/logs" element={<HealthLogs />} />
