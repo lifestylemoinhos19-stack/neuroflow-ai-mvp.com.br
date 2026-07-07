@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Loader2, Check, AlertTriangle, RotateCcw, Eye, Save } from 'lucide-react'
+import { Loader2, Check, AlertTriangle, RotateCcw, Eye, Save, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -16,6 +16,7 @@ export function SnapIVAssessment() {
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [showResult, setShowResult] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<string | null>(null)
 
   useEffect(() => {
     try {
@@ -23,6 +24,7 @@ export function SnapIVAssessment() {
       if (draft) {
         const parsed = JSON.parse(draft)
         if (parsed.snap?.answers) setAnswers(parsed.snap.answers)
+        if (parsed.snap?.lastSaved) setLastSaved(parsed.snap.lastSaved)
       }
     } catch {
       /* ignore */
@@ -33,7 +35,7 @@ export function SnapIVAssessment() {
     try {
       const draft = localStorage.getItem(STORAGE_KEY)
       const parsed = draft ? JSON.parse(draft) : {}
-      parsed.snap = { answers }
+      parsed.snap = { ...parsed.snap, answers }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
     } catch {
       /* ignore */
@@ -61,6 +63,16 @@ export function SnapIVAssessment() {
       result as unknown as Record<string, unknown>,
     )
     if (ok) {
+      const now = new Date().toISOString()
+      setLastSaved(now)
+      try {
+        const draft = localStorage.getItem(STORAGE_KEY)
+        const parsed = draft ? JSON.parse(draft) : {}
+        parsed.snap = { ...parsed.snap, lastSaved: now }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
+      } catch {
+        /* ignore */
+      }
       toast.success('Resultados salvos com sucesso! 💙', {
         style: { background: '#00FFFF', color: '#0A192F', fontWeight: 600 },
       })
@@ -73,6 +85,7 @@ export function SnapIVAssessment() {
   const handleReset = () => {
     setAnswers({})
     setShowResult(false)
+    setLastSaved(null)
     try {
       const draft = localStorage.getItem(STORAGE_KEY)
       const parsed = draft ? JSON.parse(draft) : {}
@@ -80,6 +93,20 @@ export function SnapIVAssessment() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
     } catch {
       /* ignore */
+    }
+  }
+
+  const formatTimestamp = (iso: string) => {
+    try {
+      const d = new Date(iso)
+      return d.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    } catch {
+      return iso
     }
   }
 
@@ -112,7 +139,9 @@ export function SnapIVAssessment() {
               <Check className="h-5 w-5" />
             )}
             <p className="font-semibold">
-              {result.isSuggestive ? 'Sugestivo de TDAH' : 'Não sugestivo de TDAH'}
+              {result.isSuggestive
+                ? 'Sinais que merecem atenção carinhosa'
+                : 'Tudo tranquilo por aqui'}
             </p>
           </div>
           <p className="text-sm text-white/70">
@@ -147,6 +176,12 @@ export function SnapIVAssessment() {
   return (
     <div className="space-y-3">
       <AssessmentProgress answered={answeredCount} total={18} />
+      {lastSaved && (
+        <div className="flex items-center gap-1.5 text-xs text-white/40">
+          <Clock className="h-3 w-3" />
+          <span>Último salvamento: {formatTimestamp(lastSaved)}</span>
+        </div>
+      )}
       <p className="text-sm font-semibold text-[#00FFFF] mt-3 mb-1">Desatenção (1-9)</p>
       {inattentionQs.map((q, i) => (
         <QuestionCard

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Loader2, Check, AlertTriangle, RotateCcw, Eye, Save } from 'lucide-react'
+import { Loader2, Check, AlertTriangle, RotateCcw, Eye, Save, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -15,6 +15,7 @@ export function AssqAssessment() {
   const [gender, setGender] = useState<'boy' | 'girl'>('boy')
   const [showResult, setShowResult] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<string | null>(null)
 
   useEffect(() => {
     try {
@@ -23,6 +24,7 @@ export function AssqAssessment() {
         const parsed = JSON.parse(draft)
         if (parsed.assq?.answers) setAnswers(parsed.assq.answers)
         if (parsed.assq?.gender) setGender(parsed.assq.gender)
+        if (parsed.assq?.lastSaved) setLastSaved(parsed.assq.lastSaved)
       }
     } catch {
       /* ignore */
@@ -33,7 +35,7 @@ export function AssqAssessment() {
     try {
       const draft = localStorage.getItem(STORAGE_KEY)
       const parsed = draft ? JSON.parse(draft) : {}
-      parsed.assq = { answers, gender }
+      parsed.assq = { ...parsed.assq, answers, gender }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
     } catch {
       /* ignore */
@@ -61,6 +63,16 @@ export function AssqAssessment() {
       result as unknown as Record<string, unknown>,
     )
     if (ok) {
+      const now = new Date().toISOString()
+      setLastSaved(now)
+      try {
+        const draft = localStorage.getItem(STORAGE_KEY)
+        const parsed = draft ? JSON.parse(draft) : {}
+        parsed.assq = { ...parsed.assq, lastSaved: now }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
+      } catch {
+        /* ignore */
+      }
       toast.success('Resultados salvos com sucesso! 💙', {
         style: { background: '#00FFFF', color: '#0A192F', fontWeight: 600 },
       })
@@ -73,6 +85,7 @@ export function AssqAssessment() {
   const handleReset = () => {
     setAnswers({})
     setShowResult(false)
+    setLastSaved(null)
     try {
       const draft = localStorage.getItem(STORAGE_KEY)
       const parsed = draft ? JSON.parse(draft) : {}
@@ -80,6 +93,20 @@ export function AssqAssessment() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
     } catch {
       /* ignore */
+    }
+  }
+
+  const formatTimestamp = (iso: string) => {
+    try {
+      const d = new Date(iso)
+      return d.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    } catch {
+      return iso
     }
   }
 
@@ -109,7 +136,9 @@ export function AssqAssessment() {
               <Check className="h-5 w-5" />
             )}
             <p className="font-semibold">
-              {result.isSuggestive ? 'Sugestivo de TEA' : 'Não sugestivo de TEA'}
+              {result.isSuggestive
+                ? 'Vale a pena conversar com um profissional'
+                : 'Sinais dentro do esperado'}
             </p>
           </div>
           <p className="text-sm text-white/70">
@@ -144,6 +173,12 @@ export function AssqAssessment() {
   return (
     <div className="space-y-3">
       <AssessmentProgress answered={answeredCount} total={27} />
+      {lastSaved && (
+        <div className="flex items-center gap-1.5 text-xs text-white/40">
+          <Clock className="h-3 w-3" />
+          <span>Último salvamento: {formatTimestamp(lastSaved)}</span>
+        </div>
+      )}
       <div className="mt-2">
         <p className="text-xs text-white/50 mb-1.5">Sexo da criança</p>
         <div className="flex gap-2">
