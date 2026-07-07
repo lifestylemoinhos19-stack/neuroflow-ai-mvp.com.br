@@ -28,86 +28,118 @@ export const STABILITY_MAX_BPM = 85
 export const BASELINE_BPM = 72
 
 const MAX_EVENTS = 12
+const ENERGY_MIN = 10
+const ENERGY_MAX = 100
+const TICK_INTERVAL_MS = 1000
+const BALLOON_MULTIPLIER = 2.2
+const MAX_BPM_DEVIATION = 40
 
 export class GameController {
-  private bpm = BASELINE_BPM
-  private energy = 100
-  private balloonOffset = 0
-  private isActive = false
-  private simulationMode: SimulationMode = 'real'
+  private bpm: number = BASELINE_BPM
+  private energy: number = 50
+  private balloonOffset: number = 0
+  private isActive: boolean = false
+  private simulationMode: SimulationMode = 'simulation'
   private externalBpm: number | null = null
-  private biometricConnected = false
-  private lastExternalBpmTime = 0
+  private biometricConnected: boolean = false
+  private lastExternalBpmTime: number = 0
   private intervalId: ReturnType<typeof setInterval> | null = null
-  private stabilitySeconds = 0
-  private canCollectCrystal = false
-  private crystals = 0
+  private stabilitySeconds: number = 0
+  private canCollectCrystal: boolean = false
+  private crystals: number = 0
   private events: GameEvent[] = []
-  private eventIdCounter = 0
-  private listeners = new Set<(state: GameControllerState) => void>()
-  private simPhase = 0
-  private lastTickTime = 0
+  private eventIdCounter: number = 0
+  private listeners: Set<(state: GameControllerState) => void> = new Set()
+  private simPhase: number = 0
+  private lastTickTime: number = 0
 
   private logEvent(type: EventType, message: string): void {
-    this.events.unshift({ id: this.eventIdCounter++, type, message, timestamp: Date.now() })
-    if (this.events.length > MAX_EVENTS) this.events = this.events.slice(0, MAX_EVENTS)
+    const event: GameEvent = {
+      id: this.eventIdCounter++,
+      type,
+      message,
+      timestamp: Date.now(),
+    }
+    this.events = [...this.events.slice(-(MAX_EVENTS - 1)), event]
   }
 
   private calculateEnergy(bpm: number): number {
-    return Math.max(10, Math.min(100, 100 - Math.abs(bpm - BASELINE_BPM) * 4))
+    const diff = Math.abs(bpm - BASELINE_BPM)
+    const proximity = Math.max(0, 1 - diff / MAX_BPM_DEVIATION)
+    return Math.round(ENERGY_MIN + proximity * (ENERGY_MAX - ENERGY_MIN))
   }
 
   private calculateBalloonOffset(bpm: number): number {
-    const clampedDelta = Math.max(-20, Math.min(20, bpm - BASELINE_BPM))
-    return -(clampedDelta * 2.2)
+    return -(bpm - BASELINE_BPM) * BALLOON_MULTIPLIER
   }
 
   private checkWatchdog(): void {
-    if (this.simulationMode === 'simulation') {
-      if (
-        this.externalBpm !== null &&
-        Date.now() - this.lastExternalBpmTime < WATCHDOG_TIMEOUT_MS
-      ) {
-        this.simulationMode = 'real'
-        this.logEvent('ok', 'Dados biometricos restaurados')
+    if (this.simulationMode === 'real' && this.biometricConnected) {
+      const elapsed = Date.now() - this.lastExternalBpmTime
+      if (elapsed > WATCHDOG_TIMEOUT_MS) {
+        this.simulationMode = 'simulation'
+        this.logEvent(
+          'warning',
+          `Watchdog: sem dados biométricos por ${WATCHDOG_TIMEOUT_MS / 1000}s — simulação ativada`,
+        )
       }
-      return
-    }
-    if (this.externalBpm === null || Date.now() - this.lastExternalBpmTime > WATCHDOG_TIMEOUT_MS) {
-      this.simulationMode = 'simulation'
-      this.logEvent('warning', 'Modo Simulacao ativado (watchdog)')
     }
   }
 
   private generateSimBpm(): number {
-    this.simPhase += 0.15
-    const mid = (68 + 75) / 2
-    const amp = (75 - 68) / 2
-    return Math.round(mid + amp * Math.sin(this.simPhase))
+    this.simPhase += 0.05
+    const noise = (Math.random() - 0.5) * 4
+    const wave = Math.sin(this.simPhase) * 3
+    return Math.max(50, Math.min(110, Math.round(BASELINE_BPM + wave + noise)))
   }
 
-  private updateStability(bpm: number, deltaMs: number): void {
-    const isStable = bpm >= STABILITY_MIN_BPM && bpm <= STABILITY_MAX_BPM
-    if (!isStable) {
+  private updateStability(bpm: number): void {
+    if (bpm >= STABILITY_MIN_BPM && bpm <= STABILITY_MAX_BPM) {
+      this.stabilitySeconds += 1
+      if (this.stabilitySeconds >= CRYSTAL_INTERVAL_S && !this.canCollectCrystal) {
+        this.canCollectCrystal = true
+        this.logEvent('ok', 'Cristal de Foco disponível para coleta!')
+      }
+    } else {
+      if (this.stabilitySeconds > 0) {
+        this.logEvent('info', `Estabilidade reiniciada — BPM fora da zona (${bpm})`)
+      }
       this.stabilitySeconds = 0
       this.canCollectCrystal = false
-      return
     }
-    this.stabilitySeconds += deltaMs / 1000
-    if (this.stabilitySeconds >= CRYSTAL_INTERVAL_S && !this.canCollectCrystal) {
-      this.canCollectCrystal = true
-      this.logEvent('info', 'Cristal disponivel para coleta!')
+  }
+
+  private tick(): void {
+    this.checkWatchdog()
+
+    let currentBpm: number
+    if (this.simulationMode === 'simulation' || this.externalBpm === null) {
+      currentBpm = this.generateSimBpm()
+    } else {
+      currentBpm = this.externalBpm
     }
+
+    this.bpm = currentBpm
+    this.energy = this.calculateEnergy(currentBpm)
+    this.balloonOffset = this.calculateBalloonOffset(currentBpm)
+    this.updateStability(currentBpm)
+
+    this.notify()
+  }
+
+  private notify(): void {
+    const state = this.getState()
+    this.listeners.forEach((listener) => listener(state))
   }
 
   getState(): GameControllerState {
     return {
       bpm: this.bpm,
-      energy: Math.round(this.energy),
+      energy: this.energy,
       balloonOffset: this.balloonOffset,
       isActive: this.isActive,
       simulationMode: this.simulationMode,
-      stabilitySeconds: Math.floor(this.stabilitySeconds),
+      stabilitySeconds: this.stabilitySeconds,
       canCollectCrystal: this.canCollectCrystal,
       crystals: this.crystals,
       events: [...this.events],
@@ -116,40 +148,44 @@ export class GameController {
   }
 
   setExternalBpm(bpm: number | null): void {
-    if (bpm === null || Number.isNaN(bpm)) return
-    this.externalBpm = bpm
-    this.lastExternalBpmTime = Date.now()
-    if (this.simulationMode === 'simulation') {
-      this.simulationMode = 'real'
-      this.logEvent('ok', `BPM real detectado: ${bpm}`)
+    if (bpm !== null && bpm > 0) {
+      this.externalBpm = bpm
+      this.lastExternalBpmTime = Date.now()
+      if (this.simulationMode === 'simulation') {
+        this.simulationMode = 'real'
+        this.logEvent('ok', `Reconexão biométrica — dados recebidos (BPM: ${bpm})`)
+      }
     }
   }
 
   setBiometricConnected(connected: boolean): void {
-    if (connected !== this.biometricConnected) {
-      this.biometricConnected = connected
-      this.logEvent(
-        connected ? 'ok' : 'warning',
-        connected ? 'Sensor conectado' : 'Sensor desconectado',
-      )
+    const wasConnected = this.biometricConnected
+    this.biometricConnected = connected
+    if (connected && !wasConnected) {
+      this.lastExternalBpmTime = Date.now()
+      this.logEvent('info', 'Sensor biométrico conectado')
+    } else if (!connected && wasConnected) {
+      this.logEvent('warning', 'Sensor biométrico desconectado')
     }
   }
 
   collectCrystal(): void {
-    if (!this.canCollectCrystal) return
-    this.crystals += 1
-    this.canCollectCrystal = false
-    this.stabilitySeconds = 0
-    this.logEvent('ok', `Cristal coletado! Total: ${this.crystals}`)
-    this.notify()
+    if (this.canCollectCrystal) {
+      this.crystals += 1
+      this.canCollectCrystal = false
+      this.stabilitySeconds = 0
+      this.logEvent('ok', `Cristal coletado! Total: ${this.crystals}`)
+    }
   }
 
   toggleSimulation(): void {
-    this.simulationMode = this.simulationMode === 'real' ? 'simulation' : 'real'
-    this.logEvent(
-      this.simulationMode === 'simulation' ? 'warning' : 'info',
-      `Modo ${this.simulationMode === 'simulation' ? 'Simulacao' : 'Real'} ativado (manual)`,
-    )
+    if (this.simulationMode === 'real') {
+      this.simulationMode = 'simulation'
+      this.logEvent('warning', 'Modo simulação ativado (manual)')
+    } else {
+      this.simulationMode = 'real'
+      this.logEvent('info', 'Modo real ativado (manual)')
+    }
     this.notify()
   }
 
@@ -157,31 +193,8 @@ export class GameController {
     if (this.isActive) return
     this.isActive = true
     this.lastTickTime = Date.now()
-    this.logEvent('info', 'Sessao de foco iniciada')
-    if (this.intervalId) clearInterval(this.intervalId)
-    this.intervalId = setInterval(() => {
-      const now = Date.now()
-      const delta = now - this.lastTickTime
-      this.lastTickTime = now
-      this.checkWatchdog()
-      let newBpm: number
-      if (this.simulationMode === 'simulation') {
-        newBpm = this.generateSimBpm()
-      } else if (
-        this.externalBpm !== null &&
-        now - this.lastExternalBpmTime < WATCHDOG_TIMEOUT_MS
-      ) {
-        newBpm = this.externalBpm
-      } else {
-        newBpm = this.generateSimBpm()
-        this.simulationMode = 'simulation'
-      }
-      this.bpm = Math.max(40, Math.min(180, newBpm))
-      this.energy = this.calculateEnergy(this.bpm)
-      this.balloonOffset = this.calculateBalloonOffset(this.bpm)
-      this.updateStability(this.bpm, delta)
-      this.notify()
-    }, 1000)
+    this.logEvent('info', 'Sessão de foco iniciada')
+    this.intervalId = setInterval(() => this.tick(), TICK_INTERVAL_MS)
     this.notify()
   }
 
@@ -200,11 +213,6 @@ export class GameController {
     return () => {
       this.listeners.delete(listener)
     }
-  }
-
-  private notify(): void {
-    const state = this.getState()
-    this.listeners.forEach((l) => l(state))
   }
 
   dispose(): void {

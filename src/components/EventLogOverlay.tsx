@@ -15,22 +15,26 @@ const eventBg: Record<string, string> = {
   error: 'bg-red-400/5',
 }
 
+const MAX_EVENTS = 12
+
 function formatTime(ts: number): string {
   const d = new Date(ts)
   return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`
 }
 
 export function EventLogOverlay({ events }: { events: GameEvent[] }) {
+  const recentEvents = events.slice(-MAX_EVENTS)
+
   return (
     <div className="absolute bottom-4 left-4 z-40 w-64 max-w-[60vw] bg-[#0A192F]/80 backdrop-blur-md rounded-xl border border-[#00FFFF]/10 p-3 max-h-48 overflow-y-auto">
       <div className="text-[10px] font-medium text-[#00FFFF]/60 mb-2 uppercase tracking-wide">
         Log de Eventos
       </div>
       <div className="space-y-1">
-        {events.length === 0 ? (
+        {recentEvents.length === 0 ? (
           <div className="text-[10px] text-white/30">Aguardando eventos...</div>
         ) : (
-          events.map((e) => (
+          recentEvents.map((e) => (
             <div
               key={e.id}
               className={cn(
