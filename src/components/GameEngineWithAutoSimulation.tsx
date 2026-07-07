@@ -114,18 +114,6 @@ export function GameEngineWithAutoSimulation({
               {state.crystals + session.masterCrystals}
             </span>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              'rounded-full text-xs h-8',
-              isSim ? 'bg-[#FFB347]/10 text-[#FFB347]' : 'bg-white/5 text-white/50',
-            )}
-            onClick={() => controller.toggleSimulation()}
-          >
-            <Bug className="h-3.5 w-3.5 mr-1" />
-            {isSim ? 'SIM' : 'REAL'}
-          </Button>
         </div>
       </header>
 
@@ -251,6 +239,21 @@ export function GameEngineWithAutoSimulation({
       </footer>
 
       <EventLogOverlay events={state.events} />
+
+      <div className="fixed bottom-4 right-4 z-50">
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            'rounded-full text-xs h-8',
+            isSim ? 'bg-[#FFB347]/10 text-[#FFB347]' : 'bg-white/5 text-white/50',
+          )}
+          onClick={() => controller.toggleSimulation()}
+        >
+          <Bug className="h-3.5 w-3.5 mr-1" />
+          {isSim ? 'SIM' : 'REAL'}
+        </Button>
+      </div>
     </div>
   )
 }
