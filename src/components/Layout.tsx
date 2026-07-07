@@ -15,6 +15,7 @@ import {
   FlaskConical,
   ScrollText,
   FileSearch,
+  Stethoscope,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { Link as RouterLink } from 'react-router-dom'
@@ -27,6 +28,7 @@ const baseNavItems = [
   { path: '/', label: 'Painel', icon: Activity },
   { path: '/anamnesis', label: 'Anamnese', icon: ClipboardList },
   { path: '/scales', label: 'Escalas', icon: ClipboardCheck },
+  { path: '/avaliacao', label: 'Avaliação', icon: Stethoscope },
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/stress-test', label: 'Testes', icon: FlaskConical },
   { path: '/ethics', label: 'Institucional', icon: ScrollText },
