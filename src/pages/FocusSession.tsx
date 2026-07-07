@@ -1,9 +1,10 @@
 import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, User } from 'lucide-react'
 import { CameraOnboarding } from '@/components/CameraOnboarding'
 import { GameEngineWithAutoSimulation } from '@/components/GameEngineWithAutoSimulation'
 import { FieldTestRunner } from '@/components/FieldTestRunner'
+import { useAuth } from '@/contexts/auth-context'
 import type { GameController } from '@/lib/game-controller'
 
 type Phase = 'onboarding' | 'focus' | 'error'
@@ -12,6 +13,16 @@ export default function FocusSession() {
   const [phase, setPhase] = useState<Phase>('onboarding')
   const [controller, setController] = useState<GameController | null>(null)
   const [showFieldTest, setShowFieldTest] = useState(false)
+  const { isAuthenticated } = useAuth()
+
+  const guestBanner = !isAuthenticated ? (
+    <div className="fixed top-0 left-0 right-0 z-[60] bg-[#00FFFF]/10 border-b border-[#00FFFF]/20 backdrop-blur-sm px-4 py-2 text-center">
+      <p className="text-xs text-[#00FFFF] flex items-center justify-center gap-1.5">
+        <User className="h-3 w-3" />
+        Modo Convidado — Faça login para salvar seu progresso
+      </p>
+    </div>
+  ) : null
 
   const handleCalibrationComplete = useCallback((ctrl: GameController) => {
     if (!ctrl || typeof ctrl.start !== 'function' || typeof ctrl.stop !== 'function') {
@@ -56,21 +67,27 @@ export default function FocusSession() {
 
   if (phase === 'onboarding') {
     return (
-      <CameraOnboarding
-        onComplete={handleCalibrationComplete}
-        onOpenFieldTest={() => setShowFieldTest(true)}
-      />
+      <>
+        {guestBanner}
+        <CameraOnboarding
+          onComplete={handleCalibrationComplete}
+          onOpenFieldTest={() => setShowFieldTest(true)}
+        />
+      </>
     )
   }
 
   if (phase === 'focus' && controller) {
     return (
-      <GameEngineWithAutoSimulation
-        controller={controller}
-        onExit={handleExit}
-        externalBpm={null}
-        biometricConnected={false}
-      />
+      <>
+        {guestBanner}
+        <GameEngineWithAutoSimulation
+          controller={controller}
+          onExit={handleExit}
+          externalBpm={null}
+          biometricConnected={false}
+        />
+      </>
     )
   }
 

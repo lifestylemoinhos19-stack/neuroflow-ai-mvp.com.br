@@ -24,7 +24,9 @@ import Ethics from '@/pages/Ethics'
 import EthicalAuditDashboard from '@/pages/EthicalAuditDashboard'
 import TermsOfUse from '@/pages/TermsOfUse'
 import NotFound from '@/pages/NotFound'
-import FocusSession from '@/pages/FocusSession'
+import Welcome from '@/pages/Welcome'
+import CaptureChoice from '@/pages/CaptureChoice'
+import FocusSessionRoute from '@/pages/FocusSessionRoute'
 import { MainDeployment } from '@/components/MainDeployment'
 import SessionSummary from '@/pages/SessionSummary'
 import OpticalOnboarding from '@/pages/OpticalOnboarding'
@@ -53,6 +55,8 @@ const App = () => (
             <Route path="/about" element={<Ethics />} />
             <Route path="/avaliacao" element={<PublicAssessment />} />
             <Route path="/avaliacao/:scale" element={<PublicAssessment />} />
+            <Route path="/welcome" element={<Welcome />} />
+            <Route path="/capture-choice" element={<CaptureChoice />} />
             <Route
               path="/mfa"
               element={
@@ -80,14 +84,7 @@ const App = () => (
                 </AuthGuard>
               }
             />
-            <Route
-              path="/focus-session"
-              element={
-                <AuthGuard>
-                  <MainDeployment />
-                </AuthGuard>
-              }
-            />
+            <Route path="/focus-session" element={<FocusSessionRoute />} />
             <Route
               path="/deployment"
               element={
@@ -122,7 +119,7 @@ const App = () => (
             />
 
             {/* Protected Routes (require Auth + MFA + Onboarding) */}
-            <Route path="/" element={<Navigate to="/focus-session" replace />} />
+            <Route path="/" element={<Navigate to="/welcome" replace />} />
             <Route
               element={
                 <AuthGuard>
@@ -155,7 +152,7 @@ const App = () => (
               />
             </Route>
 
-            <Route path="*" element={<Navigate to="/focus-session" replace />} />
+            <Route path="*" element={<Navigate to="/welcome" replace />} />
           </Routes>
         </BrandingProvider>
       </AuthProvider>

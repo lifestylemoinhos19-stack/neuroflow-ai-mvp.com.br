@@ -1,6 +1,11 @@
 import { Link } from 'react-router-dom'
+import { useBranding } from '@/hooks/use-branding'
 
 export function SkipLogo() {
+  const { showSkipLogo } = useBranding()
+
+  if (!showSkipLogo) return null
+
   return (
     <Link
       to="/"

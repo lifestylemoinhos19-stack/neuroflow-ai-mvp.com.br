@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { PublicPageShell } from '@/components/PublicPageShell'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 export default function PublicAssessment() {
   const [started, setStarted] = useState(false)
   const { scale } = useParams<{ scale?: string }>()
+  const navigate = useNavigate()
   const defaultTab = scale === 'assq' ? 'assq' : scale === 'snapiv' ? 'snapiv' : 'snapiv'
 
   useEffect(() => {
@@ -109,6 +110,14 @@ export default function PublicAssessment() {
             <PublicAssq />
           </TabsContent>
         </Tabs>
+        <div className="mt-6 pt-4 border-t border-[#00FFFF]/10">
+          <Button
+            onClick={() => navigate('/focus-session')}
+            className="w-full bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-semibold"
+          >
+            Ir para Sessão de Foco <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+        </div>
       </div>
     </PublicPageShell>
   )
