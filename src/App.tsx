@@ -4,6 +4,9 @@ import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
 import { AuthProvider, AuthGuard } from '@/contexts/auth-context'
+import { BrandingProvider } from '@/hooks/use-branding'
+import { BrandingProvider } from '@/hooks/use-branding'
+import { SkipBrandingBadge } from '@/components/SkipBrandingBadge'
 import BetaLanding from '@/pages/BetaLanding'
 import BetaFeedback from '@/pages/BetaFeedback'
 import NeuroValidationPage from '@/pages/NeuroValidationPage'
@@ -35,125 +38,128 @@ const App = () => (
       <Toaster />
       <Sonner />
       <AuthProvider>
-        <Routes>
-          {/* Public / Semi-public Routes */}
-          <Route
-            path="/login"
-            element={
-              <AuthGuard requireMfa={false}>
-                <Login />
-              </AuthGuard>
-            }
-          />
-          <Route path="/terms" element={<TermsOfUse />} />
-          <Route path="/security" element={<Security />} />
-          <Route path="/ethics" element={<Ethics />} />
-          <Route path="/about" element={<Ethics />} />
-          <Route
-            path="/mfa"
-            element={
-              <AuthGuard requireMfa={false}>
-                <MFA />
-              </AuthGuard>
-            }
-          />
-
-          {/* Onboarding Route (requires Auth + MFA, but not onboarding) */}
-          <Route
-            path="/onboarding"
-            element={
-              <AuthGuard>
-                <Onboarding />
-              </AuthGuard>
-            }
-          />
-
-          <Route
-            path="/optical-onboarding"
-            element={
-              <AuthGuard>
-                <OpticalOnboarding />
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="/focus-session"
-            element={
-              <AuthGuard>
-                <MainDeployment />
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="/deployment"
-            element={
-              <AuthGuard>
-                <MainDeployment />
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="/session-summary"
-            element={
-              <AuthGuard>
-                <SessionSummary />
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="/beta"
-            element={
-              <AuthGuard>
-                <BetaLanding />
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="/beta-feedback"
-            element={
-              <AuthGuard>
-                <BetaFeedback />
-              </AuthGuard>
-            }
-          />
-
-          {/* Protected Routes (require Auth + MFA + Onboarding) */}
-          <Route path="/" element={<Navigate to="/focus-session" replace />} />
-          <Route
-            element={
-              <AuthGuard>
-                <Layout />
-              </AuthGuard>
-            }
-          >
-            <Route path="/anamnesis" element={<Anamnesis />} />
-            <Route path="/scales" element={<Scales />} />
-            <Route path="/avaliacao" element={<Avaliacao />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/insights" element={<Insights />} />
-            <Route path="/logs" element={<HealthLogs />} />
-            <Route path="/neuro-validation" element={<NeuroValidationPage />} />
-            <Route path="/stress-test" element={<StressTestDashboard />} />
+        <BrandingProvider>
+          <SkipBrandingBadge />
+          <Routes>
+            {/* Public / Semi-public Routes */}
             <Route
-              path="/admin/stress-tests"
+              path="/login"
               element={
-                <AuthGuard requireAdmin>
-                  <StressTestDashboard />
+                <AuthGuard requireMfa={false}>
+                  <Login />
+                </AuthGuard>
+              }
+            />
+            <Route path="/terms" element={<TermsOfUse />} />
+            <Route path="/security" element={<Security />} />
+            <Route path="/ethics" element={<Ethics />} />
+            <Route path="/about" element={<Ethics />} />
+            <Route
+              path="/mfa"
+              element={
+                <AuthGuard requireMfa={false}>
+                  <MFA />
+                </AuthGuard>
+              }
+            />
+
+            {/* Onboarding Route (requires Auth + MFA, but not onboarding) */}
+            <Route
+              path="/onboarding"
+              element={
+                <AuthGuard>
+                  <Onboarding />
+                </AuthGuard>
+              }
+            />
+
+            <Route
+              path="/optical-onboarding"
+              element={
+                <AuthGuard>
+                  <OpticalOnboarding />
                 </AuthGuard>
               }
             />
             <Route
-              path="/admin/ethical-audit"
+              path="/focus-session"
               element={
-                <AuthGuard requireAdmin>
-                  <EthicalAuditDashboard />
+                <AuthGuard>
+                  <MainDeployment />
                 </AuthGuard>
               }
             />
-          </Route>
+            <Route
+              path="/deployment"
+              element={
+                <AuthGuard>
+                  <MainDeployment />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/session-summary"
+              element={
+                <AuthGuard>
+                  <SessionSummary />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/beta"
+              element={
+                <AuthGuard>
+                  <BetaLanding />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/beta-feedback"
+              element={
+                <AuthGuard>
+                  <BetaFeedback />
+                </AuthGuard>
+              }
+            />
 
-          <Route path="*" element={<Navigate to="/focus-session" replace />} />
-        </Routes>
+            {/* Protected Routes (require Auth + MFA + Onboarding) */}
+            <Route path="/" element={<Navigate to="/focus-session" replace />} />
+            <Route
+              element={
+                <AuthGuard>
+                  <Layout />
+                </AuthGuard>
+              }
+            >
+              <Route path="/anamnesis" element={<Anamnesis />} />
+              <Route path="/scales" element={<Scales />} />
+              <Route path="/avaliacao" element={<Avaliacao />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/insights" element={<Insights />} />
+              <Route path="/logs" element={<HealthLogs />} />
+              <Route path="/neuro-validation" element={<NeuroValidationPage />} />
+              <Route path="/stress-test" element={<StressTestDashboard />} />
+              <Route
+                path="/admin/stress-tests"
+                element={
+                  <AuthGuard requireAdmin>
+                    <StressTestDashboard />
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/admin/ethical-audit"
+                element={
+                  <AuthGuard requireAdmin>
+                    <EthicalAuditDashboard />
+                  </AuthGuard>
+                }
+              />
+            </Route>
+
+            <Route path="*" element={<Navigate to="/focus-session" replace />} />
+          </Routes>
+        </BrandingProvider>
       </AuthProvider>
     </TooltipProvider>
   </BrowserRouter>

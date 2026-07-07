@@ -18,11 +18,12 @@ import {
   Stethoscope,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
-import { Link as RouterLink } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
+import { useBranding } from '@/hooks/use-branding'
+import { SkipLogo } from '@/components/SkipLogo'
 
 const baseNavItems = [
   { path: '/', label: 'Painel', icon: Activity },
@@ -37,6 +38,7 @@ const baseNavItems = [
 
 export default function Layout() {
   const { logout, user, isAdmin } = useAuth()
+  const branding = useBranding()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const navItems = isAdmin
@@ -150,6 +152,11 @@ export default function Layout() {
               <p className="text-xs text-slate-400 text-center">
                 NeuroFlow AI — Em conformidade com a LGPD (Lei nº 13.709/2018)
               </p>
+              {branding.showSkipLogo && (
+                <div className="mt-3 flex justify-center">
+                  <SkipLogo />
+                </div>
+              )}
             </footer>
           </div>
         </main>
