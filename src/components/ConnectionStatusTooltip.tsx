@@ -59,6 +59,9 @@ export function ConnectionStatusTooltip({ state, error, onRetry }: ConnectionSta
       <Tooltip>
         <TooltipTrigger asChild>
           <button
+            role="status"
+            aria-live="polite"
+            aria-label={`Status do sensor: ${config.label}`}
             className={cn(
               'flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all duration-200 font-sans font-medium border',
               isConnected
@@ -89,7 +92,11 @@ export function ConnectionStatusTooltip({ state, error, onRetry }: ConnectionSta
             <span className={cn('text-xs font-medium', config.color)}>{config.label}</span>
           </button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="bg-[#0A192F] border-[#00FFFF]/30 text-white">
+        <TooltipContent
+          side="bottom"
+          className="bg-[#0A192F] border-[#00FFFF]/30 text-white relative"
+        >
+          <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-[#0A192F] border-l border-t border-[#00FFFF]/30" />
           <div className="flex flex-col gap-2 max-w-xs">
             <p className={cn('text-xs font-medium', config.color)}>{config.tooltip}</p>
             {error && isError && <p className="text-xs text-red-400">{error}</p>}
