@@ -79,7 +79,7 @@ export function InformedConsent({ onAccept }: InformedConsentProps) {
           size="lg"
           className="w-full bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Concordar e Continuar <ArrowRight className="h-4 w-4 ml-2" />
+          Li e aceito <ArrowRight className="h-4 w-4 ml-2" />
         </Button>
       </div>
     </PublicPageShell>

@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { useBranding } from '@/hooks/use-branding'
 import { SkipLogo } from '@/components/SkipLogo'
+import { CalmExplorerModal } from '@/components/CalmExplorerModal'
 
 const baseNavItems = [
   { path: '/', label: 'Painel', icon: Activity },
@@ -185,6 +186,7 @@ export default function Layout() {
           )
         })}
       </nav>
+      <CalmExplorerModal />
     </div>
   )
 }

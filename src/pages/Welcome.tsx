@@ -31,8 +31,7 @@ export default function Welcome() {
             Neuro<span className="text-[#00FFFF]">Flow</span> AI
           </h1>
           <p className="text-white/60 mt-3 text-sm sm:text-base max-w-md mx-auto">
-            Treine seu foco. Transforme sua mente. Experimente o poder do biofeedback neural em
-            tempo real.
+            Vamos conhecer seu filho?
           </p>
         </div>
 
@@ -50,7 +49,7 @@ export default function Welcome() {
 
         <div className="mt-10 flex flex-col items-center gap-4 animate-fade-in-up">
           <Button
-            onClick={() => navigate('/capture-choice')}
+            onClick={() => navigate('/avaliacao')}
             size="lg"
             className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-semibold rounded-full px-8 shadow-lg shadow-[#00FFFF]/20"
           >

@@ -4,6 +4,7 @@ import { ArrowLeft, Printer, Save, Loader2, FileText, Brain, Stethoscope } from 
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { PublicPageShell } from '@/components/PublicPageShell'
+import { AssessmentScoreChart } from '@/components/AssessmentScoreChart'
 import { useAuth } from '@/contexts/auth-context'
 import { supabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
@@ -29,12 +30,12 @@ function formatMessage(scaleType: ScaleType, result: Record<string, unknown>): s
   if (scaleType === 'assq') {
     return `Avaliação ASSQ: pontuação total ${result.total}, limiar ${result.threshold}. Sugestivo: ${result.isSuggestive}`
   }
-  return `Avaliação CBCL: internalizante ${result.internalizing}, externalizante ${result.externalizing}, total ${result.total}. Internalizante elevado: ${result.isInternalizingElevated}, Externalizante elevado: ${result.isExternalizingElevated}`
+  return `Avaliação CBCL: internalizante ${result.internalizing}, externalizante ${result.externalizing}, total ${result.total}.`
 }
 
 export function AssessmentDevolutiva({ scaleType, result, onBack }: DevolutivaProps) {
-  const [aiText, setAiText] = useState<string>('')
-  const [aiAction, setAiAction] = useState<string>('')
+  const [aiText, setAiText] = useState('')
+  const [aiAction, setAiAction] = useState('')
   const [loading, setLoading] = useState(true)
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
@@ -56,11 +57,13 @@ export function AssessmentDevolutiva({ scaleType, result, onBack }: DevolutivaPr
   const handlePrint = () => window.print()
 
   const handleSave = () => {
+    localStorage.setItem('neuroflow_show_calm_explorer', 'true')
     if (!isAuthenticated) {
       toast.info('Faça login para salvar seu histórico de avaliações.')
       navigate('/login')
     } else {
       toast.success('Seus resultados já estão salvos em sua conta!')
+      navigate('/dashboard')
     }
   }
 
@@ -126,6 +129,7 @@ export function AssessmentDevolutiva({ scaleType, result, onBack }: DevolutivaPr
               </div>
             </div>
           )}
+          <AssessmentScoreChart scaleType={scaleType} result={result} />
         </div>
 
         <div className="rounded-2xl border border-[#00FFFF]/20 bg-[#00FFFF]/5 p-6 space-y-3">
@@ -166,7 +170,7 @@ export function AssessmentDevolutiva({ scaleType, result, onBack }: DevolutivaPr
             onClick={handleSave}
             className="flex-1 bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-semibold"
           >
-            <Save className="h-4 w-4 mr-2" /> Salvar na Minha Conta
+            <Save className="h-4 w-4 mr-2" /> Salvar meu histórico
           </Button>
         </div>
       </div>
