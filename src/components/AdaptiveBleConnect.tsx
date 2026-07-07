@@ -18,6 +18,12 @@ export function AdaptiveBleConnect({ onConnected }: { onConnected?: () => void }
   const [onboarding, setOnboarding] = useState<UserOnboarding | null>(null)
   const [loading, setLoading] = useState(true)
   const autoReconnectStarted = useRef(false)
+  const connectedNotifiedRef = useRef(false)
+  const onConnectedRef = useRef(onConnected)
+
+  useEffect(() => {
+    onConnectedRef.current = onConnected
+  }, [onConnected])
 
   const fetchOnboarding = useCallback(async () => {
     if (!user) {
@@ -25,9 +31,14 @@ export function AdaptiveBleConnect({ onConnected }: { onConnected?: () => void }
       setLoading(false)
       return
     }
-    const data = await getOnboardingState(user.id)
-    setOnboarding(data)
-    setLoading(false)
+    try {
+      const data = await getOnboardingState(user.id)
+      setOnboarding(data)
+    } catch {
+      setOnboarding(null)
+    } finally {
+      setLoading(false)
+    }
   }, [user])
 
   useEffect(() => {
@@ -35,10 +46,15 @@ export function AdaptiveBleConnect({ onConnected }: { onConnected?: () => void }
   }, [fetchOnboarding])
 
   useEffect(() => {
-    if (state === 'connected' && onConnected) {
-      onConnected()
+    if (state === 'connected') {
+      if (!connectedNotifiedRef.current && onConnectedRef.current) {
+        connectedNotifiedRef.current = true
+        onConnectedRef.current()
+      }
+    } else {
+      connectedNotifiedRef.current = false
     }
-  }, [state, onConnected])
+  }, [state])
 
   useEffect(() => {
     if (loading || !user) return
@@ -50,7 +66,8 @@ export function AdaptiveBleConnect({ onConnected }: { onConnected?: () => void }
       onboarding &&
       !onboarding.is_first_access &&
       (onboarding.paired_sensor_id || cachedSensor) &&
-      !autoReconnectStarted.current
+      !autoReconnectStarted.current &&
+      state !== 'connected'
     ) {
       autoReconnectStarted.current = true
       const sensorToReconnect = onboarding.paired_sensor_id || cachedSensor
@@ -59,7 +76,8 @@ export function AdaptiveBleConnect({ onConnected }: { onConnected?: () => void }
       !onboarding &&
       cachedSensor &&
       browser.supportsBle &&
-      !autoReconnectStarted.current
+      !autoReconnectStarted.current &&
+      state !== 'connected'
     ) {
       autoReconnectStarted.current = true
       ensureSensorConsistency(user.id).then((consistentId) => {
@@ -68,7 +86,7 @@ export function AdaptiveBleConnect({ onConnected }: { onConnected?: () => void }
         }
       })
     }
-  }, [loading, onboarding, user, startAutoReconnect])
+  }, [loading, onboarding, user, startAutoReconnect, state])
 
   if (loading) {
     return (

@@ -38,6 +38,7 @@ export function BluetoothPairingTutorial({
   bleState,
   isSupported,
   error,
+  sensorId,
   onConnect,
   onComplete,
   onSkip,
@@ -92,9 +93,16 @@ export function BluetoothPairingTutorial({
         {isConnectStep && (
           <div className="mb-6 space-y-2">
             {bleState === 'connected' && (
-              <p className="flex items-center justify-center gap-2 text-[#00FFFF] text-sm">
-                <Check className="h-4 w-4" /> Sensor conectado com sucesso!
-              </p>
+              <div className="space-y-1">
+                <p className="flex items-center justify-center gap-2 text-[#00FFFF] text-sm">
+                  <Check className="h-4 w-4" /> Sensor conectado com sucesso!
+                </p>
+                {sensorId && (
+                  <p className="text-xs text-white/40 text-center font-mono">
+                    ID: {sensorId.slice(0, 8)}...
+                  </p>
+                )}
+              </div>
             )}
             {error && <p className="text-xs text-red-400 text-center">{error}</p>}
             {!isSupported && (

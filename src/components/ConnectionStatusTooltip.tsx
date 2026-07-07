@@ -10,10 +10,47 @@ interface ConnectionStatusTooltipProps {
   onRetry: () => void
 }
 
+interface ConnectionStatusTooltipProps {
+  state: BleSensorState
+  error: string | null
+  onRetry: () => void
+}
+
 const stateConfig: Record<
   BleSensorState,
   { label: string; tooltip: string; color: string; icon: typeof Bluetooth }
 > = {
+  idle: {
+    label: 'Desconectado',
+    tooltip: 'Sensor não conectado.',
+    color: 'text-white/40',
+    icon: Bluetooth,
+  },
+  scanning: {
+    label: 'Escaneando',
+    tooltip: 'Escaneando sensores próximos...',
+    color: 'text-[#00FFFF]',
+    icon: Bluetooth,
+  },
+  connecting: {
+    label: 'Conectando',
+    tooltip: 'Estabelecendo conexão...',
+    color: 'text-[#00FFFF]',
+    icon: Bluetooth,
+  },
+  connected: {
+    label: 'Conectado',
+    tooltip: 'Sensor conectado!',
+    color: 'text-[#00FFFF]',
+    icon: BluetoothConnected,
+  },
+  error: {
+    label: 'Erro',
+    tooltip: 'Falha na conexão',
+    color: 'text-red-400',
+    icon: AlertCircle,
+  },
+}
   idle: {
     label: 'Desconectado',
     tooltip: 'Sensor não conectado.',
