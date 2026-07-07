@@ -5,7 +5,6 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 
 import { AuthProvider, AuthGuard } from '@/contexts/auth-context'
 import { BrandingProvider } from '@/hooks/use-branding'
-import { BrandingProvider } from '@/hooks/use-branding'
 import { SkipBrandingBadge } from '@/components/SkipBrandingBadge'
 import BetaLanding from '@/pages/BetaLanding'
 import BetaFeedback from '@/pages/BetaFeedback'
