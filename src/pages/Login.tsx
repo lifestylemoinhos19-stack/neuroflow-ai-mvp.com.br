@@ -27,6 +27,8 @@ export default function Login() {
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false)
   const { signIn, signUp } = useAuth()
   const { toast } = useToast()
+  const hasGuestData =
+    typeof window !== 'undefined' && !!localStorage.getItem('neuroflow_guest_token')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -107,6 +109,11 @@ export default function Login() {
             <CardDescription className="text-white/60">
               {isSignUp ? 'Crie sua conta segura' : 'Acesse seu painel clínico seguro'}
             </CardDescription>
+            {hasGuestData && !isSignUp && (
+              <p className="text-xs text-[#00FFFF] bg-[#00FFFF]/10 rounded-lg p-2 mt-2 border border-[#00FFFF]/20">
+                Suas avaliações anteriores serão vinculadas automaticamente à sua conta.
+              </p>
+            )}
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
@@ -194,7 +201,7 @@ export default function Login() {
                 />
                 <div className="text-sm leading-relaxed">
                   <Label htmlFor="privacy" className="cursor-pointer font-medium text-white/80">
-                    Aceito os{' '}
+                    Li e aceito os{' '}
                     <a href="#" className="text-[#00FFFF] hover:underline">
                       Termos de Uso
                     </a>{' '}

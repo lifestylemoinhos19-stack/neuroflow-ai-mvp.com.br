@@ -82,6 +82,7 @@ export default function PublicAssessment() {
             <Stethoscope className="h-8 w-8 text-[#00FFFF]" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white">NeuroFlow AI</h1>
+          <h2 className="text-xl sm:text-2xl font-bold text-white">Vamos conhecer seu filho?</h2>
           <p className="text-[#00FFFF]/80 text-sm sm:text-base font-medium max-w-md mx-auto">
             Avaliação carinhosa para entender melhor o seu filho
           </p>
