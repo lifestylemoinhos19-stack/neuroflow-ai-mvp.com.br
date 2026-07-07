@@ -3,12 +3,9 @@ import { Brain, ArrowLeft, LogIn, Shield, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { type ReactNode, useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { useBranding } from '@/hooks/use-branding'
-import { SkipLogo } from '@/components/SkipLogo'
 
 export function PublicPageShell({ children }: { children: ReactNode }) {
   const [isAuthed, setIsAuthed] = useState(false)
-  const branding = useBranding()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -91,11 +88,6 @@ export function PublicPageShell({ children }: { children: ReactNode }) {
               Termos
             </Link>
           </div>
-          {branding.showSkipLogo && (
-            <div className="mt-2">
-              <SkipLogo />
-            </div>
-          )}
         </div>
       </footer>
     </div>

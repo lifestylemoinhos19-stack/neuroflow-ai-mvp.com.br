@@ -1,9 +1,18 @@
 import { useBranding } from '@/hooks/use-branding'
+import { useLocation } from 'react-router-dom'
 
 export function SkipBrandingBadge() {
   const { showSkipLogo, loading } = useBranding()
+  const location = useLocation()
 
-  if (loading || !showSkipLogo) {
+  const isPublicRoute =
+    location.pathname === '/avaliacao' ||
+    location.pathname === '/terms' ||
+    location.pathname === '/security' ||
+    location.pathname === '/ethics' ||
+    location.pathname === '/about'
+
+  if (loading || !showSkipLogo || isPublicRoute) {
     return null
   }
 

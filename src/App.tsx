@@ -5,7 +5,6 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 
 import { AuthProvider, AuthGuard } from '@/contexts/auth-context'
 import { BrandingProvider } from '@/hooks/use-branding'
-import { SkipBrandingBadge } from '@/components/SkipBrandingBadge'
 import BetaLanding from '@/pages/BetaLanding'
 import BetaFeedback from '@/pages/BetaFeedback'
 import NeuroValidationPage from '@/pages/NeuroValidationPage'
@@ -38,7 +37,6 @@ const App = () => (
       <Sonner />
       <AuthProvider>
         <BrandingProvider>
-          <SkipBrandingBadge />
           <Routes>
             {/* Public / Semi-public Routes */}
             <Route
@@ -54,6 +52,7 @@ const App = () => (
             <Route path="/ethics" element={<Ethics />} />
             <Route path="/about" element={<Ethics />} />
             <Route path="/avaliacao" element={<PublicAssessment />} />
+            <Route path="/avaliacao/:scale" element={<PublicAssessment />} />
             <Route
               path="/mfa"
               element={

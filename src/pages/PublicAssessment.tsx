@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
 import { PublicPageShell } from '@/components/PublicPageShell'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -9,6 +10,14 @@ import { cn } from '@/lib/utils'
 
 export default function PublicAssessment() {
   const [started, setStarted] = useState(false)
+  const { scale } = useParams<{ scale?: string }>()
+  const defaultTab = scale === 'assq' ? 'assq' : scale === 'snapiv' ? 'snapiv' : 'snapiv'
+
+  useEffect(() => {
+    if (scale === 'snapiv' || scale === 'assq') {
+      setStarted(true)
+    }
+  }, [scale])
 
   if (!started) {
     return (
@@ -76,7 +85,7 @@ export default function PublicAssessment() {
             uma avaliação médica. Resultados são salvos apenas no seu navegador.
           </p>
         </div>
-        <Tabs defaultValue="snapiv" className="w-full">
+        <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList
             className={cn('grid w-full grid-cols-2 max-w-md bg-white/5 border border-white/10')}
           >
