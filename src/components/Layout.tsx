@@ -16,6 +16,7 @@ import {
   ScrollText,
   FileSearch,
   Stethoscope,
+  LineChart,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
@@ -30,6 +31,7 @@ const baseNavItems = [
   { path: '/anamnesis', label: 'Anamnese', icon: ClipboardList },
   { path: '/scales', label: 'Escalas', icon: ClipboardCheck },
   { path: '/avaliacao', label: 'Avaliação', icon: Stethoscope },
+  { path: '/historico', label: 'Histórico', icon: LineChart },
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/stress-test', label: 'Testes', icon: FlaskConical },
   { path: '/ethics', label: 'Institucional', icon: ScrollText },

@@ -13,7 +13,7 @@ const STORAGE_KEY = 'neuroflow_avaliacao_resultados'
 const inattentionQs = snapQuestions.filter((q) => q.group === 'inattention')
 const hyperactivityQs = snapQuestions.filter((q) => q.group === 'hyperactivity')
 
-export function PublicSnapIV() {
+export function PublicSnapIV({ onDevolutiva }: { onDevolutiva?: () => void }) {
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [showResult, setShowResult] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -165,6 +165,15 @@ export function PublicSnapIV() {
           )}
           Salvar e Enviar Resultados
         </Button>
+        {onDevolutiva && (
+          <Button
+            onClick={onDevolutiva}
+            variant="outline"
+            className="w-full border-[#00FFFF]/30 text-[#00FFFF] hover:bg-[#00FFFF]/10"
+          >
+            <Eye className="h-4 w-4 mr-2" /> Ver Devolutiva Completa
+          </Button>
+        )}
         <Button
           variant="outline"
           onClick={handleReset}

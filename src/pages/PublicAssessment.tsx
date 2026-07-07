@@ -6,19 +6,73 @@ import { Button } from '@/components/ui/button'
 import { Stethoscope, Brain, ArrowRight, Lock, ShieldCheck } from 'lucide-react'
 import { PublicSnapIV } from '@/components/PublicSnapIV'
 import { PublicAssq } from '@/components/PublicAssq'
+import { PublicCbcl } from '@/components/PublicCbcl'
+import { InformedConsent } from '@/components/InformedConsent'
+import { AssessmentDevolutiva } from '@/components/AssessmentDevolutiva'
 import { cn } from '@/lib/utils'
+import { interpretSnapIV, interpretASSQ } from '@/lib/assessment-data'
+import { interpretCBCL } from '@/lib/cbcl-data'
+
+type ScaleType = 'snap-iv' | 'assq' | 'cbcl'
 
 export default function PublicAssessment() {
+  const [consented, setConsented] = useState(false)
   const [started, setStarted] = useState(false)
+  const [devolutiva, setDevolutiva] = useState<{
+    scale: ScaleType
+    result: Record<string, unknown>
+  } | null>(null)
   const { scale } = useParams<{ scale?: string }>()
   const navigate = useNavigate()
-  const defaultTab = scale === 'assq' ? 'assq' : scale === 'snapiv' ? 'snapiv' : 'snapiv'
+  const defaultTab: ScaleType = scale === 'assq' ? 'assq' : scale === 'cbcl' ? 'cbcl' : 'snap-iv'
 
   useEffect(() => {
-    if (scale === 'snapiv' || scale === 'assq') {
+    if (scale === 'snapiv' || scale === 'assq' || scale === 'cbcl') {
       setStarted(true)
     }
   }, [scale])
+
+  const handleDevolutiva = (scaleType: ScaleType) => {
+    try {
+      const draft = localStorage.getItem('neuroflow_avaliacao_resultados')
+      const parsed = draft ? JSON.parse(draft) : {}
+      let result: Record<string, unknown> = {}
+      if (scaleType === 'snap-iv' && parsed.snap?.answers) {
+        result = interpretSnapIV(parsed.snap.answers) as unknown as Record<string, unknown>
+      } else if (scaleType === 'assq' && parsed.assq?.answers) {
+        result = interpretASSQ(
+          parsed.assq.answers,
+          parsed.assq.gender || 'boy',
+        ) as unknown as Record<string, unknown>
+      } else if (scaleType === 'cbcl' && parsed.cbcl?.answers) {
+        result = interpretCBCL(parsed.cbcl.answers) as unknown as Record<string, unknown>
+      }
+      setDevolutiva({ scale: scaleType, result })
+    } catch {
+      /* ignore */
+    }
+  }
+
+  if (devolutiva) {
+    return (
+      <AssessmentDevolutiva
+        scaleType={devolutiva.scale}
+        result={devolutiva.result}
+        onBack={() => setDevolutiva(null)}
+      />
+    )
+  }
+
+  if (!consented) {
+    return (
+      <InformedConsent
+        onAccept={() => {
+          setConsented(true)
+          setStarted(true)
+        }}
+      />
+    )
+  }
 
   if (!started) {
     return (
@@ -42,7 +96,7 @@ export default function PublicAssessment() {
             </div>
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="h-3.5 w-3.5 text-[#00FFFF]" />
-              <span>Dados ficam no seu dispositivo</span>
+              <span>Dados protegidos (LGPD)</span>
             </div>
           </div>
           <Button
@@ -57,8 +111,7 @@ export default function PublicAssessment() {
               <Brain className="h-4 w-4 text-[#00FFFF] shrink-0 mt-0.5" />
               <p className="text-xs text-white/70">
                 Esta ferramenta é de <strong className="text-[#00FFFF]">triagem</strong> e não
-                substitui uma avaliação médica. Os resultados são salvos apenas localmente no seu
-                navegador.
+                substitui uma avaliação médica.
               </p>
             </div>
           </div>
@@ -81,39 +134,45 @@ export default function PublicAssessment() {
           <p className="text-[#00FFFF]/80 text-sm font-medium">
             Avaliação carinhosa para entender melhor o seu filho
           </p>
-          <p className="text-white/50 text-xs mt-1">
-            Escalas clínicas especializadas para triagem de neurodesenvolvimento.
-          </p>
         </div>
         <div className="rounded-xl border border-[#00FFFF]/20 bg-[#00FFFF]/5 p-3 flex items-start gap-2">
           <Brain className="h-4 w-4 text-[#00FFFF] shrink-0 mt-0.5" />
           <p className="text-xs text-white/70">
             Esta ferramenta é de triagem e <strong className="text-[#00FFFF]">não substitui</strong>{' '}
-            uma avaliação médica. Resultados são salvos apenas no seu navegador.
+            uma avaliação médica.
           </p>
         </div>
         <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList
-            className={cn('grid w-full grid-cols-2 max-w-md bg-white/5 border border-white/10')}
+            className={cn('grid w-full grid-cols-3 max-w-lg bg-white/5 border border-white/10')}
           >
             <TabsTrigger
               value="snapiv"
-              className="text-white data-[state=active]:bg-[#00FFFF] data-[state=active]:text-[#0A192F] transition-all"
+              className="text-white data-[state=active]:bg-[#00FFFF] data-[state=active]:text-[#0A192F] transition-all text-xs sm:text-sm"
             >
-              SNAP-IV (TDAH)
+              SNAP-IV
             </TabsTrigger>
             <TabsTrigger
               value="assq"
-              className="text-white data-[state=active]:bg-[#00FFFF] data-[state=active]:text-[#0A192F] transition-all"
+              className="text-white data-[state=active]:bg-[#00FFFF] data-[state=active]:text-[#0A192F] transition-all text-xs sm:text-sm"
             >
-              ASSQ (Autismo)
+              ASSQ
+            </TabsTrigger>
+            <TabsTrigger
+              value="cbcl"
+              className="text-white data-[state=active]:bg-[#00FFFF] data-[state=active]:text-[#0A192F] transition-all text-xs sm:text-sm"
+            >
+              CBCL
             </TabsTrigger>
           </TabsList>
           <TabsContent value="snapiv" className="mt-4">
-            <PublicSnapIV />
+            <PublicSnapIV onDevolutiva={() => handleDevolutiva('snap-iv')} />
           </TabsContent>
           <TabsContent value="assq" className="mt-4">
-            <PublicAssq />
+            <PublicAssq onDevolutiva={() => handleDevolutiva('assq')} />
+          </TabsContent>
+          <TabsContent value="cbcl" className="mt-4">
+            <PublicCbcl onDevolutiva={() => handleDevolutiva('cbcl')} />
           </TabsContent>
         </Tabs>
         <div className="mt-4 pt-4 border-t border-[#00FFFF]/10 text-center">

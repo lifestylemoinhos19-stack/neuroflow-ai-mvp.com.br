@@ -1,9 +1,19 @@
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { useAuth } from '@/contexts/auth-context'
 import { MainDeployment } from '@/components/MainDeployment'
-import FocusSession from '@/pages/FocusSession'
 
 export default function FocusSessionRoute() {
   const { isAuthenticated, loading } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      toast.info('Faça login para acessar sessões de foco e ganhar cristais.')
+      navigate('/login', { replace: true })
+    }
+  }, [loading, isAuthenticated, navigate])
 
   if (loading) {
     return (
@@ -13,9 +23,7 @@ export default function FocusSessionRoute() {
     )
   }
 
-  if (isAuthenticated) {
-    return <MainDeployment />
-  }
+  if (!isAuthenticated) return null
 
-  return <FocusSession />
+  return <MainDeployment />
 }
