@@ -81,3 +81,21 @@
 .crystal-shine {
   animation: crystalShine 2s ease-in-out infinite;
 }
+
+@keyframes nfCrystalPop {
+  0% {
+    transform: scale(0) rotate(-10deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15) rotate(2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.nf-crystal-pop {
+  animation: nfCrystalPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}

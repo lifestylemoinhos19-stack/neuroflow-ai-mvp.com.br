@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { AlertCircle } from 'lucide-react'
 import { CameraOnboarding } from '@/components/CameraOnboarding'
-import { GameEngine } from '@/components/GameEngine'
+import { GameEngineWithAutoSimulation } from '@/components/GameEngineWithAutoSimulation'
 import { FieldTestRunner } from '@/components/FieldTestRunner'
 import type { GameController } from '@/lib/game-controller'
 
@@ -65,7 +65,7 @@ export default function FocusSession() {
 
   if (phase === 'focus' && controller) {
     return (
-      <GameEngine
+      <GameEngineWithAutoSimulation
         controller={controller}
         onExit={handleExit}
         externalBpm={null}
