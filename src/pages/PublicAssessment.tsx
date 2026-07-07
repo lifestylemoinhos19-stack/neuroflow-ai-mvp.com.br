@@ -27,8 +27,11 @@ export default function PublicAssessment() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#00FFFF]/10 border border-[#00FFFF]/20 mb-2">
             <Stethoscope className="h-8 w-8 text-[#00FFFF]" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Hub de Autoavaliação</h1>
-          <p className="text-white/60 text-sm sm:text-base max-w-md mx-auto">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">NeuroFlow AI</h1>
+          <p className="text-[#00FFFF]/80 text-sm sm:text-base font-medium max-w-md mx-auto">
+            Avaliação carinhosa para entender melhor o seu filho
+          </p>
+          <p className="text-white/60 text-xs sm:text-sm max-w-md mx-auto mt-1">
             Escalas clínicas de triagem para neurodesenvolvimento. Responda no conforto da sua casa,
             sem necessidade de cadastro ou sensores.
           </p>
@@ -73,9 +76,12 @@ export default function PublicAssessment() {
         <div className="text-center sm:text-left">
           <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
             <Stethoscope className="h-6 w-6 text-[#00FFFF]" />
-            <h1 className="text-xl sm:text-2xl font-bold text-white">Hub de Autoavaliação</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-white">NeuroFlow AI</h1>
           </div>
-          <p className="text-white/50 text-sm">
+          <p className="text-[#00FFFF]/80 text-sm font-medium">
+            Avaliação carinhosa para entender melhor o seu filho
+          </p>
+          <p className="text-white/50 text-xs mt-1">
             Escalas clínicas especializadas para triagem de neurodesenvolvimento.
           </p>
         </div>
@@ -110,7 +116,10 @@ export default function PublicAssessment() {
             <PublicAssq />
           </TabsContent>
         </Tabs>
-        <div className="mt-6 pt-4 border-t border-[#00FFFF]/10">
+        <div className="mt-4 pt-4 border-t border-[#00FFFF]/10 text-center">
+          <p className="text-xs text-white/40 italic mb-4">
+            Esta avaliação é um apoio educativo e não substitui uma consulta profissional.
+          </p>
           <Button
             onClick={() => navigate('/focus-session')}
             className="w-full bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-semibold"

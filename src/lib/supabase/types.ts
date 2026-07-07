@@ -51,32 +51,35 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string
+          guest_token: string | null
           id: string
           profile_id: string | null
           started_at: string
           status: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           completed_at?: string | null
           created_at?: string
+          guest_token?: string | null
           id?: string
           profile_id?: string | null
           started_at?: string
           status?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           completed_at?: string | null
           created_at?: string
+          guest_token?: string | null
           id?: string
           profile_id?: string | null
           started_at?: string
           status?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {

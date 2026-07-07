@@ -1,25 +1,33 @@
 import { useState, useEffect } from 'react'
-import { Check, AlertTriangle, RotateCcw, Eye, Save } from 'lucide-react'
+import { Loader2, Check, AlertTriangle, RotateCcw, Eye, Save, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { snapQuestions, snapOptions, interpretSnapIV } from '@/lib/assessment-data'
 import { AssessmentProgress } from '@/components/AssessmentProgress'
 import { QuestionCard } from '@/components/QuestionCard'
+import { savePublicAssessmentToSupabase } from '@/services/assessment'
+import { useGuestSession } from '@/hooks/use-guest-session'
 
-const STORAGE_KEY = 'neuroflow_public_snapiv'
+const STORAGE_KEY = 'neuroflow_avaliacao_resultados'
 const inattentionQs = snapQuestions.filter((q) => q.group === 'inattention')
 const hyperactivityQs = snapQuestions.filter((q) => q.group === 'hyperactivity')
 
 export function PublicSnapIV() {
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [showResult, setShowResult] = useState(false)
-  const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<string | null>(null)
+  const { guestToken } = useGuestSession()
 
   useEffect(() => {
     try {
       const draft = localStorage.getItem(STORAGE_KEY)
-      if (draft) setAnswers(JSON.parse(draft))
+      if (draft) {
+        const parsed = JSON.parse(draft)
+        if (parsed.snap?.answers) setAnswers(parsed.snap.answers)
+        if (parsed.snap?.lastSaved) setLastSaved(parsed.snap.lastSaved)
+      }
     } catch {
       /* ignore */
     }
@@ -27,7 +35,10 @@ export function PublicSnapIV() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(answers))
+      const draft = localStorage.getItem(STORAGE_KEY)
+      const parsed = draft ? JSON.parse(draft) : {}
+      parsed.snap = { ...parsed.snap, answers }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
     } catch {
       /* ignore */
     }
@@ -40,30 +51,65 @@ export function PublicSnapIV() {
     if (showResult) setShowResult(false)
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    setSaving(true)
     const result = interpretSnapIV(answers)
-    try {
-      const all = localStorage.getItem('neuroflow_public_results')
-      const parsed = all ? JSON.parse(all) : []
-      parsed.push({ scale: 'SNAP-IV', result, date: new Date().toISOString() })
-      localStorage.setItem('neuroflow_public_results', JSON.stringify(parsed))
-    } catch {
-      /* ignore */
+    const responses = snapQuestions.map((q) => ({
+      question_key: q.key,
+      question_label: q.text,
+      response_value: answers[q.key] ?? 0,
+    }))
+    const ok = await savePublicAssessmentToSupabase(
+      'snap-iv',
+      responses,
+      result as unknown as Record<string, unknown>,
+      guestToken,
+    )
+    if (ok) {
+      const now = new Date().toISOString()
+      setLastSaved(now)
+      try {
+        const draft = localStorage.getItem(STORAGE_KEY)
+        const parsed = draft ? JSON.parse(draft) : {}
+        parsed.snap = { ...parsed.snap, lastSaved: now }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
+      } catch {
+        /* ignore */
+      }
+      toast.success('Resultados salvos com sucesso! 💙', {
+        style: { background: '#00FFFF', color: '#0A192F', fontWeight: 600 },
+      })
+    } else {
+      toast.error('Erro ao salvar resultados.')
     }
-    setSaved(true)
-    toast.success('Resultados salvos localmente! 💙', {
-      style: { background: '#00FFFF', color: '#0A192F', fontWeight: 600 },
-    })
+    setSaving(false)
   }
 
   const handleReset = () => {
     setAnswers({})
     setShowResult(false)
-    setSaved(false)
+    setLastSaved(null)
     try {
-      localStorage.removeItem(STORAGE_KEY)
+      const draft = localStorage.getItem(STORAGE_KEY)
+      const parsed = draft ? JSON.parse(draft) : {}
+      delete parsed.snap
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
     } catch {
       /* ignore */
+    }
+  }
+
+  const formatTimestamp = (iso: string) => {
+    try {
+      const d = new Date(iso)
+      return d.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    } catch {
+      return iso
     }
   }
 
@@ -107,16 +153,18 @@ export function PublicSnapIV() {
               : 'Menos de 6 itens altos em ambos os grupos. Continue monitorando o desenvolvimento.'}
           </p>
         </div>
-        {!saved ? (
-          <Button
-            onClick={handleSave}
-            className="w-full bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-medium"
-          >
-            <Save className="h-4 w-4 mr-2" /> Salvar Resultados
-          </Button>
-        ) : (
-          <p className="text-center text-sm text-green-400">✓ Resultados salvos localmente</p>
-        )}
+        <Button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-medium"
+        >
+          {saving ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4 mr-2" />
+          )}
+          Salvar e Enviar Resultados
+        </Button>
         <Button
           variant="outline"
           onClick={handleReset}
@@ -131,6 +179,12 @@ export function PublicSnapIV() {
   return (
     <div className="space-y-3">
       <AssessmentProgress answered={answeredCount} total={18} />
+      {lastSaved && (
+        <div className="flex items-center gap-1.5 text-xs text-white/40">
+          <Clock className="h-3 w-3" />
+          <span>Último salvamento: {formatTimestamp(lastSaved)}</span>
+        </div>
+      )}
       <p className="text-sm font-semibold text-[#00FFFF] mt-3 mb-1">Desatenção (1-9)</p>
       {inattentionQs.map((q, i) => (
         <QuestionCard

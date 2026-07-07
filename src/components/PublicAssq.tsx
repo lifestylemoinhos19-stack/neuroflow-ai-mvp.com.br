@@ -1,27 +1,32 @@
 import { useState, useEffect } from 'react'
-import { Check, AlertTriangle, RotateCcw, Eye, Save } from 'lucide-react'
+import { Loader2, Check, AlertTriangle, RotateCcw, Eye, Save, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { assqQuestions, assqOptions, interpretASSQ } from '@/lib/assessment-data'
 import { AssessmentProgress } from '@/components/AssessmentProgress'
 import { QuestionCard } from '@/components/QuestionCard'
+import { savePublicAssessmentToSupabase } from '@/services/assessment'
+import { useGuestSession } from '@/hooks/use-guest-session'
 
-const STORAGE_KEY = 'neuroflow_public_assq'
+const STORAGE_KEY = 'neuroflow_avaliacao_resultados'
 
 export function PublicAssq() {
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [gender, setGender] = useState<'boy' | 'girl'>('boy')
   const [showResult, setShowResult] = useState(false)
-  const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<string | null>(null)
+  const { guestToken } = useGuestSession()
 
   useEffect(() => {
     try {
       const draft = localStorage.getItem(STORAGE_KEY)
       if (draft) {
         const parsed = JSON.parse(draft)
-        if (parsed.answers) setAnswers(parsed.answers)
-        if (parsed.gender) setGender(parsed.gender)
+        if (parsed.assq?.answers) setAnswers(parsed.assq.answers)
+        if (parsed.assq?.gender) setGender(parsed.assq.gender)
+        if (parsed.assq?.lastSaved) setLastSaved(parsed.assq.lastSaved)
       }
     } catch {
       /* ignore */
@@ -30,7 +35,10 @@ export function PublicAssq() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ answers, gender }))
+      const draft = localStorage.getItem(STORAGE_KEY)
+      const parsed = draft ? JSON.parse(draft) : {}
+      parsed.assq = { ...parsed.assq, answers, gender }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
     } catch {
       /* ignore */
     }
@@ -43,30 +51,65 @@ export function PublicAssq() {
     if (showResult) setShowResult(false)
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    setSaving(true)
     const result = interpretASSQ(answers, gender)
-    try {
-      const all = localStorage.getItem('neuroflow_public_results')
-      const parsed = all ? JSON.parse(all) : []
-      parsed.push({ scale: 'ASSQ', result, date: new Date().toISOString() })
-      localStorage.setItem('neuroflow_public_results', JSON.stringify(parsed))
-    } catch {
-      /* ignore */
+    const responses = assqQuestions.map((q) => ({
+      question_key: q.key,
+      question_label: q.text,
+      response_value: answers[q.key] ?? 0,
+    }))
+    const ok = await savePublicAssessmentToSupabase(
+      'assq',
+      responses,
+      result as unknown as Record<string, unknown>,
+      guestToken,
+    )
+    if (ok) {
+      const now = new Date().toISOString()
+      setLastSaved(now)
+      try {
+        const draft = localStorage.getItem(STORAGE_KEY)
+        const parsed = draft ? JSON.parse(draft) : {}
+        parsed.assq = { ...parsed.assq, lastSaved: now }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
+      } catch {
+        /* ignore */
+      }
+      toast.success('Resultados salvos com sucesso! 💙', {
+        style: { background: '#00FFFF', color: '#0A192F', fontWeight: 600 },
+      })
+    } else {
+      toast.error('Erro ao salvar resultados.')
     }
-    setSaved(true)
-    toast.success('Resultados salvos localmente! 💙', {
-      style: { background: '#00FFFF', color: '#0A192F', fontWeight: 600 },
-    })
+    setSaving(false)
   }
 
   const handleReset = () => {
     setAnswers({})
     setShowResult(false)
-    setSaved(false)
+    setLastSaved(null)
     try {
-      localStorage.removeItem(STORAGE_KEY)
+      const draft = localStorage.getItem(STORAGE_KEY)
+      const parsed = draft ? JSON.parse(draft) : {}
+      delete parsed.assq
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
     } catch {
       /* ignore */
+    }
+  }
+
+  const formatTimestamp = (iso: string) => {
+    try {
+      const d = new Date(iso)
+      return d.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    } catch {
+      return iso
     }
   }
 
@@ -107,16 +150,18 @@ export function PublicAssq() {
               : `Pontuação ${result.total} < ${result.threshold}. Continue monitorando o desenvolvimento.`}
           </p>
         </div>
-        {!saved ? (
-          <Button
-            onClick={handleSave}
-            className="w-full bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-medium"
-          >
-            <Save className="h-4 w-4 mr-2" /> Salvar Resultados
-          </Button>
-        ) : (
-          <p className="text-center text-sm text-green-400">✓ Resultados salvos localmente</p>
-        )}
+        <Button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-medium"
+        >
+          {saving ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4 mr-2" />
+          )}
+          Salvar e Enviar Resultados
+        </Button>
         <Button
           variant="outline"
           onClick={handleReset}
@@ -131,6 +176,12 @@ export function PublicAssq() {
   return (
     <div className="space-y-3">
       <AssessmentProgress answered={answeredCount} total={27} />
+      {lastSaved && (
+        <div className="flex items-center gap-1.5 text-xs text-white/40">
+          <Clock className="h-3 w-3" />
+          <span>Último salvamento: {formatTimestamp(lastSaved)}</span>
+        </div>
+      )}
       <div className="mt-2">
         <p className="text-xs text-white/50 mb-1.5">Sexo da criança</p>
         <div className="flex gap-2">
