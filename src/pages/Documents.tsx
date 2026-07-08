@@ -30,7 +30,7 @@ export default function Documents() {
         const sample = generateClinicalReport(
           'snap-iv',
           { inattentionHigh: 7, hyperactivityHigh: 5, isSuggestive: true },
-          user.name,
+          (user?.user_metadata?.full_name as string) || (user?.email as string) || 'Paciente',
         )
         setReports([{ id: 'sample', report: sample, created_at: new Date().toISOString() }])
       } else {
