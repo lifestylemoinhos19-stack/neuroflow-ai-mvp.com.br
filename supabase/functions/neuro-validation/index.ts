@@ -28,6 +28,7 @@ interface ValidationResult {
   suggestedAction: string
   clinicalCitations: ClinicalCitation[]
   telemedicineDisclaimer: boolean
+  isDraft: boolean
 }
 
 const TEA_PATTERNS = [
@@ -680,9 +681,10 @@ Deno.serve(async (req) => {
       })
     }
 
-    return new Response(JSON.stringify({ result, input: message, latencyMs }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return new Response(
+      JSON.stringify({ result: { ...result, isDraft: true }, input: message, latencyMs }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,

@@ -11,7 +11,7 @@ const features = [
 
 export default function Welcome() {
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isAdmin } = useAuth()
 
   return (
     <div className="min-h-screen bg-[#0A192F] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
@@ -61,6 +61,14 @@ export default function Welcome() {
               className="text-sm text-white/50 hover:text-[#00FFFF] transition-colors"
             >
               Ir para o painel →
+            </Link>
+          )}
+          {isAdmin && (
+            <Link
+              to="/documentos"
+              className="text-sm text-[#00FFFF]/70 hover:text-[#00FFFF] transition-colors flex items-center gap-1"
+            >
+              <Shield className="h-3 w-3" /> Gerenciar Documentos →
             </Link>
           )}
         </div>

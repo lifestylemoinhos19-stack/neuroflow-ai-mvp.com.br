@@ -1,21 +1,9 @@
 import { supabase } from '@/lib/supabase/client'
 import type { EducationalInterpretation } from '@/lib/educational-interpretation'
-import type { ClinicalReportData } from '@/lib/clinical-report-generator'
-
 export interface InterpretationWithMeta {
   id: string
   interpretation: EducationalInterpretation
   created_at: string
-}
-
-export interface ClinicalReportWithMeta {
-  id: string
-  report: ClinicalReportData
-  created_at: string
-}
-
-export async function getClinicalReports(_userId: string): Promise<ClinicalReportWithMeta[]> {
-  return []
 }
 
 export async function createReportSession(guestToken?: string | null): Promise<string | null> {

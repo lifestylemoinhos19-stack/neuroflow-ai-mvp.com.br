@@ -264,6 +264,7 @@ export type Database = {
       }
       clinical_feedback: {
         Row: {
+          admin_edited_interpretation: string | null
           comments: string | null
           created_at: string
           doctor_id: string | null
@@ -272,6 +273,7 @@ export type Database = {
           session_id: string | null
         }
         Insert: {
+          admin_edited_interpretation?: string | null
           comments?: string | null
           created_at?: string
           doctor_id?: string | null
@@ -280,6 +282,7 @@ export type Database = {
           session_id?: string | null
         }
         Update: {
+          admin_edited_interpretation?: string | null
           comments?: string | null
           created_at?: string
           doctor_id?: string | null

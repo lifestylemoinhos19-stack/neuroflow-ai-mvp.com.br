@@ -6,6 +6,54 @@ export interface AdminSession {
   started_at: string
   completed_at: string | null
   user_id: string | null
+  guest_token?: string | null
+}
+
+export interface SessionResponse {
+  id: string
+  question_key: string
+  question_label: string | null
+  response_value: unknown
+  created_at: string
+}
+
+export async function getAllSessions(limit = 50): Promise<AdminSession[]> {
+  const { data, error } = await supabase
+    .from('anamnesis_sessions')
+    .select('id, status, started_at, completed_at, user_id, guest_token')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error || !data) return []
+  return data as AdminSession[]
+}
+
+export async function getSessionResponses(sessionId: string): Promise<SessionResponse[]> {
+  const { data, error } = await supabase
+    .from('anamnesis_responses')
+    .select('id, question_key, question_label, response_value, created_at')
+    .eq('session_id', sessionId)
+    .order('created_at', { ascending: true })
+
+  if (error || !data) return []
+  return data as SessionResponse[]
+}
+
+export async function deleteSession(sessionId: string): Promise<{ error: string | null }> {
+  const { error: respError } = await supabase
+    .from('anamnesis_responses')
+    .delete()
+    .eq('session_id', sessionId)
+
+  if (respError) return { error: respError.message }
+
+  const { error: sessError } = await supabase
+    .from('anamnesis_sessions')
+    .delete()
+    .eq('id', sessionId)
+
+  if (sessError) return { error: sessError.message }
+  return { error: null }
 }
 
 export async function getRecentSessions(limit = 20): Promise<AdminSession[]> {

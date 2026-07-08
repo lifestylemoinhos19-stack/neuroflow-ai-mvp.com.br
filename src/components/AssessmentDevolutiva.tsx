@@ -265,6 +265,14 @@ export function AssessmentDevolutiva({
                 </div>
               ) : (
                 <>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+                      Rascunho
+                    </span>
+                    <span className="text-xs text-white/40">
+                      Conteúdo gerado pela IA — sujeito a revisão do administrador
+                    </span>
+                  </div>
                   <p className="text-sm text-white/80 leading-relaxed">
                     {aiText || interpretation.summary}
                   </p>
@@ -284,6 +292,13 @@ export function AssessmentDevolutiva({
                   <p className="text-xs text-white/40 italic mt-2">
                     {interpretation.recommendations}
                   </p>
+                  {interpretation.draftNote && (
+                    <div className="mt-2 p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                      <p className="text-xs text-yellow-400/70">
+                        <strong>Rascunho:</strong> {interpretation.draftNote}
+                      </p>
+                    </div>
+                  )}
                 </>
               )}
             </>

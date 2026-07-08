@@ -4,7 +4,11 @@ export interface EducationalInterpretation {
   summary: string
   guidance: string[]
   recommendations: string
+  draftNote: string
 }
+
+const DRAFT_NOTE =
+  'Este conteúdo é um rascunho educacional de triagem. Não constitui diagnóstico clínico nem prescrição médica. Requer revisão do administrador antes da devolutiva à família.'
 
 type ScaleType = 'snap-iv' | 'assq' | 'cbcl'
 
@@ -34,11 +38,13 @@ function snapIVInterpretation(r: Record<string, unknown>): EducationalInterpreta
       'Esta triagem é educacional e não constitui diagnóstico clínico.',
       'Os resultados refletem observações do momento e podem variar.',
       'Estratégias de organização e rotina podem beneficiar todas as crianças.',
+      'Não há prescrição de medicamentos ou diagnósticos definitivos nesta triagem.',
     ],
     recommendations:
       sev === 'elevado'
         ? 'Consulte um profissional de saúde especializado para avaliação detalhada.'
         : 'Continue monitorando o desenvolvimento e mantenha diálogo com a escola.',
+    draftNote: DRAFT_NOTE,
   }
 }
 
@@ -59,11 +65,13 @@ function assqInterpretation(r: Record<string, unknown>): EducationalInterpretati
       'Esta triagem é educacional e não constitui diagnóstico.',
       'Habilidades sociais se desenvolvem de forma única em cada criança.',
       'Interações sociais estruturadas podem apoiar o desenvolvimento.',
+      'Não há prescrição de medicamentos ou diagnósticos definitivos nesta triagem.',
     ],
     recommendations:
       sev === 'elevado'
         ? 'Busque avaliação com neuropediatra ou psiquiatra infantil.'
         : 'Continue observando o desenvolvimento social da criança.',
+    draftNote: DRAFT_NOTE,
   }
 }
 
@@ -85,10 +93,12 @@ function cbclInterpretation(r: Record<string, unknown>): EducationalInterpretati
       'Esta triagem é educacional e não constitui diagnóstico.',
       'Comportamentos internalizantes (ansiedade, retraimento) e externalizantes (agressividade) foram avaliados.',
       'Ambientes estruturados e previsíveis apoiam o bem-estar emocional.',
+      'Não há prescrição de medicamentos ou diagnósticos definitivos nesta triagem.',
     ],
     recommendations:
       sev === 'elevado'
         ? 'Consulte um psicólogo ou psicopedagogo para avaliação detalhada.'
         : 'Continue oferecendo apoio emocional e monitorando o comportamento.',
+    draftNote: DRAFT_NOTE,
   }
 }
