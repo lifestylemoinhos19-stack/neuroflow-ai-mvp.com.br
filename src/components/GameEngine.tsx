@@ -7,6 +7,7 @@ import type { GameController, GameControllerState } from '@/lib/game-controller'
 import { useFocusSession } from '@/hooks/use-focus-session'
 import { CrystalParticles } from '@/components/CrystalParticles'
 import { EventLogOverlay } from '@/components/EventLogOverlay'
+import { BreathingOverlay } from '@/components/BreathingOverlay'
 
 interface Props {
   controller: GameController
@@ -23,7 +24,17 @@ const formatTime = (s: number) =>
 export function GameEngine({ controller, onExit, externalBpm, biometricConnected }: Props) {
   const [state, setState] = useState<GameControllerState>(controller.getState())
   const [showParticles, setShowParticles] = useState(false)
+  const [showBreathing, setShowBreathing] = useState(false)
   const session = useFocusSession('camera')
+
+  useEffect(() => {
+    if (session.prolongedAgitation && !showBreathing) {
+      setShowBreathing(true)
+    }
+  }, [session.prolongedAgitation, showBreathing])
+
+  const isAgitated = state.bpm > 90
+  const isInRestZone = isAgitated && state.simulationMode !== 'simulation'
 
   useEffect(() => {
     const unsubscribe = controller.subscribe(setState)
@@ -65,6 +76,8 @@ export function GameEngine({ controller, onExit, externalBpm, biometricConnected
   return (
     <div className="min-h-screen bg-[#0A192F] text-[#E6F1FF] flex flex-col relative overflow-hidden">
       <CrystalParticles show={showParticles} />
+
+      {showBreathing && <BreathingOverlay onClose={() => setShowBreathing(false)} />}
 
       <div className="absolute inset-0 pointer-events-none opacity-20">
         <Diamond
@@ -141,18 +154,32 @@ export function GameEngine({ controller, onExit, externalBpm, biometricConnected
         </div>
 
         <div className="absolute left-1/2 z-10" style={{ transform: 'translateX(-50%)' }}>
-          <div className="nf-balloon-float">
+          <div className={cn('nf-balloon-float', isInRestZone && 'opacity-60')}>
             <div
-              className="transition-transform duration-1000 ease-in-out"
-              style={{ transform: `translateY(${state.balloonOffset}px)` }}
+              className="transition-all duration-1000 ease-in-out"
+              style={{
+                transform: `translateY(${isInRestZone ? 80 : state.balloonOffset}px)`,
+              }}
             >
               <div
-                className="w-32 h-32 sm:w-40 sm:h-40 rounded-full"
+                className={cn(
+                  'w-32 h-32 sm:w-40 sm:h-40 rounded-full transition-all duration-1000',
+                  isInRestZone && 'scale-90',
+                )}
                 style={{
-                  background: 'radial-gradient(circle at 35% 35%, #00FFFF, #0A192F)',
-                  boxShadow: '0 0 40px rgba(0, 255, 255, 0.5), 0 0 80px rgba(0, 255, 255, 0.2)',
+                  background: isInRestZone
+                    ? 'radial-gradient(circle at 35% 35%, #4A5568, #0A192F)'
+                    : 'radial-gradient(circle at 35% 35%, #00FFFF, #0A192F)',
+                  boxShadow: isInRestZone
+                    ? '0 0 20px rgba(74, 85, 104, 0.4)'
+                    : '0 0 40px rgba(0, 255, 255, 0.5), 0 0 80px rgba(0, 255, 255, 0.2)',
                 }}
               />
+              {isInRestZone && (
+                <p className="text-center text-xs text-white/50 mt-2 animate-fade-in">
+                  Zona de descanso — respire fundo
+                </p>
+              )}
             </div>
           </div>
         </div>

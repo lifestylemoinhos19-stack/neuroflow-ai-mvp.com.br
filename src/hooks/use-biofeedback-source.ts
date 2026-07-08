@@ -56,6 +56,15 @@ export function useBiofeedbackSource(): BiofeedbackSourceState {
     }
   }, [ble.connectionState, rppg.isConnected, mode])
 
+  const pairedSensorId =
+    typeof window !== 'undefined' ? localStorage.getItem('neuroflow_paired_sensor_id') : null
+
+  useEffect(() => {
+    if (pairedSensorId && ble.connectionState === 'disconnected' && !ble.isConnecting) {
+      ble.autoReconnect(pairedSensorId)
+    }
+  }, [pairedSensorId, ble.connectionState, ble.isConnecting, ble.autoReconnect])
+
   useEffect(() => {
     if (bothConnected) {
       accuracyTesterRef.current.addSample(rppg.bpm, ble.bpm)

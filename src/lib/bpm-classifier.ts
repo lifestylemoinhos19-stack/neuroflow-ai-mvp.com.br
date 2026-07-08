@@ -9,17 +9,17 @@ export interface BpmRange {
 }
 
 export const DEFAULT_RANGES: BpmRange = {
-  rest: [50, 65],
-  calm: [65, 80],
-  active: [80, 100],
-  agitation: [100, 140],
+  rest: [50, 60],
+  calm: [60, 70],
+  active: [70, 90],
+  agitation: [90, 140],
 }
 
 export const BETA_RANGES: BpmRange = {
-  rest: [55, 70],
-  calm: [70, 85],
-  active: [85, 105],
-  agitation: [105, 150],
+  rest: [55, 65],
+  calm: [65, 70],
+  active: [70, 90],
+  agitation: [90, 150],
 }
 
 export function getRanges(profile: BpmProfile = 'default', custom?: BpmRange): BpmRange {

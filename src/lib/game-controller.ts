@@ -22,9 +22,9 @@ export interface GameControllerState {
 }
 
 export const WATCHDOG_TIMEOUT_MS = 5000
-export const CRYSTAL_INTERVAL_S = 30
-export const STABILITY_MIN_BPM = 60
-export const STABILITY_MAX_BPM = 85
+export const CRYSTAL_INTERVAL_S = 120
+export const STABILITY_MIN_BPM = 70
+export const STABILITY_MAX_BPM = 90
 export const BASELINE_BPM = 72
 
 const MAX_EVENTS = 12
