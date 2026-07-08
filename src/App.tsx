@@ -29,6 +29,7 @@ import Welcome from '@/pages/Welcome'
 import CaptureChoice from '@/pages/CaptureChoice'
 import FocusSessionRoute from '@/pages/FocusSessionRoute'
 import { MainDeployment } from '@/components/MainDeployment'
+import { CalmExplorerModal } from '@/components/CalmExplorerModal'
 import SessionSummary from '@/pages/SessionSummary'
 import OpticalOnboarding from '@/pages/OpticalOnboarding'
 import PublicAssessment from '@/pages/PublicAssessment'
@@ -38,116 +39,119 @@ import Documents from '@/pages/Documents'
 function AppInner() {
   useGuestConversion()
   return (
-    <Routes>
-      <Route
-        path="/login"
-        element={
-          <AuthGuard requireMfa={false}>
-            <Login />
-          </AuthGuard>
-        }
-      />
-      <Route path="/terms" element={<TermsOfUse />} />
-      <Route path="/security" element={<Security />} />
-      <Route path="/ethics" element={<Ethics />} />
-      <Route path="/about" element={<Ethics />} />
-      <Route path="/avaliacao" element={<PublicAssessment />} />
-      <Route path="/avaliacao/:scale" element={<PublicAssessment />} />
-      <Route path="/welcome" element={<Welcome />} />
-      <Route path="/capture-choice" element={<CaptureChoice />} />
-      <Route
-        path="/mfa"
-        element={
-          <AuthGuard requireMfa={false}>
-            <MFA />
-          </AuthGuard>
-        }
-      />
-      <Route
-        path="/onboarding"
-        element={
-          <AuthGuard>
-            <Onboarding />
-          </AuthGuard>
-        }
-      />
-      <Route
-        path="/optical-onboarding"
-        element={
-          <AuthGuard>
-            <OpticalOnboarding />
-          </AuthGuard>
-        }
-      />
-      <Route path="/focus-session" element={<FocusSessionRoute />} />
-      <Route
-        path="/deployment"
-        element={
-          <AuthGuard>
-            <MainDeployment />
-          </AuthGuard>
-        }
-      />
-      <Route
-        path="/session-summary"
-        element={
-          <AuthGuard>
-            <SessionSummary />
-          </AuthGuard>
-        }
-      />
-      <Route
-        path="/beta"
-        element={
-          <AuthGuard>
-            <BetaLanding />
-          </AuthGuard>
-        }
-      />
-      <Route
-        path="/beta-feedback"
-        element={
-          <AuthGuard>
-            <BetaFeedback />
-          </AuthGuard>
-        }
-      />
-      <Route path="/" element={<Navigate to="/welcome" replace />} />
-      <Route
-        element={
-          <AuthGuard>
-            <Layout />
-          </AuthGuard>
-        }
-      >
-        <Route path="/anamnesis" element={<Anamnesis />} />
-        <Route path="/scales" element={<Scales />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/insights" element={<Insights />} />
-        <Route path="/logs" element={<HealthLogs />} />
-        <Route path="/historico" element={<History />} />
-        <Route path="/documentos" element={<Documents />} />
-        <Route path="/neuro-validation" element={<NeuroValidationPage />} />
-        <Route path="/stress-test" element={<StressTestDashboard />} />
+    <>
+      <CalmExplorerModal />
+      <Routes>
         <Route
-          path="/admin/stress-tests"
+          path="/login"
           element={
-            <AuthGuard requireAdmin>
-              <StressTestDashboard />
+            <AuthGuard requireMfa={false}>
+              <Login />
+            </AuthGuard>
+          }
+        />
+        <Route path="/terms" element={<TermsOfUse />} />
+        <Route path="/security" element={<Security />} />
+        <Route path="/ethics" element={<Ethics />} />
+        <Route path="/about" element={<Ethics />} />
+        <Route path="/avaliacao" element={<PublicAssessment />} />
+        <Route path="/avaliacao/:scale" element={<PublicAssessment />} />
+        <Route path="/welcome" element={<Welcome />} />
+        <Route path="/capture-choice" element={<CaptureChoice />} />
+        <Route
+          path="/mfa"
+          element={
+            <AuthGuard requireMfa={false}>
+              <MFA />
             </AuthGuard>
           }
         />
         <Route
-          path="/admin/ethical-audit"
+          path="/onboarding"
           element={
-            <AuthGuard requireAdmin>
-              <EthicalAuditDashboard />
+            <AuthGuard>
+              <Onboarding />
             </AuthGuard>
           }
         />
-      </Route>
-      <Route path="*" element={<Navigate to="/welcome" replace />} />
-    </Routes>
+        <Route
+          path="/optical-onboarding"
+          element={
+            <AuthGuard>
+              <OpticalOnboarding />
+            </AuthGuard>
+          }
+        />
+        <Route path="/focus-session" element={<FocusSessionRoute />} />
+        <Route
+          path="/deployment"
+          element={
+            <AuthGuard>
+              <MainDeployment />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/session-summary"
+          element={
+            <AuthGuard>
+              <SessionSummary />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/beta"
+          element={
+            <AuthGuard>
+              <BetaLanding />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/beta-feedback"
+          element={
+            <AuthGuard>
+              <BetaFeedback />
+            </AuthGuard>
+          }
+        />
+        <Route path="/" element={<Navigate to="/welcome" replace />} />
+        <Route
+          element={
+            <AuthGuard>
+              <Layout />
+            </AuthGuard>
+          }
+        >
+          <Route path="/anamnesis" element={<Anamnesis />} />
+          <Route path="/scales" element={<Scales />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/insights" element={<Insights />} />
+          <Route path="/logs" element={<HealthLogs />} />
+          <Route path="/historico" element={<History />} />
+          <Route path="/documentos" element={<Documents />} />
+          <Route path="/neuro-validation" element={<NeuroValidationPage />} />
+          <Route path="/stress-test" element={<StressTestDashboard />} />
+          <Route
+            path="/admin/stress-tests"
+            element={
+              <AuthGuard requireAdmin>
+                <StressTestDashboard />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/admin/ethical-audit"
+            element={
+              <AuthGuard requireAdmin>
+                <EthicalAuditDashboard />
+              </AuthGuard>
+            }
+          />
+        </Route>
+        <Route path="*" element={<Navigate to="/welcome" replace />} />
+      </Routes>
+    </>
   )
 }
 
