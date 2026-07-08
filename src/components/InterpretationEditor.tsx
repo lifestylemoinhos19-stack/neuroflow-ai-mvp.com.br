@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +23,14 @@ const severityColors: Record<string, string> = {
   minimal: 'bg-green-500/20 text-green-400 border-green-500/30',
 }
 
+const findingColors: Record<string, string> = {
+  TEA: 'border-purple-300 bg-purple-50',
+  TDAH: 'border-blue-300 bg-blue-50',
+  'Declínio Cognitivo': 'border-orange-300 bg-orange-50',
+  Depressão: 'border-amber-300 bg-amber-50',
+  Ansiedade: 'border-rose-300 bg-rose-50',
+}
+
 export function InterpretationEditor({ sessionId }: { sessionId: string }) {
   const [interpretation, setInterpretation] = useState<InterpretationResult | null>(null)
   const [editedText, setEditedText] = useState('')
@@ -37,11 +45,7 @@ export function InterpretationEditor({ sessionId }: { sessionId: string }) {
       ([result, saved]) => {
         if (!mounted) return
         setInterpretation(result)
-        if (saved?.adminEditedText) {
-          setEditedText(saved.adminEditedText)
-        } else if (result?.suggestion) {
-          setEditedText(result.suggestion)
-        }
+        setEditedText(saved?.adminEditedText || result?.suggestion || '')
         setLoading(false)
       },
     )
@@ -60,6 +64,13 @@ export function InterpretationEditor({ sessionId }: { sessionId: string }) {
       interpretation.phq9Score,
       interpretation.gad7Score,
       interpretation.cognitiveVrc,
+      interpretation.assqScore,
+      interpretation.snapIvScore,
+      interpretation.asrs18Score,
+      interpretation.mocaScore,
+      interpretation.meemScore,
+      interpretation.hamdScore,
+      interpretation.hamaScore,
     )
     setSaving(false)
     if (error) {
@@ -95,67 +106,85 @@ export function InterpretationEditor({ sessionId }: { sessionId: string }) {
     )
   }
 
+  const allScales: { label: string; score: number | null; badge?: string; badgeClass?: string }[] =
+    [
+      {
+        label: 'PHQ-9',
+        score: interpretation.phq9Score,
+        badge: phq9SeverityLabels[interpretation.phq9Severity],
+        badgeClass: severityColors[interpretation.phq9Severity],
+      },
+      {
+        label: 'GAD-7',
+        score: interpretation.gad7Score,
+        badge: gad7SeverityLabels[interpretation.gad7Severity],
+        badgeClass: severityColors[interpretation.gad7Severity],
+      },
+      { label: 'ASSQ', score: interpretation.assqScore },
+      { label: 'SNAP-IV', score: interpretation.snapIvScore },
+      { label: 'ASRS-18', score: interpretation.asrs18Score },
+      { label: 'MoCA', score: interpretation.mocaScore },
+      { label: 'MEEM', score: interpretation.meemScore },
+      { label: 'HAM-D', score: interpretation.hamdScore },
+      { label: 'HAM-A', score: interpretation.hamaScore },
+    ]
+
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <Card className="border-slate-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">PHQ-9 (Depressão)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-slate-900">{interpretation.phq9Score}</span>
-              <Badge
-                className={cn(
-                  'border',
-                  severityColors[interpretation.phq9Severity] || severityColors.minimal,
-                )}
-              >
-                {phq9SeverityLabels[interpretation.phq9Severity]}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">GAD-7 (Ansiedade)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-slate-900">{interpretation.gad7Score}</span>
-              <Badge
-                className={cn(
-                  'border',
-                  severityColors[interpretation.gad7Severity] || severityColors.minimal,
-                )}
-              >
-                {gad7SeverityLabels[interpretation.gad7Severity]}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        {allScales
+          .filter((s) => s.score !== null)
+          .map((s) => (
+            <Card key={s.label} className="border-slate-200">
+              <CardContent className="p-3">
+                <p className="text-xs font-medium text-slate-600 mb-1">{s.label}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xl font-bold text-slate-900">{s.score}</span>
+                  {s.badge && (
+                    <Badge className={cn('border text-xs', s.badgeClass)}>{s.badge}</Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
       </div>
 
       {interpretation.cognitiveVrc !== null && (
         <Card className="border-slate-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">
-              Performance Cognitiva (VRC)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <span className="text-2xl font-bold text-slate-900">
+          <CardContent className="p-3">
+            <p className="text-xs font-medium text-slate-600 mb-1">VRC</p>
+            <span className="text-xl font-bold text-slate-900">
               {interpretation.cognitiveVrc.toFixed(2)}
             </span>
           </CardContent>
         </Card>
       )}
 
-      {interpretation.hasComorbidity && (
-        <Alert className="border-amber-300 bg-amber-50">
-          <AlertCircle className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-amber-800">
-            <strong>Comorbidade detectada:</strong> PHQ-9 ≥ 15 e GAD-7 ≥ 10.
+      {interpretation.findings.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-slate-700">Triagem Inicial — Sinais Detectados:</p>
+          {interpretation.findings.map((f, i) => (
+            <Alert
+              key={i}
+              className={cn('border', findingColors[f.category] || 'border-slate-200 bg-slate-50')}
+            >
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                <strong>{f.suggestion}</strong>{' '}
+                <span className="text-slate-500">
+                  ({f.scale}: {f.score}, corte {f.threshold})
+                </span>
+              </AlertDescription>
+            </Alert>
+          ))}
+        </div>
+      )}
+
+      {interpretation.comorbidities.length > 0 && (
+        <Alert className="border-red-300 bg-red-50">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-800">
+            <strong>Comorbidades detectadas:</strong> {interpretation.comorbidities.join('; ')}
           </AlertDescription>
         </Alert>
       )}
@@ -179,7 +208,7 @@ export function InterpretationEditor({ sessionId }: { sessionId: string }) {
         <Textarea
           value={editedText}
           onChange={(e) => setEditedText(e.target.value)}
-          rows={5}
+          rows={6}
           className="resize-none"
           placeholder="A sugestão gerada pelo sistema aparecerá aqui. Você pode editá-la antes de finalizar."
         />

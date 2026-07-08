@@ -265,30 +265,42 @@ export type Database = {
       clinical_feedback: {
         Row: {
           admin_edited_interpretation: string | null
+          cognitive_vrc: number | null
           comments: string | null
           created_at: string
           doctor_id: string | null
+          gad7_score: number | null
           id: string
           is_accurate: boolean | null
+          phq9_score: number | null
           session_id: string | null
+          system_suggestion: string | null
         }
         Insert: {
           admin_edited_interpretation?: string | null
+          cognitive_vrc?: number | null
           comments?: string | null
           created_at?: string
           doctor_id?: string | null
+          gad7_score?: number | null
           id?: string
           is_accurate?: boolean | null
+          phq9_score?: number | null
           session_id?: string | null
+          system_suggestion?: string | null
         }
         Update: {
           admin_edited_interpretation?: string | null
+          cognitive_vrc?: number | null
           comments?: string | null
           created_at?: string
           doctor_id?: string | null
+          gad7_score?: number | null
           id?: string
           is_accurate?: boolean | null
+          phq9_score?: number | null
           session_id?: string | null
+          system_suggestion?: string | null
         }
         Relationships: [
           {

@@ -44,8 +44,9 @@ export function AdminInterpretationWorkspace() {
         <Alert className="border-amber-200 bg-amber-50">
           <AlertCircle className="h-4 w-4 text-amber-600" />
           <AlertDescription className="text-amber-800 text-xs">
-            Sistema de interpretação baseado em escalas PHQ-9 e GAD-7 com integração cognitiva. As
-            sugestões são geradas por lógica contextual, não modelos genéricos.
+            Sistema de triagem clínica baseado em múltiplas escalas (ASSQ, SNAP-IV, ASRS-18, MoCA,
+            MEEM, PHQ-9, GAD-7, HAM-D, HAM-A) com integração cognitiva. As sugestões são geradas por
+            lógica contextual, não modelos genéricos.
           </AlertDescription>
         </Alert>
 
