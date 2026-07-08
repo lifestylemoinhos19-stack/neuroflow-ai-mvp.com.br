@@ -153,7 +153,7 @@ export function AdminToolbar() {
                           size="sm"
                           variant="outline"
                           onClick={() => {
-                            navigate('/documentos')
+                            navigate(`/documentos?session=${s.id}`)
                             setOpen(false)
                           }}
                           className="border-[#00FFFF]/30 text-[#00FFFF] hover:bg-[#00FFFF]/10 h-7 w-7 p-0"

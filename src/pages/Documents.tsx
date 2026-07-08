@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { FileText, Calendar, ChevronDown, ChevronUp, Brain, AlertCircle } from 'lucide-react'
 import { getInterpretations, type InterpretationWithMeta } from '@/services/clinical-report'
 import { useAuth } from '@/contexts/auth-context'
+import { AdminInterpretationWorkspace } from '@/components/AdminInterpretationWorkspace'
 import { cn } from '@/lib/utils'
 
 const severityColors: Record<string, string> = {
@@ -20,7 +21,7 @@ const severityLabels: Record<string, string> = {
 }
 
 export default function Documents() {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const [reports, setReports] = useState<InterpretationWithMeta[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -50,6 +51,8 @@ export default function Documents() {
           </p>
         </CardContent>
       </Card>
+
+      {isAdmin && <AdminInterpretationWorkspace />}
 
       {loading ? (
         <div className="space-y-3">
