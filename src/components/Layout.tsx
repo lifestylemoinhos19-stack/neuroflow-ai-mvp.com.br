@@ -33,6 +33,7 @@ const baseNavItems = [
   { path: '/scales', label: 'Escalas', icon: ClipboardCheck },
   { path: '/avaliacao', label: 'Avaliação', icon: Stethoscope },
   { path: '/historico', label: 'Histórico', icon: LineChart },
+  { path: '/documentos', label: 'Documentos', icon: FileText },
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/stress-test', label: 'Testes', icon: FlaskConical },
   { path: '/ethics', label: 'Institucional', icon: ScrollText },

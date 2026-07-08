@@ -112,7 +112,7 @@ export function generateClinicalReport(
     patientName: patientName || 'Paciente',
     patientId: '—',
     professionalName: 'Dra. Rose Mary Alves',
-    professionalCRM: 'CRM 12.345-RJ',
+    professionalCRM: 'CREMERS 19625',
     reportDate: new Date().toLocaleDateString('pt-BR'),
     followUpHistory:
       'Paciente em acompanhamento longitudinal há 18 meses, com quadro crônico-refratário a tratamento farmacológico convencional. Histórico de múltiplas internações e ajustes terapêuticos.',

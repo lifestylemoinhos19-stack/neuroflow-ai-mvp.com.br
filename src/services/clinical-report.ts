@@ -1,6 +1,12 @@
 import { supabase } from '@/lib/supabase/client'
 import type { ClinicalReportData } from '@/lib/clinical-report-generator'
 
+export interface ClinicalReportWithMeta {
+  id: string
+  report: ClinicalReportData
+  created_at: string
+}
+
 export async function createReportSession(guestToken?: string | null): Promise<string | null> {
   const sessionData: Record<string, unknown> = {
     status: 'completed',
@@ -42,7 +48,7 @@ export async function saveClinicalReportToSession(
     session_id: sessionId,
     question_key: 'clinical_report',
     question_label: 'Laudo Clínico Profissional',
-    response_value: JSON.stringify(report),
+    response_value: report,
   })
 
   if (error) {
@@ -53,9 +59,22 @@ export async function saveClinicalReportToSession(
   return true
 }
 
-export async function getClinicalReports(
-  userId: string,
-): Promise<{ id: string; response_value: unknown; created_at: string }[]> {
+function parseReport(value: unknown): ClinicalReportData | null {
+  if (!value) return null
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value) as ClinicalReportData
+    } catch {
+      return null
+    }
+  }
+  if (typeof value === 'object') {
+    return value as ClinicalReportData
+  }
+  return null
+}
+
+export async function getClinicalReports(userId: string): Promise<ClinicalReportWithMeta[]> {
   const { data, error } = await supabase
     .from('anamnesis_responses')
     .select('id, response_value, created_at')
@@ -63,5 +82,12 @@ export async function getClinicalReports(
     .order('created_at', { ascending: false })
 
   if (error || !data) return []
-  return data as { id: string; response_value: unknown; created_at: string }[]
+
+  return data
+    .map((d) => {
+      const report = parseReport(d.response_value)
+      if (!report) return null
+      return { id: d.id, report, created_at: d.created_at }
+    })
+    .filter(Boolean) as ClinicalReportWithMeta[]
 }
