@@ -149,8 +149,8 @@ export function PublicSnapIV({ onDevolutiva }: { onDevolutiva?: () => void }) {
           </div>
           <p className="text-sm text-white/70">
             {result.isSuggestive
-              ? '6 ou mais itens com pontuação alta (2 ou 3) em pelo menos um grupo. Recomenda-se avaliação profissional.'
-              : 'Menos de 6 itens altos em ambos os grupos. Continue monitorando o desenvolvimento.'}
+              ? `Média ${result.average.toFixed(1)} (≥ 1.0). Indicadores sugestivos de TDAH. Recomenda-se avaliação profissional.`
+              : `Média ${result.average.toFixed(1)} (< 1.0). Continue monitorando o desenvolvimento.`}
           </p>
         </div>
         <Button

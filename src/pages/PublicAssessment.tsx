@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { PublicPageShell } from '@/components/PublicPageShell'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
-import { Stethoscope, Brain, ArrowRight, Lock, ShieldCheck } from 'lucide-react'
+import { Stethoscope, Brain, ArrowRight, Lock, ShieldCheck, Clock } from 'lucide-react'
 import { PublicSnapIV } from '@/components/PublicSnapIV'
 import { PublicAssq } from '@/components/PublicAssq'
 import { PublicCbcl } from '@/components/PublicCbcl'
@@ -24,7 +24,9 @@ export default function PublicAssessment() {
   } | null>(null)
   const { scale } = useParams<{ scale?: string }>()
   const navigate = useNavigate()
-  const defaultTab: ScaleType = scale === 'assq' ? 'assq' : scale === 'cbcl' ? 'cbcl' : 'snap-iv'
+  const [activeTab, setActiveTab] = useState<string>(
+    scale === 'assq' ? 'assq' : scale === 'cbcl' ? 'cbcl' : 'snapiv',
+  )
 
   useEffect(() => {
     if (scale === 'snapiv' || scale === 'assq' || scale === 'cbcl') {
@@ -75,39 +77,95 @@ export default function PublicAssessment() {
   }
 
   if (!started) {
+    const scaleOptions: {
+      key: string
+      name: string
+      subtitle: string
+      description: string
+      time: string
+    }[] = [
+      {
+        key: 'snapiv',
+        name: 'SNAP-IV',
+        subtitle: 'TDAH',
+        description: 'Avalia sinais de desatenção e hiperatividade/impulsividade.',
+        time: '5-10 min',
+      },
+      {
+        key: 'assq',
+        name: 'ASSQ',
+        subtitle: 'Autismo',
+        description: 'Triagem para o Transtorno do Espectro Autista.',
+        time: '10-15 min',
+      },
+      {
+        key: 'cbcl',
+        name: 'CBCL',
+        subtitle: 'Comportamento',
+        description: 'Checklist de comportamentos internalizantes e externalizantes.',
+        time: '10-15 min',
+      },
+    ]
+
     return (
       <PublicPageShell>
-        <div className="max-w-2xl mx-auto text-center space-y-6 py-8 animate-fade-in-up">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#00FFFF]/10 border border-[#00FFFF]/20 mb-2">
-            <Stethoscope className="h-8 w-8 text-[#00FFFF]" />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">NeuroFlow AI</h1>
-          <h2 className="text-xl sm:text-2xl font-bold text-white">Vamos conhecer seu filho?</h2>
-          <p className="text-[#00FFFF]/80 text-sm sm:text-base font-medium max-w-md mx-auto">
-            Avaliação carinhosa para entender melhor o seu filho
-          </p>
-          <p className="text-white/60 text-xs sm:text-sm max-w-md mx-auto mt-1">
-            Escalas clínicas de triagem para neurodesenvolvimento. Responda no conforto da sua casa,
-            sem necessidade de cadastro ou sensores.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center text-xs text-white/50">
-            <div className="flex items-center gap-1.5">
-              <Lock className="h-3.5 w-3.5 text-[#00FFFF]" />
-              <span>Sem login necessário</span>
+        <div className="max-w-2xl mx-auto space-y-6 py-8 animate-fade-in-up">
+          <div className="text-center space-y-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#00FFFF]/10 border border-[#00FFFF]/20 mb-2">
+              <Stethoscope className="h-8 w-8 text-[#00FFFF]" />
             </div>
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-[#00FFFF]" />
-              <span>Dados protegidos (LGPD)</span>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">NeuroFlow AI</h1>
+            <h2 className="text-xl sm:text-2xl font-bold text-white">Vamos conhecer seu filho?</h2>
+            <p className="text-[#00FFFF]/80 text-sm sm:text-base font-medium max-w-md mx-auto">
+              Avaliação carinhosa para entender melhor o seu filho
+            </p>
+            <p className="text-white/60 text-xs sm:text-sm max-w-md mx-auto">
+              Escalas clínicas de triagem para neurodesenvolvimento. Responda no conforto da sua
+              casa, sem necessidade de cadastro ou sensores.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center text-xs text-white/50">
+              <div className="flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5 text-[#00FFFF]" />
+                <span>Sem login necessário</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5 text-[#00FFFF]" />
+                <span>Dados protegidos (LGPD)</span>
+              </div>
             </div>
           </div>
-          <Button
-            onClick={() => setStarted(true)}
-            size="lg"
-            className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-semibold"
-          >
-            Iniciar Avaliação <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-          <div className="rounded-xl border border-[#00FFFF]/20 bg-[#00FFFF]/5 p-4 text-left max-w-md mx-auto">
+          <div className="grid grid-cols-1 gap-3">
+            {scaleOptions.map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => {
+                  setActiveTab(opt.key)
+                  setStarted(true)
+                }}
+                className="text-left rounded-xl border border-[#00FFFF]/20 bg-[#00FFFF]/5 p-5 hover:border-[#00FFFF]/40 hover:bg-[#00FFFF]/10 transition-all group"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-lg font-bold text-white">{opt.name}</h3>
+                      <span className="text-xs font-medium text-[#00FFFF] bg-[#00FFFF]/10 px-2 py-0.5 rounded-full">
+                        {opt.subtitle}
+                      </span>
+                    </div>
+                    <p className="text-sm text-white/60">{opt.description}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2 shrink-0">
+                    <div className="flex items-center gap-1 text-xs text-white/50">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span>{opt.time}</span>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-[#00FFFF] opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="rounded-xl border border-[#00FFFF]/20 bg-[#00FFFF]/5 p-4 text-left">
             <div className="flex items-start gap-2">
               <Brain className="h-4 w-4 text-[#00FFFF] shrink-0 mt-0.5" />
               <p className="text-xs text-white/70">
@@ -143,7 +201,7 @@ export default function PublicAssessment() {
             uma avaliação médica.
           </p>
         </div>
-        <Tabs defaultValue={defaultTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList
             className={cn('grid w-full grid-cols-3 max-w-lg bg-white/5 border border-white/10')}
           >

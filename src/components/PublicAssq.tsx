@@ -146,8 +146,8 @@ export function PublicAssq({ onDevolutiva }: { onDevolutiva?: () => void }) {
           </div>
           <p className="text-sm text-white/70">
             {result.isSuggestive
-              ? `Pontuação ${result.total} ≥ ${result.threshold}. Recomenda-se avaliação diagnóstica com especialista.`
-              : `Pontuação ${result.total} < ${result.threshold}. Continue monitorando o desenvolvimento.`}
+              ? `Pontuação ${result.total} (≥ 14). Recomenda-se avaliação diagnóstica com especialista.`
+              : `Pontuação ${result.total} (< 14). Continue monitorando o desenvolvimento.`}
           </p>
         </div>
         <Button

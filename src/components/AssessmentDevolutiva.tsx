@@ -41,10 +41,10 @@ const scaleTitles: Record<ScaleType, string> = {
 
 function formatMessage(scaleType: ScaleType, result: Record<string, unknown>): string {
   if (scaleType === 'snap-iv')
-    return `SNAP-IV: ${result.inattentionHigh} desatenção, ${result.hyperactivityHigh} hiperatividade. Sugestivo: ${result.isSuggestive}`
+    return `SNAP-IV: média ${result.average}, ${result.inattentionHigh} desatenção, ${result.hyperactivityHigh} hiperatividade. Severidade: ${result.severity}`
   if (scaleType === 'assq')
-    return `ASSQ: total ${result.total}, limiar ${result.threshold}. Sugestivo: ${result.isSuggestive}`
-  return `CBCL: internalizante ${result.internalizing}, externalizante ${result.externalizing}, total ${result.total}.`
+    return `ASSQ: total ${result.total}, limiar ${result.threshold}. Severidade: ${result.severity}`
+  return `CBCL: internalizante ${result.internalizing}, externalizante ${result.externalizing}, total ${result.total}. Severidade: ${result.severity}`
 }
 
 export function AssessmentDevolutiva({ scaleType, result, onBack }: DevolutivaProps) {
@@ -147,6 +147,26 @@ export function AssessmentDevolutiva({ scaleType, result, onBack }: DevolutivaPr
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <Stethoscope className="h-5 w-5 text-[#00FFFF]" /> Resultados
               </h2>
+              {result.severity && (
+                <div className="flex justify-center">
+                  <span
+                    className={cn(
+                      'px-4 py-1.5 rounded-full text-sm font-bold border',
+                      result.severity === 'elevado'
+                        ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                        : result.severity === 'moderado'
+                          ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                          : 'bg-green-500/20 text-green-400 border-green-500/30',
+                    )}
+                  >
+                    {result.severity === 'elevado'
+                      ? 'Elevado'
+                      : result.severity === 'moderado'
+                        ? 'Moderado'
+                        : 'Baixo'}
+                  </span>
+                </div>
+              )}
               {scaleType === 'snap-iv' && (
                 <div className="grid grid-cols-2 gap-3">
                   <div className="text-center p-3 rounded-xl bg-[#0A192F] border border-white/10">

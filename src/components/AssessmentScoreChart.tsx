@@ -24,23 +24,23 @@ export function AssessmentScoreChart({ scaleType, result }: Props) {
 
   if (scaleType === 'snap-iv') {
     data = [
-      { name: 'Desatenção', score: Number(result.inattentionHigh) || 0, threshold: 6 },
-      { name: 'Hiperatividade', score: Number(result.hyperactivityHigh) || 0, threshold: 6 },
+      { name: 'Desatenção', score: Number(result.inattentionAvg) || 0, threshold: 1.5 },
+      { name: 'Hiperatividade', score: Number(result.hyperactivityAvg) || 0, threshold: 1.5 },
     ]
-    yMax = 9
+    yMax = 3
   } else if (scaleType === 'assq') {
     data = [
       {
         name: 'Pontuação Total',
         score: Number(result.total) || 0,
-        threshold: Number(result.threshold) || 19,
+        threshold: 14,
       },
     ]
     yMax = 60
   } else {
     data = [
-      { name: 'Internalizante', score: Number(result.internalizing) || 0, threshold: 8 },
-      { name: 'Externalizante', score: Number(result.externalizing) || 0, threshold: 7 },
+      { name: 'Internalizante', score: Number(result.internalizing) || 0, threshold: 4 },
+      { name: 'Externalizante', score: Number(result.externalizing) || 0, threshold: 4 },
     ]
     yMax = 30
   }

@@ -125,23 +125,40 @@ export const assqOptions: AssessmentOption[] = [
   { value: 2, label: 'Sim' },
 ]
 
+export type SeverityLevel = 'baixo' | 'moderado' | 'elevado'
+
 export interface SnapIVResult {
   inattentionHigh: number
   hyperactivityHigh: number
   isSuggestive: boolean
+  average: number
+  inattentionAvg: number
+  hyperactivityAvg: number
+  severity: SeverityLevel
 }
 
 export function interpretSnapIV(answers: Record<string, number>): SnapIVResult {
-  const inattentionHigh = snapQuestions
-    .filter((q) => q.group === 'inattention')
-    .filter((q) => (answers[q.key] ?? -1) >= 2).length
-  const hyperactivityHigh = snapQuestions
-    .filter((q) => q.group === 'hyperactivity')
-    .filter((q) => (answers[q.key] ?? -1) >= 2).length
+  const inattentionAnswers = snapQuestions.filter((q) => q.group === 'inattention')
+  const hyperactivityAnswers = snapQuestions.filter((q) => q.group === 'hyperactivity')
+  const inattentionSum = inattentionAnswers.reduce((s, q) => s + (answers[q.key] ?? 0), 0)
+  const hyperactivitySum = hyperactivityAnswers.reduce((s, q) => s + (answers[q.key] ?? 0), 0)
+  const totalSum = inattentionSum + hyperactivitySum
+  const average = totalSum / 18
+  const inattentionAvg = inattentionSum / 9
+  const hyperactivityAvg = hyperactivitySum / 9
+  const inattentionHigh = inattentionAnswers.filter((q) => (answers[q.key] ?? -1) >= 2).length
+  const hyperactivityHigh = hyperactivityAnswers.filter((q) => (answers[q.key] ?? -1) >= 2).length
+  let severity: SeverityLevel = 'baixo'
+  if (average > 1.5) severity = 'elevado'
+  else if (average >= 1.0) severity = 'moderado'
   return {
     inattentionHigh,
     hyperactivityHigh,
-    isSuggestive: inattentionHigh >= 6 || hyperactivityHigh >= 6,
+    isSuggestive: severity !== 'baixo',
+    average,
+    inattentionAvg,
+    hyperactivityAvg,
+    severity,
   }
 }
 
@@ -149,10 +166,14 @@ export interface AssqResult {
   total: number
   threshold: number
   isSuggestive: boolean
+  severity: SeverityLevel
 }
 
 export function interpretASSQ(answers: Record<string, number>, gender: 'boy' | 'girl'): AssqResult {
   const total = assqQuestions.reduce((sum, q) => sum + (answers[q.key] ?? 0), 0)
   const threshold = gender === 'boy' ? 22 : 19
-  return { total, threshold, isSuggestive: total >= threshold }
+  let severity: SeverityLevel = 'baixo'
+  if (total > 21) severity = 'elevado'
+  else if (total >= 14) severity = 'moderado'
+  return { total, threshold, isSuggestive: severity !== 'baixo', severity }
 }

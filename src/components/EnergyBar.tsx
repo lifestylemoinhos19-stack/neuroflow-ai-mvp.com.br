@@ -19,9 +19,10 @@ export function EnergyBar({ bpm, energy, stateLevel }: EnergyBarProps) {
       : stateLevel === 'agitated'
         ? 'Padrão Geométrico'
         : 'Neutro'
-  const energyColor = bpm < 70 ? 'bg-[#00FFFF]' : bpm > 100 ? 'bg-[#FFD700]' : 'bg-[#7DF9FF]'
+  const energyColor =
+    bpm < 70 ? 'bg-[#00FFFF]' : bpm > 90 ? 'bg-[#1E3A5F] border border-white/30' : 'bg-[#3B82F6]'
   const energyPulse =
-    bpm < 70 ? 'animate-pulse-slow' : bpm > 100 ? 'animate-pulse-fast' : 'animate-pulse'
+    bpm < 70 ? 'animate-pulse-slow' : bpm > 90 ? 'animate-pulse-fast' : 'animate-pulse'
 
   const waveId = `wave-${patternId}`
   const geoId = `geo-${patternId}`

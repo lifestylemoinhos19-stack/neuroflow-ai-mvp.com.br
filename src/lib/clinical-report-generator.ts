@@ -59,35 +59,42 @@ const MEDICATIONS: Medication[] = [
 function getDiagnoses(scaleType: ScaleType, result: Record<string, unknown>): CID10Diagnosis[] {
   const dx: CID10Diagnosis[] = []
   if (scaleType === 'snap-iv') {
-    const inatt = Number(result.inattentionHigh) || 0
-    const hyper = Number(result.hyperactivityHigh) || 0
-    if (inatt >= 6 && hyper >= 6) dx.push({ code: 'F90.2', description: 'TDAH — Tipo Combinado' })
-    else if (inatt >= 6)
-      dx.push({ code: 'F90.0', description: 'TDAH — Predominantemente Desatento' })
-    else if (hyper >= 6)
-      dx.push({ code: 'F90.1', description: 'TDAH — Predominantemente Hiperativo-Impulsivo' })
-    dx.push({ code: 'F41.1', description: 'Transtorno de Ansiedade Generalizada (comorbidade)' })
+    const avg = Number(result.average) || 0
+    const inattAvg = Number(result.inattentionAvg) || 0
+    const hyperAvg = Number(result.hyperactivityAvg) || 0
+    if (avg > 1.5) {
+      if (inattAvg > 1.5 && hyperAvg > 1.5)
+        dx.push({ code: 'F90.2', description: 'TDAH — Tipo Combinado' })
+      else if (inattAvg > 1.5)
+        dx.push({ code: 'F90.0', description: 'TDAH — Predominantemente Desatento' })
+      else dx.push({ code: 'F90.1', description: 'TDAH — Predominantemente Hiperativo-Impulsivo' })
+      dx.push({ code: 'F41.1', description: 'Transtorno de Ansiedade Generalizada (comorbidade)' })
+    } else if (avg >= 1.0) {
+      dx.push({ code: 'F90.0', description: 'TDAH — Sinais sugestivos (triagem positiva)' })
+    }
     dx.push({
       code: 'F33.1',
       description: 'Transtorno Depressivo Recorrente, episódio moderado (diferencial)',
     })
   } else if (scaleType === 'assq') {
     const total = Number(result.total) || 0
-    const threshold = Number(result.threshold) || 19
-    if (total >= threshold) {
+    if (total > 21) {
       dx.push({ code: 'F84.0', description: 'Transtorno do Espectro Autista' })
       dx.push({ code: 'F84.5', description: 'Síndrome de Asperger (espectro relacionado)' })
+    } else if (total >= 14) {
+      dx.push({ code: 'F84.0', description: 'Transtorno do Espectro Autista (triagem positiva)' })
     }
     dx.push({ code: 'F90.0', description: 'TDAH (comorbidade comum no TEA)' })
     dx.push({ code: 'F41.1', description: 'Transtorno de Ansiedade Generalizada' })
   } else {
-    const intern = Number(result.internalizing) || 0
-    const extern = Number(result.externalizing) || 0
-    if (intern >= 8) {
+    const total = Number(result.total) || 0
+    if (total > 14) {
       dx.push({ code: 'F93.0', description: 'Ansiedade de Separação da Infância' })
       dx.push({ code: 'F32.1', description: 'Episódio Depressivo Moderado' })
+      dx.push({ code: 'F91.0', description: 'Transtorno de Conduta' })
+    } else if (total >= 8) {
+      dx.push({ code: 'F93.0', description: 'Ansiedade de Separação da Infância (sugestivo)' })
     }
-    if (extern >= 7) dx.push({ code: 'F91.0', description: 'Transtorno de Conduta' })
     dx.push({ code: 'F41.1', description: 'Transtorno de Ansiedade Generalizada' })
   }
   dx.push({ code: 'F31.5', description: 'Transtorno Bipolar, episódio atual misto (diferencial)' })

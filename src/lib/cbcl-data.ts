@@ -1,3 +1,5 @@
+type SeverityLevel = 'baixo' | 'moderado' | 'elevado'
+
 export interface CbclQuestion {
   key: string
   text: string
@@ -50,6 +52,7 @@ export interface CbclResult {
   isInternalizingElevated: boolean
   isExternalizingElevated: boolean
   maxScore: number
+  severity: SeverityLevel
 }
 
 export function interpretCBCL(answers: Record<string, number>): CbclResult {
@@ -63,12 +66,17 @@ export function interpretCBCL(answers: Record<string, number>): CbclResult {
   const externalizing = externalizingQs.reduce((s, q) => s + (answers[q.key] ?? 0), 0)
   const intMax = internalizingQs.length * 2
   const extMax = externalizingQs.length * 2
+  const total = internalizing + externalizing
+  let severity: SeverityLevel = 'baixo'
+  if (total > 14) severity = 'elevado'
+  else if (total >= 8) severity = 'moderado'
   return {
     internalizing,
     externalizing,
-    total: internalizing + externalizing,
+    total,
     isInternalizingElevated: internalizing >= intMax * 0.3,
     isExternalizingElevated: externalizing >= extMax * 0.3,
     maxScore: cbclQuestions.length * 2,
+    severity,
   }
 }
