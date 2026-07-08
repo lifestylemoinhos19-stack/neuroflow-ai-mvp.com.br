@@ -8,30 +8,24 @@ import {
   FileText,
   Brain,
   Stethoscope,
-  BarChart3,
-  ClipboardList,
   Sparkles,
   ArrowRight,
+  Edit,
+  Check,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import { PublicPageShell } from '@/components/PublicPageShell'
 import { AssessmentScoreChart } from '@/components/AssessmentScoreChart'
-import { ProfessionalClinicalReport } from '@/components/ProfessionalClinicalReport'
 import { useAuth } from '@/contexts/auth-context'
 import { supabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import { generateClinicalReport, type ClinicalReportData } from '@/lib/clinical-report-generator'
-import { createReportSession, saveClinicalReportToSession } from '@/services/clinical-report'
+import { generateEducationalInterpretation } from '@/lib/educational-interpretation'
+import { createReportSession, saveInterpretationToSession } from '@/services/clinical-report'
+import { saveAdminInterpretation } from '@/services/admin'
 
 type ScaleType = 'snap-iv' | 'assq' | 'cbcl'
-type ViewMode = 'chart' | 'report'
-
-interface DevolutivaProps {
-  scaleType: ScaleType
-  result: Record<string, unknown>
-  onBack: () => void
-}
 
 const scaleTitles: Record<ScaleType, string> = {
   'snap-iv': 'SNAP-IV — Triagem TDAH',
@@ -47,16 +41,45 @@ function formatMessage(scaleType: ScaleType, result: Record<string, unknown>): s
   return `CBCL: internalizante ${result.internalizing}, externalizante ${result.externalizing}, total ${result.total}. Severidade: ${result.severity}`
 }
 
-export function AssessmentDevolutiva({ scaleType, result, onBack }: DevolutivaProps) {
+const severityColors: Record<string, string> = {
+  elevado: 'bg-red-500/20 text-red-400 border-red-500/30',
+  moderado: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+  baixo: 'bg-green-500/20 text-green-400 border-green-500/30',
+}
+const severityLabels: Record<string, string> = {
+  elevado: 'Elevado',
+  moderado: 'Moderado',
+  baixo: 'Baixo',
+}
+
+export function AssessmentDevolutiva({
+  scaleType,
+  result,
+  onBack,
+}: {
+  scaleType: ScaleType
+  result: Record<string, unknown>
+  onBack: () => void
+}) {
   const [aiText, setAiText] = useState('')
   const [aiAction, setAiAction] = useState('')
   const [loading, setLoading] = useState(true)
-  const [viewMode, setViewMode] = useState<ViewMode>('chart')
-  const [report, setReport] = useState<ClinicalReportData | null>(null)
   const [saving, setSaving] = useState(false)
   const [showCalmExplorer, setShowCalmExplorer] = useState(false)
-  const { isAuthenticated, user } = useAuth()
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedText, setEditedText] = useState('')
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const { isAuthenticated, isAdmin } = useAuth()
   const navigate = useNavigate()
+
+  const interpretation = generateEducationalInterpretation(scaleType, result)
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      createReportSession(null).then((id) => id && setSessionId(id))
+    }
+  }, [isAuthenticated])
 
   useEffect(() => {
     const message = formatMessage(scaleType, result)
@@ -72,32 +95,39 @@ export function AssessmentDevolutiva({ scaleType, result, onBack }: DevolutivaPr
       .finally(() => setLoading(false))
   }, [scaleType, result])
 
-  useEffect(() => {
-    setReport(generateClinicalReport(scaleType, result, user?.name, aiText))
-  }, [scaleType, result, aiText, user])
-
-  const handlePrint = () => window.print()
+  const handleAdminSave = async () => {
+    if (!sessionId) {
+      toast.error('Sessão não disponível para salvar.')
+      return
+    }
+    setSavingEdit(true)
+    const { error } = await saveAdminInterpretation(sessionId, editedText)
+    setSavingEdit(false)
+    if (error) {
+      toast.error('Erro ao salvar interpretação.')
+      return
+    }
+    setAiText(editedText)
+    setIsEditing(false)
+    toast.success('Interpretação atualizada com sucesso!')
+  }
 
   const handleSave = useCallback(async () => {
     setSaving(true)
     localStorage.setItem('neuroflow_show_calm_explorer', 'true')
     const guestToken = localStorage.getItem('neuroflow_guest_token')
-
     if (!isAuthenticated) {
       toast.info('Faça login para salvar seu histórico de avaliações.')
       navigate('/login', { state: { guestToken, fromAssessment: true } })
       setSaving(false)
       return
     }
-
-    const sessionId = await createReportSession(null)
-    if (sessionId && report) {
-      await saveClinicalReportToSession(sessionId, report)
-    }
+    const sid = sessionId || (await createReportSession(null))
+    if (sid) await saveInterpretationToSession(sid, interpretation)
     toast.success('Seus resultados foram salvos em sua conta!')
     setShowCalmExplorer(true)
     setSaving(false)
-  }, [isAuthenticated, navigate, report])
+  }, [isAuthenticated, navigate, interpretation, sessionId])
 
   return (
     <PublicPageShell>
@@ -122,97 +152,112 @@ export function AssessmentDevolutiva({ scaleType, result, onBack }: DevolutivaPr
           <p className="text-[#00FFFF]/80 text-sm font-medium mt-1">{scaleTitles[scaleType]}</p>
         </div>
 
-        <div className="no-print flex gap-2 justify-center">
-          <Button
-            variant={viewMode === 'chart' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('chart')}
-            className={cn(viewMode === 'chart' && 'bg-[#00FFFF] text-[#0A192F]')}
-          >
-            <BarChart3 className="h-4 w-4 mr-2" /> Gráfico de pontuação
-          </Button>
-          <Button
-            variant={viewMode === 'report' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('report')}
-            className={cn(viewMode === 'report' && 'bg-[#00FFFF] text-[#0A192F]')}
-          >
-            <ClipboardList className="h-4 w-4 mr-2" /> Visualização de Laudo Profissional
-          </Button>
+        <div className="rounded-2xl border border-[#00FFFF]/20 bg-[#112240] p-6 space-y-4 no-print">
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <Stethoscope className="h-5 w-5 text-[#00FFFF]" /> Resultados
+          </h2>
+          {result.severity && (
+            <div className="flex justify-center">
+              <span
+                className={cn(
+                  'px-4 py-1.5 rounded-full text-sm font-bold border',
+                  severityColors[result.severity as string] || severityColors.baixo,
+                )}
+              >
+                {severityLabels[result.severity as string] || 'Baixo'}
+              </span>
+            </div>
+          )}
+          {scaleType === 'snap-iv' && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="text-center p-3 rounded-xl bg-[#0A192F] border border-white/10">
+                <p className="text-3xl font-bold text-[#00FFFF]">
+                  {String(result.inattentionHigh)}
+                </p>
+                <p className="text-xs text-white/50">Itens altos — Desatenção</p>
+              </div>
+              <div className="text-center p-3 rounded-xl bg-[#0A192F] border border-white/10">
+                <p className="text-3xl font-bold text-[#00FFFF]">
+                  {String(result.hyperactivityHigh)}
+                </p>
+                <p className="text-xs text-white/50">Itens altos — Hiperatividade</p>
+              </div>
+            </div>
+          )}
+          {scaleType === 'assq' && (
+            <div className="text-center py-2">
+              <p className="text-4xl font-bold text-[#00FFFF]">{String(result.total)}</p>
+              <p className="text-sm text-white/50 mt-1">Pontuação total (máx. 54)</p>
+            </div>
+          )}
+          {scaleType === 'cbcl' && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="text-center p-3 rounded-xl bg-[#0A192F] border border-white/10">
+                <p className="text-3xl font-bold text-[#00FFFF]">{String(result.internalizing)}</p>
+                <p className="text-xs text-white/50">Internalizante</p>
+              </div>
+              <div className="text-center p-3 rounded-xl bg-[#0A192F] border border-white/10">
+                <p className="text-3xl font-bold text-[#00FFFF]">{String(result.externalizing)}</p>
+                <p className="text-xs text-white/50">Externalizante</p>
+              </div>
+            </div>
+          )}
+          <AssessmentScoreChart scaleType={scaleType} result={result} />
         </div>
 
-        {viewMode === 'chart' ? (
-          <>
-            <div className="rounded-2xl border border-[#00FFFF]/20 bg-[#112240] p-6 space-y-4 no-print">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Stethoscope className="h-5 w-5 text-[#00FFFF]" /> Resultados
-              </h2>
-              {result.severity && (
-                <div className="flex justify-center">
-                  <span
-                    className={cn(
-                      'px-4 py-1.5 rounded-full text-sm font-bold border',
-                      result.severity === 'elevado'
-                        ? 'bg-red-500/20 text-red-400 border-red-500/30'
-                        : result.severity === 'moderado'
-                          ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-                          : 'bg-green-500/20 text-green-400 border-green-500/30',
-                    )}
-                  >
-                    {result.severity === 'elevado'
-                      ? 'Elevado'
-                      : result.severity === 'moderado'
-                        ? 'Moderado'
-                        : 'Baixo'}
-                  </span>
-                </div>
-              )}
-              {scaleType === 'snap-iv' && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center p-3 rounded-xl bg-[#0A192F] border border-white/10">
-                    <p className="text-3xl font-bold text-[#00FFFF]">
-                      {String(result.inattentionHigh)}
-                    </p>
-                    <p className="text-xs text-white/50">Itens altos — Desatenção</p>
-                  </div>
-                  <div className="text-center p-3 rounded-xl bg-[#0A192F] border border-white/10">
-                    <p className="text-3xl font-bold text-[#00FFFF]">
-                      {String(result.hyperactivityHigh)}
-                    </p>
-                    <p className="text-xs text-white/50">Itens altos — Hiperatividade</p>
-                  </div>
-                </div>
-              )}
-              {scaleType === 'assq' && (
-                <div className="text-center py-2">
-                  <p className="text-4xl font-bold text-[#00FFFF]">{String(result.total)}</p>
-                  <p className="text-sm text-white/50 mt-1">Pontuação total (máx. 54)</p>
-                  <p className="text-xs text-white/40">Limiar: {String(result.threshold)}</p>
-                </div>
-              )}
-              {scaleType === 'cbcl' && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center p-3 rounded-xl bg-[#0A192F] border border-white/10">
-                    <p className="text-3xl font-bold text-[#00FFFF]">
-                      {String(result.internalizing)}
-                    </p>
-                    <p className="text-xs text-white/50">Internalizante</p>
-                  </div>
-                  <div className="text-center p-3 rounded-xl bg-[#0A192F] border border-white/10">
-                    <p className="text-3xl font-bold text-[#00FFFF]">
-                      {String(result.externalizing)}
-                    </p>
-                    <p className="text-xs text-white/50">Externalizante</p>
-                  </div>
-                </div>
-              )}
-              <AssessmentScoreChart scaleType={scaleType} result={result} />
+        <div className="rounded-2xl border border-[#00FFFF]/20 bg-[#00FFFF]/5 p-6 space-y-3 no-print">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <Brain className="h-5 w-5 text-[#00FFFF]" /> Interpretação Educacional
+            </h2>
+            {isAdmin && !isEditing && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setEditedText(aiText || interpretation.summary)
+                  setIsEditing(true)
+                }}
+                className="text-[#00FFFF] hover:bg-[#00FFFF]/10"
+              >
+                <Edit className="h-3 w-3 mr-1" /> Editar
+              </Button>
+            )}
+          </div>
+          {isEditing ? (
+            <div className="space-y-2">
+              <Textarea
+                value={editedText}
+                onChange={(e) => setEditedText(e.target.value)}
+                rows={6}
+                className="bg-[#0A192F] border-[#00FFFF]/20 text-white"
+              />
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsEditing(false)}
+                  className="border-white/20 text-white"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleAdminSave}
+                  disabled={savingEdit}
+                  className="bg-[#00FFFF] text-[#0A192F]"
+                >
+                  {savingEdit ? (
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  ) : (
+                    <Check className="h-3 w-3 mr-1" />
+                  )}
+                  Salvar Interpretação
+                </Button>
+              </div>
             </div>
-
-            <div className="rounded-2xl border border-[#00FFFF]/20 bg-[#00FFFF]/5 p-6 space-y-3 no-print">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Brain className="h-5 w-5 text-[#00FFFF]" /> Interpretação da IA
-              </h2>
+          ) : (
+            <>
               {loading ? (
                 <div className="flex items-center gap-2 text-white/60 text-sm">
                   <Loader2 className="h-4 w-4 animate-spin" /> Gerando interpretação
@@ -220,27 +265,30 @@ export function AssessmentDevolutiva({ scaleType, result, onBack }: DevolutivaPr
                 </div>
               ) : (
                 <>
-                  {aiText && <p className="text-sm text-white/80 leading-relaxed">{aiText}</p>}
+                  <p className="text-sm text-white/80 leading-relaxed">
+                    {aiText || interpretation.summary}
+                  </p>
+                  <div className="space-y-1 mt-2">
+                    {interpretation.guidance.map((g, i) => (
+                      <p key={i} className="text-xs text-white/50 flex items-start gap-1">
+                        <span className="text-[#00FFFF] mt-0.5">•</span> {g}
+                      </p>
+                    ))}
+                  </div>
                   {aiAction && (
-                    <div
-                      className={cn(
-                        'mt-3 p-3 rounded-lg bg-[#00FFFF]/10 border border-[#00FFFF]/20',
-                      )}
-                    >
+                    <div className="mt-3 p-3 rounded-lg bg-[#00FFFF]/10 border border-[#00FFFF]/20">
                       <p className="text-xs font-bold text-[#00FFFF] mb-1">Próximos Passos:</p>
                       <p className="text-sm text-white/70">{aiAction}</p>
                     </div>
                   )}
+                  <p className="text-xs text-white/40 italic mt-2">
+                    {interpretation.recommendations}
+                  </p>
                 </>
               )}
-              <p className="text-xs text-white/40 italic mt-2">
-                Esta devolutiva é de caráter educativo e não substitui uma consulta profissional.
-              </p>
-            </div>
-          </>
-        ) : (
-          report && <ProfessionalClinicalReport report={report} />
-        )}
+            </>
+          )}
+        </div>
 
         {showCalmExplorer && (
           <div className="no-print rounded-2xl border border-[#00FFFF]/30 bg-[#00FFFF]/10 p-6 text-center animate-fade-in-up">
@@ -263,7 +311,7 @@ export function AssessmentDevolutiva({ scaleType, result, onBack }: DevolutivaPr
 
         <div className="no-print flex flex-col sm:flex-row gap-3">
           <Button
-            onClick={handlePrint}
+            onClick={() => window.print()}
             variant="outline"
             className="flex-1 border-[#00FFFF]/30 text-[#00FFFF] hover:bg-[#00FFFF]/10"
           >

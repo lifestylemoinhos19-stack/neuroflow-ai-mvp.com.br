@@ -1,9 +1,9 @@
 import { supabase } from '@/lib/supabase/client'
-import type { ClinicalReportData } from '@/lib/clinical-report-generator'
+import type { EducationalInterpretation } from '@/lib/educational-interpretation'
 
-export interface ClinicalReportWithMeta {
+export interface InterpretationWithMeta {
   id: string
-  report: ClinicalReportData
+  interpretation: EducationalInterpretation
   created_at: string
 }
 
@@ -40,54 +40,54 @@ export async function createReportSession(guestToken?: string | null): Promise<s
   return data?.id ?? null
 }
 
-export async function saveClinicalReportToSession(
+export async function saveInterpretationToSession(
   sessionId: string,
-  report: ClinicalReportData,
+  interpretation: EducationalInterpretation,
 ): Promise<boolean> {
   const { error } = await supabase.from('anamnesis_responses').insert({
     session_id: sessionId,
-    question_key: 'clinical_report',
-    question_label: 'Laudo Clínico Profissional',
-    response_value: report,
+    question_key: 'educational_interpretation',
+    question_label: 'Interpretação Educacional',
+    response_value: interpretation,
   })
 
   if (error) {
-    console.error('Error saving clinical report:', error)
+    console.error('Error saving interpretation:', error)
     return false
   }
 
   return true
 }
 
-function parseReport(value: unknown): ClinicalReportData | null {
+function parseInterpretation(value: unknown): EducationalInterpretation | null {
   if (!value) return null
   if (typeof value === 'string') {
     try {
-      return JSON.parse(value) as ClinicalReportData
+      return JSON.parse(value) as EducationalInterpretation
     } catch {
       return null
     }
   }
   if (typeof value === 'object') {
-    return value as ClinicalReportData
+    return value as EducationalInterpretation
   }
   return null
 }
 
-export async function getClinicalReports(userId: string): Promise<ClinicalReportWithMeta[]> {
+export async function getInterpretations(): Promise<InterpretationWithMeta[]> {
   const { data, error } = await supabase
     .from('anamnesis_responses')
     .select('id, response_value, created_at')
-    .eq('question_key', 'clinical_report')
+    .eq('question_key', 'educational_interpretation')
     .order('created_at', { ascending: false })
 
   if (error || !data) return []
 
   return data
     .map((d) => {
-      const report = parseReport(d.response_value)
-      if (!report) return null
-      return { id: d.id, report, created_at: d.created_at }
+      const interpretation = parseInterpretation(d.response_value)
+      if (!interpretation) return null
+      return { id: d.id, interpretation, created_at: d.created_at }
     })
-    .filter(Boolean) as ClinicalReportWithMeta[]
+    .filter(Boolean) as InterpretationWithMeta[]
 }

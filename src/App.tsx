@@ -30,6 +30,7 @@ import CaptureChoice from '@/pages/CaptureChoice'
 import FocusSessionRoute from '@/pages/FocusSessionRoute'
 import { MainDeployment } from '@/components/MainDeployment'
 import { CalmExplorerModal } from '@/components/CalmExplorerModal'
+import { AdminToolbar } from '@/components/AdminToolbar'
 import SessionSummary from '@/pages/SessionSummary'
 import OpticalOnboarding from '@/pages/OpticalOnboarding'
 import PublicAssessment from '@/pages/PublicAssessment'
@@ -41,6 +42,7 @@ function AppInner() {
   return (
     <>
       <CalmExplorerModal />
+      <AdminToolbar />
       <Routes>
         <Route
           path="/login"
