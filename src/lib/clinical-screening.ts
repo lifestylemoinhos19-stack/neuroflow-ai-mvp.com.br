@@ -145,3 +145,22 @@ function buildSuggestion(findings: ScreeningFinding[], comorbidities: string[]):
   )
   return lines.join('\n')
 }
+
+export function computeGlobalSeverity(scores: ScaleScores): 'low' | 'moderate' | 'high' {
+  const screening = generateScreening(scores)
+  if (screening.findings.length === 0) return 'low'
+
+  const hasHighSeverity =
+    (scores.phq9 !== null && scores.phq9 >= 15) ||
+    (scores.gad7 !== null && scores.gad7 >= 15) ||
+    (scores.snapIv !== null && scores.snapIv > 2.0) ||
+    (scores.assq !== null && scores.assq >= 22) ||
+    (scores.asrs18 !== null && scores.asrs18 >= 48) ||
+    (scores.moca !== null && scores.moca < 18) ||
+    (scores.meem !== null && scores.meem < 18) ||
+    (scores.hamd !== null && scores.hamd >= 20) ||
+    (scores.hama !== null && scores.hama >= 20)
+
+  if (hasHighSeverity) return 'high'
+  return 'moderate'
+}

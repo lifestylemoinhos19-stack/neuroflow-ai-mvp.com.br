@@ -265,41 +265,62 @@ export type Database = {
       clinical_feedback: {
         Row: {
           admin_edited_interpretation: string | null
+          asrs18_score: number | null
+          assq_score: number | null
           cognitive_vrc: number | null
           comments: string | null
           created_at: string
           doctor_id: string | null
           gad7_score: number | null
+          hama_score: number | null
+          hamd_score: number | null
           id: string
           is_accurate: boolean | null
+          meem_score: number | null
+          moca_score: number | null
           phq9_score: number | null
           session_id: string | null
+          snap_iv_score: number | null
           system_suggestion: string | null
         }
         Insert: {
           admin_edited_interpretation?: string | null
+          asrs18_score?: number | null
+          assq_score?: number | null
           cognitive_vrc?: number | null
           comments?: string | null
           created_at?: string
           doctor_id?: string | null
           gad7_score?: number | null
+          hama_score?: number | null
+          hamd_score?: number | null
           id?: string
           is_accurate?: boolean | null
+          meem_score?: number | null
+          moca_score?: number | null
           phq9_score?: number | null
           session_id?: string | null
+          snap_iv_score?: number | null
           system_suggestion?: string | null
         }
         Update: {
           admin_edited_interpretation?: string | null
+          asrs18_score?: number | null
+          assq_score?: number | null
           cognitive_vrc?: number | null
           comments?: string | null
           created_at?: string
           doctor_id?: string | null
           gad7_score?: number | null
+          hama_score?: number | null
+          hamd_score?: number | null
           id?: string
           is_accurate?: boolean | null
+          meem_score?: number | null
+          moca_score?: number | null
           phq9_score?: number | null
           session_id?: string | null
+          snap_iv_score?: number | null
           system_suggestion?: string | null
         }
         Relationships: [

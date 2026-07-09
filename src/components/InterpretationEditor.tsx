@@ -71,6 +71,9 @@ export function InterpretationEditor({ sessionId }: { sessionId: string }) {
       interpretation.meemScore,
       interpretation.hamdScore,
       interpretation.hamaScore,
+      interpretation.snapIvInattention,
+      interpretation.snapIvHyperactivity,
+      interpretation.globalSeverity,
     )
     setSaving(false)
     if (error) {

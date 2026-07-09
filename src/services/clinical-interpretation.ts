@@ -8,7 +8,12 @@ import {
   type Gad7Severity,
 } from '@/lib/phq9-gad7-data'
 import { assqQuestions, snapQuestions, interpretSnapIV } from '@/lib/assessment-data'
-import { generateScreening, asrs18Keys, type ScreeningFinding } from '@/lib/clinical-screening'
+import {
+  generateScreening,
+  asrs18Keys,
+  type ScreeningFinding,
+  computeGlobalSeverity,
+} from '@/lib/clinical-screening'
 
 export interface InterpretationResult {
   phq9Score: number
@@ -21,6 +26,9 @@ export interface InterpretationResult {
   hasScaleData: boolean
   assqScore: number | null
   snapIvScore: number | null
+  snapIvInattention: number | null
+  snapIvHyperactivity: number | null
+  globalSeverity: 'low' | 'moderate' | 'high'
   asrs18Score: number | null
   mocaScore: number | null
   meemScore: number | null
@@ -152,6 +160,9 @@ export async function getSessionInterpretation(
       meemScore: null,
       hamdScore: null,
       hamaScore: null,
+      snapIvInattention: null,
+      snapIvHyperactivity: null,
+      globalSeverity: 'low',
       findings: [],
       comorbidities: [],
     }
@@ -173,6 +184,19 @@ export async function getSessionInterpretation(
     meemScore,
     hamdScore,
     hamaScore,
+    snapIvInattention: snapResult.inattentionAvg || null,
+    snapIvHyperactivity: snapResult.hyperactivityAvg || null,
+    globalSeverity: computeGlobalSeverity({
+      phq9: phq9Score,
+      gad7: gad7Score,
+      assq: assqScore || null,
+      snapIv: snapIvScore || null,
+      asrs18: asrs18Score || null,
+      moca: mocaScore,
+      meem: meemScore,
+      hamd: hamdScore,
+      hama: hamaScore,
+    }),
     findings: screening.findings,
     comorbidities: screening.comorbidities,
   }
@@ -192,6 +216,9 @@ export async function saveInterpretation(
   meemScore?: number | null,
   hamdScore?: number | null,
   hamaScore?: number | null,
+  snapIvInattention?: number | null,
+  snapIvHyperactivity?: number | null,
+  globalSeverity?: 'low' | 'moderate' | 'high' | null,
 ): Promise<{ error: string | null }> {
   const {
     data: { user },
@@ -216,6 +243,9 @@ export async function saveInterpretation(
       meem_score: meemScore,
       hamd_score: hamdScore,
       hama_score: hamaScore,
+      snap_iv_inattention: snapIvInattention,
+      snap_iv_hyperactivity: snapIvHyperactivity,
+      global_severity: globalSeverity,
     } as any,
     { onConflict: 'session_id' },
   )

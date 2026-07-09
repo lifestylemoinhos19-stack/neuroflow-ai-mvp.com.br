@@ -9,9 +9,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Brain, AlertCircle } from 'lucide-react'
+import { Brain, AlertCircle, History as HistoryIcon } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getAllSessions, type AdminSession } from '@/services/admin'
 import { InterpretationEditor } from '@/components/InterpretationEditor'
+import { PatientHistoryDashboard } from '@/components/PatientHistoryDashboard'
 
 export function AdminInterpretationWorkspace() {
   const [searchParams] = useSearchParams()
@@ -50,30 +52,49 @@ export function AdminInterpretationWorkspace() {
           </AlertDescription>
         </Alert>
 
-        {loading ? (
-          <p className="text-sm text-slate-400">Carregando sessões...</p>
-        ) : sessions.length === 0 ? (
-          <p className="text-sm text-slate-400">Nenhuma sessão encontrada.</p>
-        ) : (
-          <>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Selecionar Sessão</label>
-              <Select value={selectedId} onValueChange={setSelectedId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Escolha uma sessão" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sessions.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {new Date(s.started_at).toLocaleDateString('pt-BR')} — {s.status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {selectedId && <InterpretationEditor sessionId={selectedId} />}
-          </>
-        )}
+        <Tabs defaultValue="interpretation" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="interpretation">
+              <Brain className="h-3.5 w-3.5 mr-1.5" />
+              Interpretação
+            </TabsTrigger>
+            <TabsTrigger value="history">
+              <HistoryIcon className="h-3.5 w-3.5 mr-1.5" />
+              Histórico do Paciente
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="interpretation" className="space-y-4 mt-4">
+            {loading ? (
+              <p className="text-sm text-slate-400">Carregando sessões...</p>
+            ) : sessions.length === 0 ? (
+              <p className="text-sm text-slate-400">Nenhuma sessão encontrada.</p>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">Selecionar Sessão</label>
+                  <Select value={selectedId} onValueChange={setSelectedId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Escolha uma sessão" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sessions.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {new Date(s.started_at).toLocaleDateString('pt-BR')} — {s.status}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {selectedId && <InterpretationEditor sessionId={selectedId} />}
+              </>
+            )}
+          </TabsContent>
+
+          <TabsContent value="history" className="mt-4">
+            <PatientHistoryDashboard />
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   )
