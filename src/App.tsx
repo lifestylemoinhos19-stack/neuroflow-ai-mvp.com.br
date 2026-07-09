@@ -27,6 +27,7 @@ import IndicatorsDashboard from '@/pages/IndicatorsDashboard'
 import TermsOfUse from '@/pages/TermsOfUse'
 import NotFound from '@/pages/NotFound'
 import Welcome from '@/pages/Welcome'
+import NeuroFlowLanding from '@/pages/NeuroFlowLanding'
 import CaptureChoice from '@/pages/CaptureChoice'
 import FocusSessionRoute from '@/pages/FocusSessionRoute'
 import { MainDeployment } from '@/components/MainDeployment'
@@ -60,6 +61,7 @@ function AppInner() {
         <Route path="/avaliacao" element={<PublicAssessment />} />
         <Route path="/avaliacao/:scale" element={<PublicAssessment />} />
         <Route path="/welcome" element={<Welcome />} />
+        <Route path="/neuroflow-ia" element={<NeuroFlowLanding />} />
         <Route path="/capture-choice" element={<CaptureChoice />} />
         <Route
           path="/mfa"

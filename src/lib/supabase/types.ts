@@ -1498,6 +1498,14 @@ export type Database = {
       cleanup_unauthorized_data: { Args: never; Returns: Json }
       decrypt_pii: { Args: { p_cipher: string }; Returns: string }
       encrypt_pii: { Args: { p_text: string }; Returns: string }
+      get_clinical_prevalence_stats: {
+        Args: never
+        Returns: {
+          condition_name: string
+          patient_count: number
+          total_evaluated: number
+        }[]
+      }
       get_encryption_key: { Args: never; Returns: string }
       get_session_responses_decrypted: {
         Args: { p_session_id: string }
