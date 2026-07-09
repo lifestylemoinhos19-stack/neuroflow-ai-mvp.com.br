@@ -7,7 +7,7 @@ export interface AssessmentResponse {
 }
 
 export async function saveAssessmentToSupabase(
-  scaleType: 'snap-iv' | 'assq' | 'cbcl',
+  scaleType: 'snap-iv' | 'assq' | 'cbcl' | 'phq9',
   responses: AssessmentResponse[],
   summary: Record<string, unknown>,
 ): Promise<boolean> {

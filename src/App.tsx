@@ -38,6 +38,7 @@ import OpticalOnboarding from '@/pages/OpticalOnboarding'
 import PublicAssessment from '@/pages/PublicAssessment'
 import History from '@/pages/History'
 import Documents from '@/pages/Documents'
+import Phq9Page from '@/pages/Phq9Page'
 
 function AppInner() {
   useGuestConversion()
@@ -135,6 +136,7 @@ function AppInner() {
           <Route path="/logs" element={<HealthLogs />} />
           <Route path="/historico" element={<History />} />
           <Route path="/documentos" element={<Documents />} />
+          <Route path="/evaluations/phq9" element={<Phq9Page />} />
           <Route path="/neuro-validation" element={<NeuroValidationPage />} />
           <Route path="/stress-test" element={<StressTestDashboard />} />
           <Route
