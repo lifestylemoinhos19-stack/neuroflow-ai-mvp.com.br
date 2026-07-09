@@ -20,6 +20,7 @@ interface AuthContextType {
   needsOnboarding: boolean
   profileChecked: boolean
   isAdmin: boolean
+  isDoctor: boolean
   bleOnboardingCompleted: boolean
   pairedSensorId: string | null
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
@@ -91,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const needsOnboarding = isAuthenticated && isMfaVerified && (!profile || !profile.privacy_consent)
   const isAdmin = !!profile && profile.role === 'admin'
+  const isDoctor = !!profile && profile.role === 'doctor'
   const bleOnboardingCompleted = onboarding
     ? !onboarding.is_first_access
     : !!profile?.has_completed_onboarding
@@ -242,6 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         needsOnboarding,
         profileChecked,
         isAdmin,
+        isDoctor,
         bleOnboardingCompleted,
         pairedSensorId: onboarding?.paired_sensor_id ?? null,
         signIn,
@@ -267,13 +270,22 @@ export function AuthGuard({
   children,
   requireMfa = true,
   requireAdmin = false,
+  requireClinical = false,
 }: {
   children: ReactNode
   requireMfa?: boolean
   requireAdmin?: boolean
+  requireClinical?: boolean
 }) {
-  const { isAuthenticated, isMfaVerified, loading, needsOnboarding, profileChecked, isAdmin } =
-    useAuth()
+  const {
+    isAuthenticated,
+    isMfaVerified,
+    loading,
+    needsOnboarding,
+    profileChecked,
+    isAdmin,
+    isDoctor,
+  } = useAuth()
   const location = useLocation()
 
   if (loading || (isAuthenticated && isMfaVerified && !profileChecked)) {
@@ -302,6 +314,10 @@ export function AuthGuard({
   }
 
   if (requireAdmin && !isAdmin) {
+    return <Navigate to="/" replace />
+  }
+
+  if (requireClinical && !isAdmin && !isDoctor) {
     return <Navigate to="/" replace />
   }
 

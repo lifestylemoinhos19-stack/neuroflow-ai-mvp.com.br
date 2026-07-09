@@ -272,6 +272,7 @@ export type Database = {
           created_at: string
           doctor_id: string | null
           gad7_score: number | null
+          global_severity: string | null
           hama_score: number | null
           hamd_score: number | null
           id: string
@@ -280,6 +281,8 @@ export type Database = {
           moca_score: number | null
           phq9_score: number | null
           session_id: string | null
+          snap_iv_hyperactivity: number | null
+          snap_iv_inattention: number | null
           snap_iv_score: number | null
           system_suggestion: string | null
         }
@@ -292,6 +295,7 @@ export type Database = {
           created_at?: string
           doctor_id?: string | null
           gad7_score?: number | null
+          global_severity?: string | null
           hama_score?: number | null
           hamd_score?: number | null
           id?: string
@@ -300,6 +304,8 @@ export type Database = {
           moca_score?: number | null
           phq9_score?: number | null
           session_id?: string | null
+          snap_iv_hyperactivity?: number | null
+          snap_iv_inattention?: number | null
           snap_iv_score?: number | null
           system_suggestion?: string | null
         }
@@ -312,6 +318,7 @@ export type Database = {
           created_at?: string
           doctor_id?: string | null
           gad7_score?: number | null
+          global_severity?: string | null
           hama_score?: number | null
           hamd_score?: number | null
           id?: string
@@ -320,6 +327,8 @@ export type Database = {
           moca_score?: number | null
           phq9_score?: number | null
           session_id?: string | null
+          snap_iv_hyperactivity?: number | null
+          snap_iv_inattention?: number | null
           snap_iv_score?: number | null
           system_suggestion?: string | null
         }

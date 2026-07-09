@@ -23,6 +23,7 @@ import Scales from '@/pages/Scales'
 import Dashboard from '@/pages/Dashboard'
 import Ethics from '@/pages/Ethics'
 import EthicalAuditDashboard from '@/pages/EthicalAuditDashboard'
+import IndicatorsDashboard from '@/pages/IndicatorsDashboard'
 import TermsOfUse from '@/pages/TermsOfUse'
 import NotFound from '@/pages/NotFound'
 import Welcome from '@/pages/Welcome'
@@ -147,6 +148,14 @@ function AppInner() {
             element={
               <AuthGuard requireAdmin>
                 <EthicalAuditDashboard />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/admin/indicators"
+            element={
+              <AuthGuard requireClinical>
+                <IndicatorsDashboard />
               </AuthGuard>
             }
           />
