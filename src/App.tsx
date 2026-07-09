@@ -19,6 +19,7 @@ import HealthLogs from '@/pages/HealthLogs'
 import Security from '@/pages/Security'
 import Anamnesis from '@/pages/Anamnesis'
 import MiniInterview from '@/pages/MiniInterview'
+import MiniEvolutionDashboard from '@/pages/MiniEvolutionDashboard'
 import Onboarding from '@/pages/Onboarding'
 import Scales from '@/pages/Scales'
 import Dashboard from '@/pages/Dashboard'
@@ -136,6 +137,15 @@ function AppInner() {
           <Route path="/mini-interview" element={<MiniInterview />} />
           <Route path="/scales" element={<Scales />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/evolution" element={<MiniEvolutionDashboard />} />
+          <Route
+            path="/dashboard/evolution/:patientId"
+            element={
+              <AuthGuard requireClinical>
+                <MiniEvolutionDashboard />
+              </AuthGuard>
+            }
+          />
           <Route path="/insights" element={<Insights />} />
           <Route path="/logs" element={<HealthLogs />} />
           <Route path="/historico" element={<History />} />

@@ -174,7 +174,45 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { message } = await req.json()
+    const body = await req.json()
+    const { message, action, miniData } = body
+
+    if (action === 'clinical_summary' && miniData) {
+      const { positiveModules = [], sessionDate, trend, totalModules = 16 } = miniData
+      let summary = '## Resumo Clínico – MINI 5.0.0\n\n'
+      summary += `**Data da Avaliação:** ${new Date(sessionDate).toLocaleDateString('pt-BR')}\n\n`
+
+      if (positiveModules.length > 0) {
+        summary += '### Módulos Positivos Identificados:\n\n'
+        for (const mod of positiveModules) {
+          summary += `- **${mod.module}**: ${mod.result}\n`
+        }
+        summary += `\n**Total de módulos positivos:** ${positiveModules.length} de ${totalModules}\n`
+      } else {
+        summary += '### Nenhum módulo identificado como positivo na avaliação atual.\n\n'
+      }
+
+      const trendLabel =
+        trend === 'improving'
+          ? 'Melhora clínica'
+          : trend === 'deteriorating'
+            ? 'Piora clínica'
+            : 'Estável'
+      summary += `**Tendência clínica:** ${trendLabel}\n`
+
+      if (positiveModules.length > 0) {
+        summary += '\n### Recomendações:\n\n'
+        summary +=
+          'Avaliação clínica detalhada recomendada para os módulos identificados como positivos. '
+        summary +=
+          'Considerar encaminhamento para especialista conforme indicação de cada módulo positivo.\n'
+      }
+
+      return new Response(JSON.stringify({ reply: summary }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     const lower = message.toLowerCase()
 
     const authHeader = req.headers.get('Authorization')
