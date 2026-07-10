@@ -23,6 +23,7 @@ export async function saveAssessmentToSupabase(
       status: 'completed',
       started_at: new Date(Date.now() - 60000).toISOString(),
       completed_at: new Date().toISOString(),
+      metadata: { scaleType, ...summary },
     })
     .select()
     .single()
@@ -63,6 +64,7 @@ export async function savePublicAssessmentToSupabase(
     status: 'completed',
     started_at: new Date(Date.now() - 60000).toISOString(),
     completed_at: new Date().toISOString(),
+    metadata: { scaleType, ...summary },
   }
 
   if (user) {
