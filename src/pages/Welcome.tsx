@@ -56,12 +56,20 @@ export default function Welcome() {
             Começar Agora <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
           {isAuthenticated && (
-            <Link
-              to="/dashboard"
-              className="text-sm text-white/50 hover:text-[#00FFFF] transition-colors"
-            >
-              Ir para o painel →
-            </Link>
+            <>
+              <Link
+                to="/evaluations/sds"
+                className="text-sm text-white/50 hover:text-[#00FFFF] transition-colors"
+              >
+                Avaliação SDS →
+              </Link>
+              <Link
+                to="/dashboard"
+                className="text-sm text-white/50 hover:text-[#00FFFF] transition-colors"
+              >
+                Ir para o painel →
+              </Link>
+            </>
           )}
           {isAdmin && (
             <Link

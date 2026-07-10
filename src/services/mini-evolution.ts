@@ -149,7 +149,11 @@ export function calculateClinicalTrend(sessions: MiniSessionResult[]): ClinicalT
   }
 }
 
-export async function generateAIReport(patientId: string, sessions: MiniSessionResult[]) {
+export async function generateAIReport(
+  patientId: string,
+  sessions: MiniSessionResult[],
+  sdsData?: { sdsTotal: number; workTotal: number; daysLost: number; dateLabel: string }[],
+) {
   if (sessions.length === 0) return { data: null, error: { message: 'Nenhuma sessão encontrada.' } }
   const current = sessions[sessions.length - 1]
   const trend = calculateClinicalTrend(sessions)
@@ -157,6 +161,7 @@ export async function generateAIReport(patientId: string, sessions: MiniSessionR
     module: `Módulo ${m.moduleKey} - ${m.moduleLabel}`,
     result: 'Positivo',
   }))
+  const latestSds = sdsData && sdsData.length > 0 ? sdsData[sdsData.length - 1] : null
   try {
     const { data, error } = await supabase.functions.invoke('chat-ayla', {
       body: {
@@ -168,6 +173,15 @@ export async function generateAIReport(patientId: string, sessions: MiniSessionR
           totalModules: current.moduleResults.length,
           trend: trend.trend,
         },
+        sdsData: latestSds
+          ? {
+              sdsTotal: latestSds.sdsTotal,
+              workTotal: latestSds.workTotal,
+              daysLost: latestSds.daysLost,
+              sessionDate: latestSds.dateLabel,
+              history: sdsData,
+            }
+          : null,
       },
     })
     if (error) throw error
@@ -182,6 +196,12 @@ export async function generateAIReport(patientId: string, sessions: MiniSessionR
       })
     } else {
       s += 'Nenhum módulo positivo identificado.\n'
+    }
+    if (latestSds) {
+      s += '\n### Escala de Incapacidade de Sheehan (SDS):\n\n'
+      s += `**SDS Total:** ${latestSds.sdsTotal}/30\n`
+      s += `**Sherra Work Total:** ${latestSds.workTotal}/30\n`
+      s += `**Dias Perdidos:** ${latestSds.daysLost}/7\n`
     }
     return { data: { reply: s }, error: null }
   }

@@ -40,7 +40,9 @@ export async function saveAssessmentToSupabase(
     response_value: r.response_value,
   }))
 
-  const { error: respError } = await supabase.from('anamnesis_responses').insert(rows)
+  const { error: respError } = await supabase
+    .from('anamnesis_responses')
+    .upsert(rows, { onConflict: 'session_id,question_key' })
 
   if (respError) {
     console.error('Error saving assessment responses:', respError)
@@ -93,7 +95,9 @@ export async function savePublicAssessmentToSupabase(
     response_value: r.response_value,
   }))
 
-  const { error: respError } = await supabase.from('anamnesis_responses').insert(rows)
+  const { error: respError } = await supabase
+    .from('anamnesis_responses')
+    .upsert(rows, { onConflict: 'session_id,question_key' })
 
   if (respError) {
     console.error('Error saving public assessment responses:', respError)

@@ -15,6 +15,12 @@ import {
   generateMockSessions,
   MiniSessionResult,
 } from '@/services/mini-evolution'
+import {
+  getSdsEvolution,
+  generateMockSdsEvolution,
+  SdsEvolutionPoint,
+} from '@/services/sds-evolution'
+import { SdsEvolutionChart } from '@/components/SdsEvolutionChart'
 
 export default function MiniEvolutionDashboard() {
   const { patientId } = useParams()
@@ -25,6 +31,7 @@ export default function MiniEvolutionDashboard() {
   const [aiReport, setAiReport] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [sdsData, setSdsData] = useState<SdsEvolutionPoint[]>([])
 
   const effectiveId = patientId || user?.id || ''
   const trend = useMemo(() => calculateClinicalTrend(sessions), [sessions])
@@ -39,12 +46,15 @@ export default function MiniEvolutionDashboard() {
       .then((data) => setSessions(data.length > 0 ? data : generateMockSessions()))
       .catch(() => setSessions(generateMockSessions()))
       .finally(() => setLoading(false))
+    getSdsEvolution(effectiveId)
+      .then((data) => setSdsData(data.length > 0 ? data : generateMockSdsEvolution()))
+      .catch(() => setSdsData(generateMockSdsEvolution()))
   }, [effectiveId])
 
   const handleGenerate = async () => {
     setGenerating(true)
     setDialogOpen(true)
-    const { data } = await generateAIReport(effectiveId, sessions)
+    const { data } = await generateAIReport(effectiveId, sessions, sdsData)
     setAiReport(data?.reply || 'Erro ao gerar relatório.')
     setGenerating(false)
   }
@@ -98,6 +108,19 @@ export default function MiniEvolutionDashboard() {
           <MiniModuleTimeline sessions={sessions} />
         </CardContent>
       </Card>
+
+      {sdsData.length > 0 && (
+        <Card className="bg-slate-900/50 border-slate-800">
+          <CardHeader>
+            <CardTitle className="text-cyan-300">
+              Evolução SDS / Sherra — Incapacidade Funcional
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SdsEvolutionChart data={sdsData} />
+          </CardContent>
+        </Card>
+      )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl bg-slate-900 border-slate-700">

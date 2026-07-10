@@ -175,7 +175,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json()
-    const { message, action, miniData } = body
+    const { message, action, miniData, sdsData } = body
 
     if (action === 'clinical_summary' && miniData) {
       const { positiveModules = [], sessionDate, trend, totalModules = 16 } = miniData
@@ -199,6 +199,22 @@ Deno.serve(async (req) => {
             ? 'Piora clínica'
             : 'Estável'
       summary += `**Tendência clínica:** ${trendLabel}\n`
+
+      if (sdsData) {
+        summary += '\n### Escala de Incapacidade de Sheehan (SDS):\n\n'
+        summary += `**SDS Total:** ${sdsData.sdsTotal}/30`
+        const sdsLevel =
+          sdsData.sdsTotal < 10 ? 'Normal/Leve' : sdsData.sdsTotal <= 20 ? 'Moderado' : 'Severo'
+        summary += ` (${sdsLevel})\n`
+        summary += `**Sherra Work Total:** ${sdsData.workTotal}/30\n`
+        summary += `**Dias Perdidos:** ${sdsData.daysLost}/7\n`
+        if (sdsData.history && sdsData.history.length > 1) {
+          summary += '\n**Evolução SDS:**\n'
+          for (const h of sdsData.history) {
+            summary += `- ${h.dateLabel}: SDS ${h.sdsTotal}/30, Work ${h.workTotal}/30\n`
+          }
+        }
+      }
 
       if (positiveModules.length > 0) {
         summary += '\n### Recomendações:\n\n'
