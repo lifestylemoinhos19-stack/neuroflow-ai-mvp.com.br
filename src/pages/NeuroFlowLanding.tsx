@@ -58,7 +58,7 @@ const groups = [
   {
     icon: Brain,
     title: 'Autismo (TEA)',
-    desc: 'Triagem e monitoramento do Transtorno do Espectro Autista com escalas como ASSQ e M-Chat-R.',
+    desc: 'Triagem e monitoramento do Transtorno do Espectro Autista com escalas validadas como ASSQ.',
   },
   {
     icon: Baby,
@@ -68,12 +68,12 @@ const groups = [
   {
     icon: Zap,
     title: 'TDAH',
-    desc: 'Diagnóstico e acompanhamento do Transtorno de Déficit de Atenção e Hiperatividade com SNAP-IV.',
+    desc: 'Diagnóstico e acompanhamento do Transtorno de Déficit de Atenção e Hiperatividade via SNAP-IV.',
   },
   {
     icon: ClipboardList,
     title: 'Outras Patologias',
-    desc: 'Depressão, ansiedade, TOC e avaliação funcional através de instrumentos validados.',
+    desc: 'Depressão, ansiedade, TOC, TAG, transtornos alimentares e mais através do MINI 5.0.0.',
   },
 ]
 
@@ -81,27 +81,27 @@ const workflow = [
   {
     num: '01',
     title: 'Cadastro',
-    desc: 'Criação da conta e perfil do profissional de saúde com autenticação MFA.',
+    desc: 'Registro do paciente e criação de prontuário digital seguro.',
   },
   {
     num: '02',
     title: 'Avaliação',
-    desc: 'Aplicação de escalas clínicas validadas e coleta de dados do paciente.',
+    desc: 'Aplicação de escalas validadas e testes cognitivos digitais.',
   },
   {
     num: '03',
     title: 'IA',
-    desc: 'Interpretação assistida por inteligência artificial com referências clínicas.',
+    desc: 'Processamento dos resultados por inteligência artificial clínica.',
   },
   {
     num: '04',
     title: 'Laudo',
-    desc: 'Geração de relatórios personalizados com sugestões de interpretação clínica.',
+    desc: 'Geração automática de laudo personalizado e interpretativo.',
   },
   {
     num: '05',
     title: 'Monitoramento',
-    desc: 'Acompanhamento longitudinal da evolução do paciente ao longo do tempo.',
+    desc: 'Acompanhamento longitudinal da evolução do paciente.',
   },
 ]
 
@@ -132,7 +132,7 @@ export default function NeuroFlowLanding() {
   return (
     <div className="min-h-screen bg-[#0A192F] text-[#E6F1FF]">
       <section className="relative min-h-[90vh] flex items-center justify-center px-4 py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0A192F] via-[#0A192F] to-[#112240]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A192F] via-[#112240] to-[#1B3A5F]" />
         <div className="relative z-10 max-w-3xl text-center animate-fade-in-up">
           <div className="inline-flex items-center gap-2 bg-[#00FFFF]/10 px-4 py-2 rounded-full border border-[#00FFFF]/20 mb-8">
             <Sparkles className="h-4 w-4 text-[#00FFFF]" />
@@ -141,12 +141,11 @@ export default function NeuroFlowLanding() {
             </span>
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#E6F1FF] tracking-tight mb-6">
-            Plataforma de Apoio à Decisão Clínica com IA
+            NeuroFlow IA — Monitoramento Clínico com Inteligência Artificial
           </h1>
           <p className="text-lg sm:text-xl text-[#8892B0] mb-10 max-w-2xl mx-auto leading-relaxed">
-            NeuroFlow IA é uma plataforma de saúde que utiliza inteligência artificial para apoiar
-            profissionais na realização de avaliações neuro-psicológicas, interpretação de escalas
-            clínicas e monitoramento longitudinal de pacientes.
+            Plataforma completa de avaliação neuropsicológica com escalas validadas, testes
+            cognitivos digitais e laudos gerados por IA
           </p>
           <Button
             asChild
@@ -211,7 +210,7 @@ export default function NeuroFlowLanding() {
             {scales.map((s) => (
               <div
                 key={s.code}
-                className="bg-[#112240] rounded-xl border border-[#00FFFF]/10 p-5 hover:border-[#00FFFF]/30 transition-colors duration-300"
+                className="bg-[#1B3A5F] rounded-xl border border-[#00FFFF]/10 p-5 hover:border-[#00FFFF]/30 transition-colors duration-300"
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[#00FFFF] font-bold text-lg">{s.code}</span>
@@ -263,7 +262,7 @@ export default function NeuroFlowLanding() {
               {workflow.map((step) => (
                 <div key={step.num} className="relative flex items-center gap-4 sm:gap-6">
                   <div className="shrink-0 relative z-10">
-                    <div className="h-16 w-16 rounded-2xl bg-[#112240] border border-[#00FFFF]/30 flex items-center justify-center">
+                    <div className="h-16 w-16 rounded-2xl bg-[#1B3A5F] border border-[#00FFFF]/30 flex items-center justify-center">
                       <span className="text-[#00FFFF] font-bold text-lg sm:text-xl">
                         {step.num}
                       </span>
