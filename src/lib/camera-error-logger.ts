@@ -7,6 +7,7 @@ export interface CameraErrorLog {
 }
 
 export async function logCameraError(error: CameraErrorLog): Promise<void> {
+  console.error('[CameraError]', error.message, { status: error.status, mode: error.mode })
   try {
     await supabase.from('system_updates').insert({
       title: 'Camera Connection Error',
