@@ -43,6 +43,7 @@ import Documents from '@/pages/Documents'
 import Phq9Page from '@/pages/Phq9Page'
 import SdsPage from '@/pages/SdsPage'
 import YbocsPage from '@/pages/YbocsPage'
+import ClinicalModulesHub from '@/pages/ClinicalModulesHub'
 
 function AppInner() {
   useGuestConversion()
@@ -136,6 +137,7 @@ function AppInner() {
           <Route path="/anamnesis" element={<Anamnesis />} />
           <Route path="/mini-interview" element={<MiniInterview />} />
           <Route path="/scales" element={<Scales />} />
+          <Route path="/modulos-clinicos" element={<ClinicalModulesHub />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/evolution" element={<MiniEvolutionDashboard />} />
           <Route

@@ -18,6 +18,7 @@ import {
   FileSearch,
   Stethoscope,
   LineChart,
+  Layers,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
@@ -32,6 +33,7 @@ const baseNavItems = [
   { path: '/', label: 'Painel', icon: Activity },
   { path: '/anamnesis', label: 'Anamnese', icon: ClipboardList },
   { path: '/scales', label: 'Escalas', icon: ClipboardCheck },
+  { path: '/modulos-clinicos', label: 'Módulos Clínicos', icon: Layers },
   { path: '/ybocs-assessment', label: 'Y-BOCS', icon: ListChecks },
   { path: '/avaliacao', label: 'Avaliação', icon: Stethoscope },
   { path: '/historico', label: 'Histórico', icon: LineChart },
