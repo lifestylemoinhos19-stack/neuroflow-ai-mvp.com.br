@@ -47,7 +47,7 @@ export async function saveAnamnesisResponses(
     session_id: sessionId,
     question_key: r.question_key,
     question_label: r.question_label || null,
-    response_value: JSON.stringify(r.response_value),
+    response_value: r.response_value,
   }))
 
   const { error } = await supabase.from('anamnesis_responses').insert(rows)
