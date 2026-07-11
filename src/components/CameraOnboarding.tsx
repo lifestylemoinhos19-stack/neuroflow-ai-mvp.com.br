@@ -104,6 +104,11 @@ export function CameraOnboarding({ onComplete, onOpenFieldTest }: Props) {
       setVideoReady(false)
 
       try {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          throw Object.assign(new Error('Camera API not available on this device.'), {
+            name: 'NotSupportedError',
+          })
+        }
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
           audio: false,
@@ -131,7 +136,11 @@ export function CameraOnboarding({ onComplete, onOpenFieldTest }: Props) {
       } catch (err: any) {
         if (!isMountedRef.current || connectionIdRef.current !== currentId) return
         const { status: errStatus, message } = classifyCameraError(err)
-        await logCameraFailure(err, errStatus)
+        if (errStatus !== 'permission_denied') {
+          await logCameraFailure(err, errStatus)
+        } else {
+          console.warn('[CameraOnboarding] Permission denied — user action required')
+        }
 
         if (shouldRetryCameraError(err) && retries < MAX_CAMERA_RETRIES) {
           setAutoRetrying(true)

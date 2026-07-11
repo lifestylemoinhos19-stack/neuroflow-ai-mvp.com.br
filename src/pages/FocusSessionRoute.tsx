@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/auth-context'
 import { MainDeployment } from '@/components/MainDeployment'
+import { FocusSessionErrorBoundary } from '@/components/FocusSessionErrorBoundary'
 
 export default function FocusSessionRoute() {
   const { isAuthenticated, loading } = useAuth()
@@ -25,5 +26,9 @@ export default function FocusSessionRoute() {
 
   if (!isAuthenticated) return null
 
-  return <MainDeployment />
+  return (
+    <FocusSessionErrorBoundary>
+      <MainDeployment />
+    </FocusSessionErrorBoundary>
+  )
 }

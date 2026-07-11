@@ -58,7 +58,11 @@ export function shouldRetryCameraError(err: any): boolean {
 export async function logCameraFailure(err: any, status: string): Promise<void> {
   const errorName = err?.name || 'Unknown'
   const errorMessage = err?.message || 'No message'
-  console.error(`[Camera] ${errorName}: ${errorMessage}`, { status, error: err })
+  if (status === 'permission_denied') {
+    console.warn(`[Camera] Permission denied: ${errorName}`, { status })
+  } else {
+    console.warn(`[Camera] ${errorName}: ${errorMessage}`, { status, error: err })
+  }
   await logCameraError({
     message: `${errorName}: ${errorMessage}`,
     status,
