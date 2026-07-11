@@ -183,7 +183,7 @@ export function CameraOnboarding({ onComplete, onOpenFieldTest }: Props) {
 
   const handleComplete = () => {
     const controller = new GameController()
-    controller.setBpm(bpmRef.current ?? 72)
+    controller.setExternalBpm(bpmRef.current ?? 72)
     onComplete(controller)
   }
 
@@ -191,7 +191,7 @@ export function CameraOnboarding({ onComplete, onOpenFieldTest }: Props) {
     stopCamera()
     adapterRef.current.stop()
     const controller = new GameController()
-    controller.setBpm(72)
+    controller.setExternalBpm(72)
     onComplete(controller)
   }
 
