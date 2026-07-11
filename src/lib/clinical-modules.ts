@@ -143,6 +143,36 @@ export const clinicalModules: ClinicalModule[] = [
         available: true,
       },
       {
+        key: 'moca',
+        name: 'MoCA',
+        purpose:
+          'Avaliação cognitiva geral (Montreal Cognitive Assessment) cobrindo visuo-espacial, nomeação, memória, atenção, linguagem, abstração, evocação e orientação.',
+        targetAudience: 'Adultos/Idosos com queixas cognitivas',
+        estimatedTime: '10-15 min',
+        route: '/evaluations/moca',
+        available: true,
+      },
+      {
+        key: 'ftdrs',
+        name: 'FTDRS',
+        purpose:
+          'Escala de avaliação específica para Demência Frontotemporal, focando em mudanças comportamentais e funcionais características.',
+        targetAudience: 'Pacientes com suspeita de variantes comportamentais/linguagem de FTD',
+        estimatedTime: '15-20 min',
+        route: '/evaluations/ftdrs',
+        available: true,
+      },
+      {
+        key: 'fas',
+        name: 'FAS',
+        purpose:
+          'Teste de fluência verbal que avalia função executiva frontal e capacidade de geração de palavras iniciadas com as letras F, A e S.',
+        targetAudience: 'Adultos/Idosos',
+        estimatedTime: '5 min',
+        route: '/evaluations/fas',
+        available: true,
+      },
+      {
         key: 'mini-5',
         name: 'MINI 5.0.0',
         purpose:
