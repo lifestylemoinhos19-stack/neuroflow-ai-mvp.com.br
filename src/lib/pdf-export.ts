@@ -1,4 +1,10 @@
 import { SessionWithRisk } from '@/services/sessions'
+import {
+  CLINIC_BRANDING,
+  getBrandHeaderHtml,
+  getBrandFooterHtml,
+  getBrandCss,
+} from '@/lib/clinic-branding'
 
 function riskLabel(level: string | null): string {
   switch (level) {
@@ -34,7 +40,7 @@ export function exportReport(sessions: SessionWithRisk[]): void {
 <title>Relatório NeuroFlow AI</title>
 <style>
   body { font-family: 'Segoe UI', sans-serif; padding: 40px; color: #1e293b; max-width: 800px; margin: 0 auto; }
-  h1 { color: #4f46e5; margin-bottom: 4px; }
+  h1 { color: ${CLINIC_BRANDING.colors.primary}; margin-bottom: 4px; }
   .subtitle { color: #64748b; margin-bottom: 24px; }
   .session { margin-bottom: 20px; padding: 16px; border: 1px solid #e2e8f0; border-radius: 8px; }
   .session h2 { margin: 0 0 8px; font-size: 18px; }
@@ -44,14 +50,15 @@ export function exportReport(sessions: SessionWithRisk[]): void {
   table { width: 100%; border-collapse: collapse; margin-top: 8px; }
   th, td { padding: 8px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
   th { background: #f8fafc; }
-  .clinical-footer { text-align: center; font-weight: bold; font-size: 12px; padding: 16px 0; margin-top: 32px; border-top: 2px solid #4f46e5; color: #4f46e5; }
+  .clinical-footer { text-align: center; font-weight: bold; font-size: 12px; padding: 16px 0; margin-top: 32px; border-top: 2px solid ${CLINIC_BRANDING.colors.primary}; color: ${CLINIC_BRANDING.colors.primary}; }
+  ${getBrandCss()}
   @media print {
-    .clinical-footer { position: fixed; bottom: 0; left: 0; right: 0; text-align: center; font-weight: bold; font-size: 12px; padding: 8px 0; border-top: 1px solid #e2e8f0; color: #4f46e5; }
-    body { padding-bottom: 60px; }
+    body { padding-bottom: 80px; }
   }
 </style>
 </head>
 <body>
+  ${getBrandHeaderHtml()}
   <h1>Relatório NeuroFlow AI</h1>
   <p class="subtitle">Relatório de Anamnese e Avaliação Neurológica &middot; ${new Date().toLocaleString('pt-BR')}</p>
   ${
@@ -76,6 +83,7 @@ export function exportReport(sessions: SessionWithRisk[]): void {
   }
   <p style="margin-top:32px;color:#94a3b8;font-size:12px;">Documento gerado pelo NeuroFlow AI. Dados protegidos conforme LGPD (Lei nº 13.709/2018).</p>
   <div class="clinical-footer">Suporte à decisão clínica — Validação médica obrigatória</div>
+  ${getBrandFooterHtml()}
 </body>
 </html>`
 

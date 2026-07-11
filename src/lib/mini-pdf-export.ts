@@ -1,4 +1,10 @@
 import type { MiniReportData } from '@/services/mini-report'
+import {
+  CLINIC_BRANDING,
+  getBrandHeaderHtml,
+  getBrandFooterHtml,
+  getBrandCss,
+} from '@/lib/clinic-branding'
 
 function esc(s: string | null | undefined): string {
   if (!s) return '—'
@@ -28,38 +34,39 @@ export function exportMiniPdf(report: MiniReportData): void {
   const now = new Date().toLocaleString('pt-BR')
   const fb = report.clinicalFeedback
   const hasInterpretation = fb?.system_suggestion || fb?.admin_edited_interpretation
+  const c = CLINIC_BRANDING.colors
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Relatório MINI 5.0.0</title>
+<title>Relatório MINI 5.0.0 - ${CLINIC_BRANDING.name}</title>
 <style>
-  body{font-family:'Segoe UI',Arial,sans-serif;padding:40px;color:#1e293b;max-width:800px;margin:0 auto}
-  h1{color:#0f172a;margin:0;font-size:24px}
-  .sub{color:#64748b;margin:4px 0 24px;font-size:14px}
+  body{font-family:'Segoe UI',Arial,sans-serif;padding:40px;color:${c.dark};max-width:800px;margin:0 auto}
+  h1{color:${c.primary};margin:0;font-size:24px}
+  .sub{color:${c.medium};margin:4px 0 24px;font-size:14px}
   .sec{margin-bottom:24px}
-  .sec-t{font-size:16px;font-weight:700;color:#0f172a;border-bottom:2px solid #3b82f6;padding-bottom:4px;margin-bottom:12px}
+  .sec-t{font-size:16px;font-weight:700;color:${c.primary};border-bottom:2px solid ${c.secondary};padding-bottom:4px;margin-bottom:12px}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:14px}
-  .grid .l{color:#64748b}
+  .grid .l{color:${c.medium}}
   .grid .v{font-weight:600}
   table{width:100%;border-collapse:collapse;font-size:13px}
-  th{background:#f1f5f9;padding:8px;text-align:left;border-bottom:2px solid #cbd5e1}
+  th{background:${c.accent};padding:8px;text-align:left;border-bottom:2px solid ${c.primary}}
   td{padding:8px;border-bottom:1px solid #e2e8f0}
   .pos{background:#fef3c7;font-weight:600}
-  .neg{color:#64748b}
+  .neg{color:${c.medium}}
   .alert{background:#fef3c7;border-left:4px solid #f59e0b;padding:12px;margin-bottom:8px;font-size:14px}
-  .fb{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;font-size:14px;margin-bottom:12px}
+  .fb{background:${c.accent};border:1px solid #bfdbfe;border-radius:8px;padding:16px;font-size:14px;margin-bottom:12px}
   .sig{margin-top:48px;text-align:center}
-  .sig-l{border-top:1px solid #475569;width:300px;margin:0 auto;padding-top:8px;font-size:13px;color:#475569}
-  .ft{margin-top:32px;padding-top:16px;border-top:1px solid #cbd5e1;font-size:11px;color:#94a3b8;text-align:center}
-  .warn{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;font-size:12px;color:#1e40af;margin-top:16px}
-  @media print{body{padding:20px}}
+  .sig-l{border-top:1px solid ${c.medium};width:300px;margin:0 auto;padding-top:8px;font-size:13px;color:${c.medium}}
+  .warn{background:${c.accent};border:1px solid #bfdbfe;border-radius:8px;padding:12px;font-size:12px;color:${c.primary};margin-top:16px}
+  ${getBrandCss()}
 </style>
 </head>
 <body>
+  ${getBrandHeaderHtml()}
   <h1>Relatório MINI 5.0.0</h1>
-  <p class="sub">Mini International Neuropsychiatric Interview &middot; NeuroFlow AI &middot; ${now}</p>
+  <p class="sub">Mini International Neuropsychiatric Interview &middot; ${CLINIC_BRANDING.name} &middot; ${now}</p>
   <div class="sec">
     <div class="sec-t">Identificação do Entrevistado</div>
     <div class="grid">
@@ -103,7 +110,7 @@ export function exportMiniPdf(report: MiniReportData): void {
   }
   <div class="warn">⚠ Este instrumento é uma ferramenta de triagem e não substitui a avaliação clínica profissional. O diagnóstico definitivo requer avaliação presencial especializada.</div>
   <div class="sig"><div class="sig-l">Assinatura do Profissional Responsável</div></div>
-  <div class="ft">Documento gerado pelo NeuroFlow AI em ${now}<br/>Dados protegidos conforme LGPD (Lei nº 13.709/2018). Suporte à decisão clínica — Validação médica obrigatória.</div>
+  ${getBrandFooterHtml()}
 </body>
 </html>`
 

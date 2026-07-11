@@ -444,6 +444,7 @@ export type Database = {
           id: string
           recipient_email: string
           reservation_id: string | null
+          session_id: string | null
           status: string
           subject: string
         }
@@ -453,6 +454,7 @@ export type Database = {
           id?: string
           recipient_email: string
           reservation_id?: string | null
+          session_id?: string | null
           status: string
           subject: string
         }
@@ -462,6 +464,7 @@ export type Database = {
           id?: string
           recipient_email?: string
           reservation_id?: string | null
+          session_id?: string | null
           status?: string
           subject?: string
         }
@@ -471,6 +474,13 @@ export type Database = {
             columns: ['reservation_id']
             isOneToOne: false
             referencedRelation: 'reservations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'email_logs_session_id_fkey'
+            columns: ['session_id']
+            isOneToOne: false
+            referencedRelation: 'anamnesis_sessions'
             referencedColumns: ['id']
           },
         ]

@@ -117,6 +117,7 @@ Deno.serve(async (req) => {
       startedAt: session.started_at,
       completedAt: session.completed_at || '',
       moduleMap,
+      logoUrl: `${SUPABASE_URL}/storage/v1/object/public/clinic-assets/casa-branca-logo.png`,
       feedback: feedback as Record<string, unknown> as any,
     })
 
