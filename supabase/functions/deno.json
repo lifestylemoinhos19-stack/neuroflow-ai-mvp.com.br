@@ -21,10 +21,11 @@
     "query-payment-status": 4,
     "refund-payment": 2,
     "sync-google-calendar": 2,
-    "send-reservation-confirmation": 1,
+    "send-reservation-confirmation": 2,
     "chat-ayla": 10,
     "neuro-validation": 9,
     "calculate-vrc": 6,
-    "send-beta-invitation": 1
+    "send-beta-invitation": 1,
+    "send-mini-report": 1
   }
 }

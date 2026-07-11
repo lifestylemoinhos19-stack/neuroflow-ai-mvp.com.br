@@ -8,6 +8,7 @@ import {
   Clock,
   FileText,
   Loader2,
+  Mail,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -16,6 +17,7 @@ import { MiniPatientInfo } from '@/services/mini-interview'
 import { MiniModuleResult } from '@/lib/mini-scoring'
 import { fetchMiniReportData } from '@/services/mini-report'
 import { exportMiniPdf } from '@/lib/mini-pdf-export'
+import { SendMiniReportDialog } from '@/components/mini/SendMiniReportDialog'
 
 function calcDuration(start: string, end: string): string {
   if (!start || !end) return '—'
@@ -46,6 +48,7 @@ function StatusIcon({ isPositive }: { isPositive: boolean }) {
 export function MiniSummary({ patientInfo, results, onRestart, sessionId }: MiniSummaryProps) {
   const positiveModules = results.filter((r) => r.isPositive)
   const [exporting, setExporting] = useState(false)
+  const [sendEmailOpen, setSendEmailOpen] = useState(false)
 
   const handleExportPdf = async () => {
     if (!sessionId) {
@@ -206,6 +209,14 @@ export function MiniSummary({ patientInfo, results, onRestart, sessionId }: Mini
 
       <div className="flex gap-3 mini-print-hide">
         <Button
+          onClick={() => setSendEmailOpen(true)}
+          disabled={!sessionId}
+          className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-medium"
+        >
+          <Mail className="h-4 w-4 mr-2" />
+          Enviar por E-mail
+        </Button>
+        <Button
           onClick={handleExportPdf}
           disabled={exporting || !sessionId}
           className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-medium"
@@ -234,6 +245,12 @@ export function MiniSummary({ patientInfo, results, onRestart, sessionId }: Mini
           Reiniciar Avaliação
         </Button>
       </div>
+
+      <SendMiniReportDialog
+        open={sendEmailOpen}
+        onOpenChange={setSendEmailOpen}
+        sessionId={sessionId}
+      />
     </div>
   )
 }
