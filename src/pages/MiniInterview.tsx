@@ -142,7 +142,14 @@ export default function MiniInterview() {
 
   if (step === 'summary') {
     const results = scoreAllModules(miniModules, answers)
-    return <MiniSummary patientInfo={patientInfo} results={results} onRestart={handleRestart} />
+    return (
+      <MiniSummary
+        patientInfo={patientInfo}
+        results={results}
+        onRestart={handleRestart}
+        sessionId={sessionId}
+      />
+    )
   }
 
   const isFirst = currentModule === 0

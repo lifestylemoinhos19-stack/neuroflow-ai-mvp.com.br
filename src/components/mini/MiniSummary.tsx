@@ -1,8 +1,21 @@
-import { Printer, RotateCcw, CheckCircle2, XCircle, AlertTriangle, Clock } from 'lucide-react'
+import { useState } from 'react'
+import {
+  Printer,
+  RotateCcw,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Clock,
+  FileText,
+  Loader2,
+} from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { MiniPatientInfo } from '@/services/mini-interview'
 import { MiniModuleResult } from '@/lib/mini-scoring'
+import { fetchMiniReportData } from '@/services/mini-report'
+import { exportMiniPdf } from '@/lib/mini-pdf-export'
 
 function calcDuration(start: string, end: string): string {
   if (!start || !end) return '—'
@@ -19,6 +32,7 @@ interface MiniSummaryProps {
   patientInfo: MiniPatientInfo
   results: MiniModuleResult[]
   onRestart: () => void
+  sessionId?: string | null
 }
 
 function StatusIcon({ isPositive }: { isPositive: boolean }) {
@@ -29,8 +43,30 @@ function StatusIcon({ isPositive }: { isPositive: boolean }) {
   )
 }
 
-export function MiniSummary({ patientInfo, results, onRestart }: MiniSummaryProps) {
+export function MiniSummary({ patientInfo, results, onRestart, sessionId }: MiniSummaryProps) {
   const positiveModules = results.filter((r) => r.isPositive)
+  const [exporting, setExporting] = useState(false)
+
+  const handleExportPdf = async () => {
+    if (!sessionId) {
+      toast.error('ID da sessão não disponível.')
+      return
+    }
+    setExporting(true)
+    try {
+      const report = await fetchMiniReportData(sessionId)
+      if (!report) {
+        toast.error('Não foi possível carregar os dados do relatório.')
+        return
+      }
+      exportMiniPdf(report)
+      toast.success('Relatório PDF gerado com sucesso!')
+    } catch {
+      toast.error('Erro ao gerar relatório PDF.')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   return (
     <div className="max-w-3xl mx-auto mini-print-root">
@@ -170,11 +206,24 @@ export function MiniSummary({ patientInfo, results, onRestart }: MiniSummaryProp
 
       <div className="flex gap-3 mini-print-hide">
         <Button
-          onClick={() => window.print()}
+          onClick={handleExportPdf}
+          disabled={exporting || !sessionId}
           className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-medium"
         >
+          {exporting ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <FileText className="h-4 w-4 mr-2" />
+          )}
+          Gerar PDF
+        </Button>
+        <Button
+          onClick={() => window.print()}
+          variant="outline"
+          className="border-[#233554] text-[#E6F1FF] hover:bg-[#233554] hover:text-[#E6F1FF]"
+        >
           <Printer className="h-4 w-4 mr-2" />
-          Imprimir / Salvar PDF
+          Imprimir
         </Button>
         <Button
           onClick={onRestart}

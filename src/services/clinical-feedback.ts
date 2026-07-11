@@ -7,6 +7,9 @@ export interface ClinicalFeedback {
   is_accurate: boolean | null
   comments: string | null
   created_at: string
+  system_suggestion: string | null
+  admin_edited_interpretation: string | null
+  global_severity: string | null
 }
 
 export async function saveClinicalFeedback(
