@@ -55,7 +55,7 @@ export default function ClinicalModulesHub() {
     const sessionId = await startClinicalSession(scale.key, scale.name, moduleTitle)
     setStarting(null)
     if (sessionId && scale.route) {
-      navigate(scale.route)
+      navigate(scale.route, { state: { sessionId } })
     } else if (!sessionId) {
       toast({
         variant: 'destructive',

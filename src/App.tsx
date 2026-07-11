@@ -47,6 +47,8 @@ import ClinicalModulesHub from '@/pages/ClinicalModulesHub'
 import MocaPage from '@/pages/MocaPage'
 import FtdrsPage from '@/pages/FtdrsPage'
 import FasPage from '@/pages/FasPage'
+import Gad7Page from '@/pages/Gad7Page'
+import Gad7Page from '@/pages/Gad7Page'
 
 function AppInner() {
   useGuestConversion()
@@ -156,10 +158,12 @@ function AppInner() {
           <Route path="/historico" element={<History />} />
           <Route path="/documentos" element={<Documents />} />
           <Route path="/evaluations/phq9" element={<Phq9Page />} />
+          <Route path="/evaluations/gad7" element={<Gad7Page />} />
           <Route path="/evaluations/sds" element={<SdsPage />} />
           <Route path="/evaluations/moca" element={<MocaPage />} />
           <Route path="/evaluations/ftdrs" element={<FtdrsPage />} />
           <Route path="/evaluations/fas" element={<FasPage />} />
+          <Route path="/evaluations/gad7" element={<Gad7Page />} />
           <Route path="/ybocs-assessment" element={<YbocsPage />} />
           <Route path="/neuro-validation" element={<NeuroValidationPage />} />
           <Route path="/stress-test" element={<StressTestDashboard />} />
