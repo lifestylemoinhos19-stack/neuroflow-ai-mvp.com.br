@@ -1,8 +1,19 @@
-import { Printer, RotateCcw, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
+import { Printer, RotateCcw, CheckCircle2, XCircle, AlertTriangle, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { MiniPatientInfo } from '@/services/mini-interview'
 import { MiniModuleResult } from '@/lib/mini-scoring'
+
+function calcDuration(start: string, end: string): string {
+  if (!start || !end) return '—'
+  const [sh, sm] = start.split(':').map(Number)
+  const [eh, em] = end.split(':').map(Number)
+  let minutes = eh * 60 + em - (sh * 60 + sm)
+  if (minutes < 0) minutes += 24 * 60
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  return h > 0 ? `${h}h ${m}min` : `${m}min`
+}
 
 interface MiniSummaryProps {
   patientInfo: MiniPatientInfo
@@ -53,12 +64,38 @@ export function MiniSummary({ patientInfo, results, onRestart }: MiniSummaryProp
             <span className="text-[#E6F1FF] font-medium">{patientInfo.protocol || '—'}</span>
           </div>
           <div>
+            <span className="text-[#E6F1FF]/50">Entrevistador: </span>
+            <span className="text-[#E6F1FF] font-medium">{patientInfo.interviewerName || '—'}</span>
+          </div>
+          <div>
             <span className="text-[#E6F1FF]/50">Data da Entrevista: </span>
             <span className="text-[#E6F1FF] font-medium">{patientInfo.interviewDate || '—'}</span>
           </div>
           <div>
             <span className="text-[#E6F1FF]/50">Data de Nascimento: </span>
             <span className="text-[#E6F1FF] font-medium">{patientInfo.birthDate || '—'}</span>
+          </div>
+          <div>
+            <span className="text-[#E6F1FF]/50 flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              Início:{' '}
+            </span>
+            <span className="text-[#E6F1FF] font-medium">{patientInfo.startTime || '—'}</span>
+          </div>
+          <div>
+            <span className="text-[#E6F1FF]/50 flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              Fim:{' '}
+            </span>
+            <span className="text-[#E6F1FF] font-medium">{patientInfo.endTime || '—'}</span>
+          </div>
+          <div>
+            <span className="text-[#E6F1FF]/50">Duração: </span>
+            <span className="text-[#00FFFF] font-medium">
+              {patientInfo.startTime && patientInfo.endTime
+                ? calcDuration(patientInfo.startTime, patientInfo.endTime)
+                : '—'}
+            </span>
           </div>
         </div>
       </div>

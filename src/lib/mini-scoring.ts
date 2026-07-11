@@ -30,13 +30,18 @@ export function scoreModule(module: MiniModule, a: MiniAnswers): MiniModuleResul
     case 'A': {
       const gate = isYes(a, 'A1') || isYes(a, 'A2')
       const s = countYes(a, ['A3a', 'A3b', 'A3c', 'A3d', 'A3e', 'A3f', 'A3g'])
-      const pos = gate && s >= 4
+      const hasImpairment = isYes(a, 'A5')
+      const melancholic = isYes(a, 'A6') || isYes(a, 'A7')
+      const pos = gate && s >= 4 && hasImpairment
       return {
         ...base,
         status: pos ? 'POSITIVE' : 'NEGATIVE',
         label: pos ? 'POSITIVO' : 'NEGATIVO',
         isPositive: pos,
-        details: `${s}/7 sintomas`,
+        details:
+          pos && melancholic
+            ? `${s}/7 sintomas (com características melancólicas)`
+            : `${s}/7 sintomas`,
       }
     }
     case 'B': {
@@ -52,11 +57,15 @@ export function scoreModule(module: MiniModule, a: MiniAnswers): MiniModuleResul
     }
     case 'C': {
       const count = countYes(a, ['C1', 'C2', 'C3', 'C4', 'C5', 'C6'])
+      let riskLabel = 'NEGATIVO'
+      if (isYes(a, 'C5') || isYes(a, 'C6')) riskLabel = 'RISCO ALTO'
+      else if (isYes(a, 'C3') || isYes(a, 'C4')) riskLabel = 'RISCO MODERADO'
+      else if (count > 0) riskLabel = 'RISCO BAIXO'
       const pos = count > 0
       return {
         ...base,
         status: pos ? 'RISK' : 'NEGATIVE',
-        label: pos ? 'RISCO' : 'NEGATIVO',
+        label: riskLabel,
         isPositive: pos,
         details: `${count}/6 respostas positivas`,
       }
@@ -146,40 +155,21 @@ export function scoreModule(module: MiniModule, a: MiniAnswers): MiniModuleResul
         details: `Evitação: ${avoid}/6, Hiperativação: ${hyper}/5`,
       }
     }
-    case 'J': {
-      const dep = countYes(a, ['J2a', 'J2b', 'J2c', 'J2d', 'J2e', 'J2f', 'J2g'])
-      const abuse = countYes(a, ['J3a', 'J3b', 'J3c', 'J3d'])
-      const isDep = isYes(a, 'J1') && dep >= 3
-      const isAbuse = isYes(a, 'J1') && abuse >= 1
-      if (isDep)
-        return {
-          ...base,
-          status: 'DEPENDENCY',
-          label: 'POSITIVO - Dependência',
-          isPositive: true,
-          details: `${dep}/7 dependência, ${abuse}/4 abuso`,
-        }
-      if (isAbuse)
-        return {
-          ...base,
-          status: 'ABUSE',
-          label: 'POSITIVO - Abuso',
-          isPositive: true,
-          details: `${abuse}/4 abuso`,
-        }
-      return {
-        ...base,
-        status: 'NEGATIVE',
-        label: 'NEGATIVO',
-        isPositive: false,
-        details: 'Não preenchido',
-      }
-    }
+    case 'J':
     case 'K': {
-      const dep = countYes(a, ['K2a', 'K2b', 'K2c', 'K2d', 'K2e', 'K2f', 'K2g'])
-      const abuse = countYes(a, ['K3a', 'K3b', 'K3c', 'K3d'])
-      const isDep = isYes(a, 'K1') && dep >= 3
-      const isAbuse = isYes(a, 'K1') && abuse >= 1
+      const prefix = module.id === 'J' ? 'J' : 'K'
+      const dep = countYes(a, [
+        `${prefix}2a`,
+        `${prefix}2b`,
+        `${prefix}2c`,
+        `${prefix}2d`,
+        `${prefix}2e`,
+        `${prefix}2f`,
+        `${prefix}2g`,
+      ])
+      const abuse = countYes(a, [`${prefix}3a`, `${prefix}3b`, `${prefix}3c`, `${prefix}3d`])
+      const isDep = isYes(a, `${prefix}1`) && dep >= 3
+      const isAbuse = isYes(a, `${prefix}1`) && abuse >= 1
       if (isDep)
         return {
           ...base,
@@ -271,4 +261,17 @@ export function scoreModule(module: MiniModule, a: MiniAnswers): MiniModuleResul
 
 export function scoreAllModules(modules: MiniModule[], answers: MiniAnswers): MiniModuleResult[] {
   return modules.map((m) => scoreModule(m, answers))
+}
+
+export function generateClinicalSummary(results: MiniModuleResult[]): string {
+  const positive = results.filter((r) => r.isPositive)
+  if (positive.length === 0) {
+    return 'Nenhum módulo positivo identificado. Os resultados estão dentro dos parâmetros esperados.'
+  }
+  const lines = positive.map((r) => `- ${r.letter}: ${r.title} — ${r.label} (${r.details})`)
+  lines.push(
+    '',
+    'Esta é uma triagem inicial. O diagnóstico definitivo requer avaliação clínica presencial especializada.',
+  )
+  return lines.join('\n')
 }

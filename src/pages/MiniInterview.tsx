@@ -3,11 +3,13 @@ import { ChevronLeft, ChevronRight, Flag, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { miniModules, MiniAnswers } from '@/lib/mini-data'
-import { scoreAllModules } from '@/lib/mini-scoring'
+import { scoreAllModules, generateClinicalSummary } from '@/lib/mini-scoring'
+import { getVisibleQuestions, clearHiddenAnswers } from '@/lib/mini-skip-logic'
 import {
   createMiniSession,
   saveMiniResponse,
   completeMiniSession,
+  saveMiniClinicalFeedback,
   MiniPatientInfo,
 } from '@/services/mini-interview'
 import { MiniProgressBar } from '@/components/mini/MiniProgressBar'
@@ -19,16 +21,21 @@ type Step = 'patient' | 'interview' | 'summary'
 const DRAFT_KEY = 'mini_interview_draft'
 const TOTAL_MODULES = miniModules.length
 
+const EMPTY_PATIENT: MiniPatientInfo = {
+  name: '',
+  protocol: '',
+  interviewDate: '',
+  birthDate: '',
+  interviewerName: '',
+  startTime: '',
+  endTime: '',
+}
+
 export default function MiniInterview() {
   const [step, setStep] = useState<Step>('patient')
   const [currentModule, setCurrentModule] = useState(0)
   const [answers, setAnswers] = useState<MiniAnswers>({})
-  const [patientInfo, setPatientInfo] = useState<MiniPatientInfo>({
-    name: '',
-    protocol: '',
-    interviewDate: '',
-    birthDate: '',
-  })
+  const [patientInfo, setPatientInfo] = useState<MiniPatientInfo>(EMPTY_PATIENT)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [draftLoaded, setDraftLoaded] = useState(false)
@@ -39,7 +46,7 @@ export default function MiniInterview() {
       if (draft) {
         const parsed = JSON.parse(draft)
         if (parsed.answers) setAnswers(parsed.answers)
-        if (parsed.patientInfo) setPatientInfo(parsed.patientInfo)
+        if (parsed.patientInfo) setPatientInfo({ ...EMPTY_PATIENT, ...parsed.patientInfo })
         if (parsed.currentModule) setCurrentModule(parsed.currentModule)
         if (parsed.step) setStep(parsed.step)
         if (parsed.sessionId) setSessionId(parsed.sessionId)
@@ -72,7 +79,19 @@ export default function MiniInterview() {
   }
 
   const handleAnswer = (key: string, label: string, value: string) => {
-    setAnswers((prev) => ({ ...prev, [key]: value }))
+    setAnswers((prev) => {
+      const newAnswers = { ...prev, [key]: value }
+      const module = miniModules[currentModule]
+      if (module) {
+        const visibleKeys = new Set(getVisibleQuestions(module, newAnswers).map((q) => q.key))
+        module.questions.forEach((q) => {
+          if (!visibleKeys.has(q.key) && q.key !== key) {
+            delete newAnswers[q.key]
+          }
+        })
+      }
+      return newAnswers
+    })
     if (sessionId) {
       setSaving(true)
       saveMiniResponse(sessionId, key, label, value).finally(() => setSaving(false))
@@ -88,8 +107,21 @@ export default function MiniInterview() {
   }
 
   const handleFinish = async () => {
+    const endTime = new Date().toTimeString().slice(0, 5)
+    const updatedInfo = { ...patientInfo, endTime }
+    setPatientInfo(updatedInfo)
+
     if (sessionId) {
-      await completeMiniSession(sessionId)
+      await completeMiniSession(sessionId, {
+        ...updatedInfo,
+        source: 'mini_5_interview',
+      })
+
+      const results = scoreAllModules(miniModules, answers)
+      const summary = generateClinicalSummary(results)
+      const positiveCount = results.filter((r) => r.isPositive).length
+      const severity = positiveCount > 3 ? 'high' : positiveCount > 0 ? 'moderate' : 'low'
+      await saveMiniClinicalFeedback(sessionId, summary, severity)
     }
     setStep('summary')
     toast.success('Entrevista finalizada! Resultados gerados.')
@@ -98,7 +130,7 @@ export default function MiniInterview() {
   const handleRestart = () => {
     localStorage.removeItem(DRAFT_KEY)
     setAnswers({})
-    setPatientInfo({ name: '', protocol: '', interviewDate: '', birthDate: '' })
+    setPatientInfo(EMPTY_PATIENT)
     setSessionId(null)
     setCurrentModule(0)
     setStep('patient')
@@ -115,18 +147,24 @@ export default function MiniInterview() {
 
   const isFirst = currentModule === 0
   const isLast = currentModule === TOTAL_MODULES - 1
+  const module = miniModules[currentModule]
+  const visibleCount = getVisibleQuestions(module, answers).length
+  const answeredCount = getVisibleQuestions(module, answers).filter(
+    (q) => answers[q.key] !== undefined,
+  ).length
 
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-4 sticky top-0 z-10 pt-2 pb-3 bg-[#0A192F]/95 backdrop-blur-sm">
         <MiniProgressBar current={currentModule + 1} total={TOTAL_MODULES} />
+        {visibleCount > 0 && (
+          <p className="text-xs text-[#E6F1FF]/40 mt-1.5">
+            {answeredCount}/{visibleCount} perguntas respondidas neste módulo
+          </p>
+        )}
       </div>
 
-      <MiniModuleView
-        module={miniModules[currentModule]}
-        answers={answers}
-        onAnswer={handleAnswer}
-      />
+      <MiniModuleView module={module} answers={answers} onAnswer={handleAnswer} />
 
       <div className="flex items-center justify-between mt-6 mb-8">
         <Button

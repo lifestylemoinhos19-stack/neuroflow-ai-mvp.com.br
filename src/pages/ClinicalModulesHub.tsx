@@ -47,6 +47,10 @@ export default function ClinicalModulesHub() {
       toast({ title: 'Em breve', description: 'Esta avaliação estará disponível em breve.' })
       return
     }
+    if (scale.key === 'mini-5' && scale.route) {
+      navigate(scale.route)
+      return
+    }
     setStarting(scale.key)
     const sessionId = await startClinicalSession(scale.key, scale.name, moduleTitle)
     setStarting(null)

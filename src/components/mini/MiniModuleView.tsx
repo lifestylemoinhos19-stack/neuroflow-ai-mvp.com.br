@@ -1,11 +1,44 @@
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
-import { MiniModule, MiniAnswers, MiniQuestion } from '@/lib/mini-data'
+import { MiniModule, MiniAnswers, MiniQuestion, SUBSTANCE_LIST } from '@/lib/mini-data'
+import { getVisibleQuestions } from '@/lib/mini-skip-logic'
 
 interface MiniModuleViewProps {
   module: MiniModule
   answers: MiniAnswers
   onAnswer: (key: string, label: string, value: string) => void
+}
+
+function SubstanceMultiSelect({
+  answer,
+  onAnswer,
+}: {
+  answer: string | undefined
+  onAnswer: (value: string) => void
+}) {
+  const selected = answer ? answer.split(',').filter(Boolean) : []
+
+  const toggle = (substance: string) => {
+    const newSelected = selected.includes(substance)
+      ? selected.filter((s) => s !== substance)
+      : [...selected, substance]
+    onAnswer(newSelected.join(','))
+  }
+
+  return (
+    <div className="space-y-2">
+      {SUBSTANCE_LIST.map((substance) => (
+        <label key={substance} className="flex items-center gap-2 cursor-pointer">
+          <Checkbox
+            checked={selected.includes(substance)}
+            onCheckedChange={() => toggle(substance)}
+          />
+          <span className="text-sm text-[#E6F1FF]">{substance}</span>
+        </label>
+      ))}
+    </div>
+  )
 }
 
 function QuestionRow({
@@ -20,6 +53,17 @@ function QuestionRow({
   const cardStyle = { backgroundColor: '#112240', border: '1px solid #233554' }
 
   if (question.type === 'text') {
+    if (question.key === 'K1_specify') {
+      return (
+        <div className="p-4 rounded-xl" style={cardStyle}>
+          <p className="text-sm text-[#E6F1FF] mb-3">{question.label}</p>
+          <SubstanceMultiSelect
+            answer={answer}
+            onAnswer={(value) => onAnswer(question.key, question.label, value)}
+          />
+        </div>
+      )
+    }
     return (
       <div className="p-4 rounded-xl" style={cardStyle}>
         <p className="text-sm text-[#E6F1FF] mb-2">{question.label}</p>
@@ -65,6 +109,8 @@ function QuestionRow({
 }
 
 export function MiniModuleView({ module, answers, onAnswer }: MiniModuleViewProps) {
+  const visibleQuestions = getVisibleQuestions(module, answers)
+
   return (
     <div className="space-y-3">
       <div className="flex items-baseline gap-3 mb-2">
@@ -75,8 +121,8 @@ export function MiniModuleView({ module, answers, onAnswer }: MiniModuleViewProp
         </div>
       </div>
 
-      {module.questions.map((q, i) => {
-        const prevQ = module.questions[i - 1]
+      {visibleQuestions.map((q, i) => {
+        const prevQ = visibleQuestions[i - 1]
         const showGroupLabel = q.group && (!prevQ || prevQ.group !== q.group)
 
         return (

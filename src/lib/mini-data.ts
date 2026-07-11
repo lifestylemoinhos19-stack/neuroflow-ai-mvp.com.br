@@ -80,6 +80,20 @@ export const miniModules: MiniModule[] = [
         'Nas últimas 2 semanas, teve pensamentos recorrentes sobre morte ou ideação suicida?',
         'Sintomas A3',
       ),
+      yn(
+        'A5',
+        'Nas últimas 2 semanas, estes sintomas causaram sofrimento significativo ou prejuízo no funcionamento social, laboral ou outras áreas importantes?',
+      ),
+      yn(
+        'A6',
+        'Durante o pior período desse episódio, o(a) senhor(a) sentia perda de interesse ou prazer em quase todas as atividades?',
+        'Características Melancólicas',
+      ),
+      yn(
+        'A7',
+        'O(a) senhor(a) notava que seu humor não melhorava mesmo quando aconteciam coisas boas?',
+        'Características Melancólicas',
+      ),
     ],
   },
   {
@@ -431,4 +445,16 @@ export const miniModules: MiniModule[] = [
       ),
     ],
   },
+]
+
+export const SUBSTANCE_LIST: string[] = [
+  'Estimulantes (anfetaminas, metanfetamina)',
+  'Cocaína/Crack',
+  'Opiáceos (heroína, morfina, etc.)',
+  'Sedativos/Hipnóticos (benzodiazepínicos)',
+  'Maconha/Haxixe',
+  'Alucinógenos (LSD, etc.)',
+  'Inalantes (cola, solventes)',
+  'Esteroides anabolizantes',
+  'Outros',
 ]

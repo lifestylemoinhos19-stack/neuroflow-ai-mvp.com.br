@@ -274,6 +274,8 @@ export type Database = {
           comments: string | null
           created_at: string
           doctor_id: string | null
+          fas_score: number | null
+          ftdrs_score: number | null
           gad7_score: number | null
           global_severity: string | null
           hama_score: number | null
@@ -297,6 +299,8 @@ export type Database = {
           comments?: string | null
           created_at?: string
           doctor_id?: string | null
+          fas_score?: number | null
+          ftdrs_score?: number | null
           gad7_score?: number | null
           global_severity?: string | null
           hama_score?: number | null
@@ -320,6 +324,8 @@ export type Database = {
           comments?: string | null
           created_at?: string
           doctor_id?: string | null
+          fas_score?: number | null
+          ftdrs_score?: number | null
           gad7_score?: number | null
           global_severity?: string | null
           hama_score?: number | null
