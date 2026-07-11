@@ -23,6 +23,7 @@ import {
   CAMERA_RETRY_DELAYS,
   type CameraInitStatus,
 } from '@/lib/camera-diagnostics'
+import { PermissionDeniedGuidance } from '@/components/PermissionDeniedGuidance'
 
 const CALIBRATION_DURATION = 10
 
@@ -31,8 +32,8 @@ const errorDisplay: Partial<
 > = {
   permission_denied: {
     icon: ShieldAlert,
-    title: 'Camera access denied',
-    hint: 'Please check your browser permissions and retry.',
+    title: 'Acesso à câmera negado',
+    hint: 'Por favor, habilite a permissão nas configurações do seu navegador para continuar.',
   },
   device_in_use: {
     icon: MonitorSmartphone,
@@ -268,6 +269,8 @@ export function CameraOnboarding({ onComplete, onOpenFieldTest }: Props) {
           )}
         </div>
 
+        {status === 'permission_denied' && !autoRetrying && <PermissionDeniedGuidance />}
+
         {bpm !== null && status !== 'done' && !isErrorState && !isConnecting && (
           <p className="text-center text-[#00FFFF] text-sm font-medium mb-4">
             BPM detectado: {bpm}
@@ -287,7 +290,7 @@ export function CameraOnboarding({ onComplete, onOpenFieldTest }: Props) {
               onClick={connectCamera}
               className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/90 rounded-full"
             >
-              <RefreshCw className="h-4 w-4 mr-2" /> Retry Camera Connection
+              <RefreshCw className="h-4 w-4 mr-2" /> Tentar Novamente
             </Button>
           )}
           {status === 'ready' && (

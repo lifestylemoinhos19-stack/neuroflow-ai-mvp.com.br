@@ -23,7 +23,8 @@ export function classifyCameraError(err: any): CameraErrorInfo {
   if (err?.name === 'NotAllowedError' || err?.name === 'SecurityError') {
     return {
       status: 'permission_denied',
-      message: 'Camera access denied. Please check your browser permissions.',
+      message:
+        'Acesso à câmera negado. Por favor, habilite a permissão nas configurações do seu navegador para continuar.',
     }
   }
   if (err?.name === 'NotReadableError' || err?.name === 'TrackStartError') {
