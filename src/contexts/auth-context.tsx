@@ -2,7 +2,8 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { Navigate, useLocation } from 'react-router-dom'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
-import { Loader2 } from 'lucide-react'
+import { Loader2, AlertCircle, RefreshCw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { getOnboardingState, markOnboardingComplete } from '@/services/user-onboarding'
 
 interface AuthUser {
@@ -17,6 +18,7 @@ interface AuthContextType {
   user: AuthUser | null
   session: Session | null
   loading: boolean
+  authTimeout: boolean
   needsOnboarding: boolean
   profileChecked: boolean
   isAdmin: boolean
@@ -33,6 +35,7 @@ interface AuthContextType {
   logout: () => Promise<void>
   completeOnboarding: () => Promise<void>
   completeBleOnboarding: (sensorId?: string) => Promise<void>
+  retryAuth: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -51,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [authTimeout, setAuthTimeout] = useState(false)
   const [isMfaVerified, setIsMfaVerified] = useState(
     () => localStorage.getItem('neuroflow_mfa_verified') === 'true',
   )
@@ -120,6 +124,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (!loading) {
+      setAuthTimeout(false)
+      return
+    }
+    const timer = setTimeout(() => setAuthTimeout(true), 10000)
+    return () => clearTimeout(timer)
+  }, [loading])
+
+  const retryAuth = () => {
+    setAuthTimeout(false)
+    setLoading(true)
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s)
+      setUser(mapUser(s))
+      if (!s) {
+        setIsMfaVerified(false)
+        localStorage.removeItem('neuroflow_mfa_verified')
+      }
+      setLoading(false)
+    })
+  }
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -241,6 +268,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         session,
         loading,
+        authTimeout,
         needsOnboarding,
         profileChecked,
         isAdmin,
@@ -253,6 +281,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         completeOnboarding,
         completeBleOnboarding,
+        retryAuth,
       }}
     >
       {children}
@@ -281,17 +310,43 @@ export function AuthGuard({
     isAuthenticated,
     isMfaVerified,
     loading,
+    authTimeout,
     needsOnboarding,
     profileChecked,
     isAdmin,
     isDoctor,
+    retryAuth,
   } = useAuth()
   const location = useLocation()
 
+  if (authTimeout && loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-950 text-white p-6">
+        <AlertCircle className="h-12 w-12 text-red-400 mb-4" />
+        <h2 className="text-xl font-semibold mb-2">Tempo excedido</h2>
+        <p className="text-sm text-white/60 mb-6 text-center max-w-sm">
+          A verificacao de autenticacao esta demorando mais do que o esperado. Verifique sua conexao
+          e tente novamente.
+        </p>
+        <Button
+          onClick={retryAuth}
+          className="bg-cyan-400 text-slate-950 hover:bg-cyan-400/90 font-semibold rounded-full px-6"
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Tentar novamente
+        </Button>
+      </div>
+    )
+  }
+
   if (loading || (isAuthenticated && isMfaVerified && !profileChecked)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-950">
+        <div className="relative mb-6">
+          <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-2xl" />
+          <Loader2 className="relative h-10 w-10 animate-spin text-cyan-400" />
+        </div>
+        <p className="text-sm text-white/50">Carregando...</p>
       </div>
     )
   }
@@ -314,11 +369,11 @@ export function AuthGuard({
   }
 
   if (requireAdmin && !isAdmin) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   if (requireClinical && !isAdmin && !isDoctor) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   if (
@@ -326,7 +381,7 @@ export function AuthGuard({
     location.pathname === '/mfa' ||
     location.pathname === '/onboarding'
   ) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   return <>{children}</>

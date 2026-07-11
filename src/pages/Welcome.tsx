@@ -1,6 +1,6 @@
 import { useNavigate, Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Brain, ArrowRight, Shield, Heart, Zap } from 'lucide-react'
+import { Brain, ArrowRight, Shield, Heart, Zap, LogIn } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 
 const features = [
@@ -55,6 +55,16 @@ export default function Welcome() {
           >
             Começar Agora <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
+          {!isAuthenticated && (
+            <Button
+              onClick={() => navigate('/login')}
+              variant="outline"
+              size="lg"
+              className="border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/10 hover:text-[#00FFFF] font-semibold rounded-full px-8"
+            >
+              Acessar Plataforma <LogIn className="h-4 w-4 ml-2" />
+            </Button>
+          )}
           {isAuthenticated && (
             <>
               <Link
