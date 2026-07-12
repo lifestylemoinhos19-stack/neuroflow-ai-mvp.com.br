@@ -16,6 +16,7 @@ interface ReportData {
   clinicianName: string
   clinicianCrm: string
   clinicianRqe: string
+  validationUrl: string
   feedback: {
     system_suggestion: string | null
     admin_edited_interpretation: string | null
@@ -81,12 +82,19 @@ function buildSignatureHtml(data: ReportData): string {
     : ''
   const tsDate = fmtDate(data.completedAt || data.startedAt)
   const tsTime = fmtTime(data.completedAt || data.startedAt)
-  return `<div style="margin-top:40px;text-align:center;">
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=2&data=${encodeURIComponent(data.validationUrl)}`
+  return `<div style="margin-top:40px;display:flex;align-items:center;justify-content:center;gap:32px;">
+<div style="text-align:center;flex-shrink:0;">
+<img src="${qrUrl}" alt="QR Code de Validação" style="width:120px;height:120px;display:block;margin:0 auto 4px;" />
+<div style="font-size:10px;color:${C.medium};max-width:120px;line-height:1.3;">Escaneie para verificar autenticidade</div>
+</div>
+<div style="text-align:center;">
 ${sigImg}
 <div style="border-top:1px solid ${C.medium};width:280px;margin:0 auto 8px;"></div>
 <div style="font-size:14px;font-weight:700;color:${C.dark};">${esc(data.clinicianName)}</div>
 <div style="font-size:12px;color:${C.medium};margin-top:2px;">${esc(data.clinicianCrm)} &middot; ${esc(data.clinicianRqe)}</div>
 <div style="font-size:11px;color:${C.medium};margin-top:4px;font-style:italic;">Assinado digitalmente em ${tsDate} às ${tsTime}</div>
+</div>
 </div>`
 }
 
@@ -181,6 +189,9 @@ export function generateReportHtml(data: ReportData): string {
       : ''
   }
   <div class="warn">⚠ Este instrumento é uma ferramenta de triagem e não substitui a avaliação clínica profissional. O diagnóstico definitivo requer avaliação presencial especializada.</div>
+  <div style="text-align:center;margin:20px 0;">
+    <a href="${esc(data.validationUrl)}" style="display:inline-block;padding:12px 28px;background:${C.primary};color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">🔍 Verificar Autenticidade do Documento</a>
+  </div>
   ${buildSignatureHtml(data)}
   <div class="brand-footer">
     <p class="fn">${CLINIC_NAME}</p>

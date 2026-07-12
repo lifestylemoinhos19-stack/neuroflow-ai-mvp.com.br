@@ -147,6 +147,7 @@ Deno.serve(async (req) => {
       clinicianName,
       clinicianCrm,
       clinicianRqe,
+      validationUrl: `https://neuroflow-ai-mvp-61ac1.goskip.app/validar/${session_id}`,
       feedback: feedback as Record<string, unknown> as any,
     })
 

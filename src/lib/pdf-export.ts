@@ -84,7 +84,7 @@ export function exportReport(sessions: SessionWithRisk[]): void {
           .join('')
   }
   <p style="margin-top:32px;color:#94a3b8;font-size:12px;">Documento gerado pelo NeuroFlow AI. Dados protegidos conforme LGPD (Lei nº 13.709/2018).</p>
-  ${getSignatureHtml()}
+  ${getSignatureHtml(undefined, sessions[0]?.id)}
   <div class="clinical-footer">Suporte à decisão clínica — Validação médica obrigatória</div>
   ${getBrandFooterHtml()}
 </body>

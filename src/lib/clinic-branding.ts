@@ -39,17 +39,41 @@ export function getBrandFooterHtml(): string {
 </div>`
 }
 
-export function getSignatureHtml(timestamp?: string | null): string {
+export function getValidationUrl(sessionId: string): string {
+  const origin =
+    typeof window !== 'undefined'
+      ? window.location.origin
+      : 'https://neuroflow-ai-mvp-61ac1.goskip.app'
+  return `${origin}/validar/${sessionId}`
+}
+
+export function getQrCodeUrl(url: string, size: number = 150): string {
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=2&data=${encodeURIComponent(url)}`
+}
+
+export function getQrCodeHtml(sessionId: string): string {
+  const validationUrl = getValidationUrl(sessionId)
+  const qrUrl = getQrCodeUrl(validationUrl, 120)
+  return `<div class="qr-block">
+<img src="${qrUrl}" alt="QR Code de Validação" class="qr-img" />
+<div class="qr-label">Escaneie para verificar autenticidade</div>
+</div>`
+}
+
+export function getSignatureHtml(timestamp?: string | null, sessionId?: string): string {
   const c = CLINICIAN_CREDENTIALS
   const ts = timestamp ? new Date(timestamp) : new Date()
   const dateStr = ts.toLocaleDateString('pt-BR')
   const timeStr = ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-  return `<div class="signature-block">
+  const qrHtml = sessionId ? getQrCodeHtml(sessionId) : ''
+  return `<div class="signature-wrapper">
+${qrHtml}<div class="signature-block">
 <img src="${c.signatureUrl}" alt="Assinatura - ${c.name}" class="signature-img" />
 <div class="signature-line"></div>
 <div class="signature-name">${c.name}</div>
 <div class="signature-credentials">${c.crm} &middot; ${c.rqe}</div>
 <div class="signature-timestamp">Assinado digitalmente em ${dateStr} às ${timeStr}</div>
+</div>
 </div>`
 }
 
@@ -70,5 +94,9 @@ export function getBrandCss(): string {
 .signature-block .signature-name{font-size:14px;font-weight:700;color:${c.dark}}
 .signature-block .signature-credentials{font-size:12px;color:${c.medium};margin-top:2px}
 .signature-block .signature-timestamp{font-size:11px;color:${c.medium};margin-top:4px;font-style:italic}
+.signature-wrapper{display:flex;align-items:center;justify-content:center;gap:32px;margin-top:48px}
+.qr-block{text-align:center;flex-shrink:0}
+.qr-block .qr-img{width:120px;height:120px;object-fit:contain;display:block;margin:0 auto 4px}
+.qr-block .qr-label{font-size:11px;color:${c.medium};max-width:120px;line-height:1.3}
 @media print{.brand-header{position:fixed;top:0;left:0;right:0;background:#fff;z-index:100;padding:8px 40px}.brand-footer{position:fixed;bottom:0;left:0;right:0;background:#fff;z-index:100;padding:8px 40px}body{padding-top:90px;padding-bottom:70px}}`
 }

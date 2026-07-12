@@ -27,6 +27,7 @@ import Ethics from '@/pages/Ethics'
 import EthicalAuditDashboard from '@/pages/EthicalAuditDashboard'
 import IndicatorsDashboard from '@/pages/IndicatorsDashboard'
 import TermsOfUse from '@/pages/TermsOfUse'
+import ValidateDocument from '@/pages/ValidateDocument'
 import NotFound from '@/pages/NotFound'
 import Welcome from '@/pages/Welcome'
 import NeuroFlowLanding from '@/pages/NeuroFlowLanding'
@@ -65,6 +66,7 @@ function AppInner() {
           }
         />
         <Route path="/terms" element={<TermsOfUse />} />
+        <Route path="/validar/:id" element={<ValidateDocument />} />
         <Route path="/security" element={<Security />} />
         <Route path="/ethics" element={<Ethics />} />
         <Route path="/about" element={<Ethics />} />
