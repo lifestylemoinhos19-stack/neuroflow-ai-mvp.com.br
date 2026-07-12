@@ -832,6 +832,7 @@ export type Database = {
           privacy_consent: boolean | null
           privacy_consent_accepted_at: string | null
           role: string
+          signature_url: string | null
         }
         Insert: {
           created_at?: string
@@ -842,6 +843,7 @@ export type Database = {
           privacy_consent?: boolean | null
           privacy_consent_accepted_at?: string | null
           role?: string
+          signature_url?: string | null
         }
         Update: {
           created_at?: string
@@ -852,6 +854,7 @@ export type Database = {
           privacy_consent?: boolean | null
           privacy_consent_accepted_at?: string | null
           role?: string
+          signature_url?: string | null
         }
         Relationships: [
           {

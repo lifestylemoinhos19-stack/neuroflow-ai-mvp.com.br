@@ -79,11 +79,14 @@ function buildSignatureHtml(data: ReportData): string {
   const sigImg = data.signatureUrl
     ? `<img src="${data.signatureUrl}" alt="Assinatura - ${esc(data.clinicianName)}" style="max-width:200px;max-height:70px;object-fit:contain;margin:0 auto 4px;display:block;" />`
     : ''
+  const tsDate = fmtDate(data.completedAt || data.startedAt)
+  const tsTime = fmtTime(data.completedAt || data.startedAt)
   return `<div style="margin-top:40px;text-align:center;">
 ${sigImg}
 <div style="border-top:1px solid ${C.medium};width:280px;margin:0 auto 8px;"></div>
 <div style="font-size:14px;font-weight:700;color:${C.dark};">${esc(data.clinicianName)}</div>
 <div style="font-size:12px;color:${C.medium};margin-top:2px;">${esc(data.clinicianCrm)} &middot; ${esc(data.clinicianRqe)}</div>
+<div style="font-size:11px;color:${C.medium};margin-top:4px;font-style:italic;">Assinado digitalmente em ${tsDate} às ${tsTime}</div>
 </div>`
 }
 

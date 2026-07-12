@@ -39,13 +39,17 @@ export function getBrandFooterHtml(): string {
 </div>`
 }
 
-export function getSignatureHtml(): string {
+export function getSignatureHtml(timestamp?: string | null): string {
   const c = CLINICIAN_CREDENTIALS
+  const ts = timestamp ? new Date(timestamp) : new Date()
+  const dateStr = ts.toLocaleDateString('pt-BR')
+  const timeStr = ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
   return `<div class="signature-block">
 <img src="${c.signatureUrl}" alt="Assinatura - ${c.name}" class="signature-img" />
 <div class="signature-line"></div>
 <div class="signature-name">${c.name}</div>
 <div class="signature-credentials">${c.crm} &middot; ${c.rqe}</div>
+<div class="signature-timestamp">Assinado digitalmente em ${dateStr} às ${timeStr}</div>
 </div>`
 }
 
@@ -65,5 +69,6 @@ export function getBrandCss(): string {
 .signature-block .signature-line{border-top:1px solid ${c.medium};width:300px;margin:0 auto 8px}
 .signature-block .signature-name{font-size:14px;font-weight:700;color:${c.dark}}
 .signature-block .signature-credentials{font-size:12px;color:${c.medium};margin-top:2px}
+.signature-block .signature-timestamp{font-size:11px;color:${c.medium};margin-top:4px;font-style:italic}
 @media print{.brand-header{position:fixed;top:0;left:0;right:0;background:#fff;z-index:100;padding:8px 40px}.brand-footer{position:fixed;bottom:0;left:0;right:0;background:#fff;z-index:100;padding:8px 40px}body{padding-top:90px;padding-bottom:70px}}`
 }

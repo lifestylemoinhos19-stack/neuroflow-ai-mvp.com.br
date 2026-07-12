@@ -109,7 +109,7 @@ export function exportMiniPdf(report: MiniReportData): void {
       : ''
   }
   <div class="warn">⚠ Este instrumento é uma ferramenta de triagem e não substitui a avaliação clínica profissional. O diagnóstico definitivo requer avaliação presencial especializada.</div>
-  ${getSignatureHtml()}
+  ${getSignatureHtml(report.session.completed_at)}
   ${getBrandFooterHtml()}
 </body>
 </html>`
