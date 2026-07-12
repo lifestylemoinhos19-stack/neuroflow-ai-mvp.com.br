@@ -14,6 +14,13 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || ''
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 const SUBJECT = 'Relatório MINI 5.0.0 - NeuroFlow AI'
 
+const DEFAULT_CLINICIAN = {
+  name: 'Rose Mary Alves',
+  crm: 'CRMERS 19625',
+  rqe: 'RQE 29582',
+  signatureUrl: `${SUPABASE_URL}/storage/v1/object/public/clinic-assets/clinician-signature.png`,
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -68,6 +75,18 @@ Deno.serve(async (req) => {
       .limit(1)
       .maybeSingle()
 
+    const { data: clinicianSettings } = await supabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'clinician_credentials')
+      .maybeSingle()
+
+    const clinicianData = (clinicianSettings?.value as Record<string, string> | null) || {}
+    const clinicianName = clinicianData.name || DEFAULT_CLINICIAN.name
+    const clinicianCrm = clinicianData.crm || DEFAULT_CLINICIAN.crm
+    const clinicianRqe = clinicianData.rqe || DEFAULT_CLINICIAN.rqe
+    const signatureUrl = clinicianData.signature_url || DEFAULT_CLINICIAN.signatureUrl
+
     const metadata = (session.metadata as Record<string, unknown>) || {}
     let patientName = (metadata.name as string) || '—'
     let patientBirthDate = (metadata.birthDate as string) || ''
@@ -77,7 +96,7 @@ Deno.serve(async (req) => {
     if (profileId) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('guest_id, full_name')
+        .select('guest_id, full_name, signature_url')
         .eq('id', profileId)
         .maybeSingle()
 
@@ -124,6 +143,10 @@ Deno.serve(async (req) => {
       completedAt: session.completed_at || '',
       moduleMap,
       logoUrl: `${SUPABASE_URL}/storage/v1/object/public/clinic-assets/casa-branca-logo.png`,
+      signatureUrl,
+      clinicianName,
+      clinicianCrm,
+      clinicianRqe,
       feedback: feedback as Record<string, unknown> as any,
     })
 

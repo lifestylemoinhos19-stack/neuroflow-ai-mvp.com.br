@@ -12,6 +12,10 @@ interface ReportData {
   completedAt: string
   moduleMap: Record<string, ModuleResponse[]>
   logoUrl: string
+  signatureUrl: string | null
+  clinicianName: string
+  clinicianCrm: string
+  clinicianRqe: string
   feedback: {
     system_suggestion: string | null
     admin_edited_interpretation: string | null
@@ -69,6 +73,18 @@ function fmtTime(iso: string): string {
   return isNaN(d.getTime())
     ? iso
     : d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+}
+
+function buildSignatureHtml(data: ReportData): string {
+  const sigImg = data.signatureUrl
+    ? `<img src="${data.signatureUrl}" alt="Assinatura - ${esc(data.clinicianName)}" style="max-width:200px;max-height:70px;object-fit:contain;margin:0 auto 4px;display:block;" />`
+    : ''
+  return `<div style="margin-top:40px;text-align:center;">
+${sigImg}
+<div style="border-top:1px solid ${C.medium};width:280px;margin:0 auto 8px;"></div>
+<div style="font-size:14px;font-weight:700;color:${C.dark};">${esc(data.clinicianName)}</div>
+<div style="font-size:12px;color:${C.medium};margin-top:2px;">${esc(data.clinicianCrm)} &middot; ${esc(data.clinicianRqe)}</div>
+</div>`
 }
 
 export function generateReportHtml(data: ReportData): string {
@@ -162,6 +178,7 @@ export function generateReportHtml(data: ReportData): string {
       : ''
   }
   <div class="warn">⚠ Este instrumento é uma ferramenta de triagem e não substitui a avaliação clínica profissional. O diagnóstico definitivo requer avaliação presencial especializada.</div>
+  ${buildSignatureHtml(data)}
   <div class="brand-footer">
     <p class="fn">${CLINIC_NAME}</p>
     <p>${CLINIC_ADDRESS} | WhatsApp: ${CLINIC_WHATSAPP}</p>

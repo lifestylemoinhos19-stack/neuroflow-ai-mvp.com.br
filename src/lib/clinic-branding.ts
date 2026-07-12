@@ -15,6 +15,14 @@ export const CLINIC_BRANDING = {
   },
 } as const
 
+export const CLINICIAN_CREDENTIALS = {
+  name: 'Rose Mary Alves',
+  crm: 'CRMERS 19625',
+  rqe: 'RQE 29582',
+  signatureUrl: `${SUPABASE_URL}/storage/v1/object/public/clinic-assets/clinician-signature.png`,
+  fullCredentials: 'Rose Mary Alves - CRMERS 19625 RQE 29582',
+} as const
+
 export function getBrandHeaderHtml(): string {
   const b = CLINIC_BRANDING
   return `<div class="brand-header">
@@ -31,6 +39,16 @@ export function getBrandFooterHtml(): string {
 </div>`
 }
 
+export function getSignatureHtml(): string {
+  const c = CLINICIAN_CREDENTIALS
+  return `<div class="signature-block">
+<img src="${c.signatureUrl}" alt="Assinatura - ${c.name}" class="signature-img" />
+<div class="signature-line"></div>
+<div class="signature-name">${c.name}</div>
+<div class="signature-credentials">${c.crm} &middot; ${c.rqe}</div>
+</div>`
+}
+
 export function getBrandCss(): string {
   const c = CLINIC_BRANDING.colors
   return `.brand-header{display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:3px solid ${c.primary};margin-bottom:24px}
@@ -42,5 +60,10 @@ export function getBrandCss(): string {
 .brand-footer{margin-top:32px;padding:12px 0;border-top:2px solid ${c.primary};text-align:center}
 .brand-footer p{margin:2px 0;font-size:12px;color:${c.medium}}
 .brand-footer .clinic-footer-name{font-weight:700;color:${c.dark}}
+.signature-block{margin-top:48px;text-align:center}
+.signature-block .signature-img{max-width:220px;max-height:80px;object-fit:contain;margin:0 auto 4px;display:block}
+.signature-block .signature-line{border-top:1px solid ${c.medium};width:300px;margin:0 auto 8px}
+.signature-block .signature-name{font-size:14px;font-weight:700;color:${c.dark}}
+.signature-block .signature-credentials{font-size:12px;color:${c.medium};margin-top:2px}
 @media print{.brand-header{position:fixed;top:0;left:0;right:0;background:#fff;z-index:100;padding:8px 40px}.brand-footer{position:fixed;bottom:0;left:0;right:0;background:#fff;z-index:100;padding:8px 40px}body{padding-top:90px;padding-bottom:70px}}`
 }

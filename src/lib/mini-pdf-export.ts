@@ -1,9 +1,11 @@
 import type { MiniReportData } from '@/services/mini-report'
 import {
   CLINIC_BRANDING,
+  CLINICIAN_CREDENTIALS,
   getBrandHeaderHtml,
   getBrandFooterHtml,
   getBrandCss,
+  getSignatureHtml,
 } from '@/lib/clinic-branding'
 
 function esc(s: string | null | undefined): string {
@@ -57,8 +59,6 @@ export function exportMiniPdf(report: MiniReportData): void {
   .neg{color:${c.medium}}
   .alert{background:#fef3c7;border-left:4px solid #f59e0b;padding:12px;margin-bottom:8px;font-size:14px}
   .fb{background:${c.accent};border:1px solid #bfdbfe;border-radius:8px;padding:16px;font-size:14px;margin-bottom:12px}
-  .sig{margin-top:48px;text-align:center}
-  .sig-l{border-top:1px solid ${c.medium};width:300px;margin:0 auto;padding-top:8px;font-size:13px;color:${c.medium}}
   .warn{background:${c.accent};border:1px solid #bfdbfe;border-radius:8px;padding:12px;font-size:12px;color:${c.primary};margin-top:16px}
   ${getBrandCss()}
 </style>
@@ -109,7 +109,7 @@ export function exportMiniPdf(report: MiniReportData): void {
       : ''
   }
   <div class="warn">⚠ Este instrumento é uma ferramenta de triagem e não substitui a avaliação clínica profissional. O diagnóstico definitivo requer avaliação presencial especializada.</div>
-  <div class="sig"><div class="sig-l">Assinatura do Profissional Responsável</div></div>
+  ${getSignatureHtml()}
   ${getBrandFooterHtml()}
 </body>
 </html>`
