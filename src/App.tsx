@@ -167,7 +167,6 @@ function AppInner() {
           <Route path="/evaluations/ftdrs" element={<FtdrsPage />} />
           <Route path="/evaluations/fas" element={<FasPage />} />
           <Route path="/ybocs-assessment" element={<YbocsPage />} />
-          <Route path="/mini" element={<Mini500 />} />
           <Route path="/neuro-validation" element={<NeuroValidationPage />} />
           <Route path="/stress-test" element={<StressTestDashboard />} />
           <Route

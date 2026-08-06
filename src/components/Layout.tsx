@@ -33,7 +33,6 @@ import { CalmExplorerModal } from '@/components/CalmExplorerModal'
 const baseNavItems = [
   { path: '/', label: 'Painel', icon: Activity },
   { path: '/anamnesis', label: 'Anamnese', icon: ClipboardList },
-  { path: '/mini', label: 'MINI 5.0.0', icon: ClipboardList },
   { path: '/scales', label: 'Escalas', icon: ClipboardCheck },
   { path: '/modulos-clinicos', label: 'Módulos Clínicos', icon: Layers },
   { path: '/mini', label: 'MINI 5.0.0', icon: FileCheck },
