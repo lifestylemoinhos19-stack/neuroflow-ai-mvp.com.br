@@ -20,6 +20,7 @@ import {
   LineChart,
   Layers,
   FileCheck,
+  UserCog,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
@@ -52,7 +53,11 @@ export default function Layout() {
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const navItems = isAdmin
-    ? [...baseNavItems, { path: '/admin/ethical-audit', label: 'Auditoria', icon: FileSearch }]
+    ? [
+        ...baseNavItems,
+        { path: '/admin/painel', label: 'Painel Admin', icon: UserCog },
+        { path: '/admin/ethical-audit', label: 'Auditoria', icon: FileSearch },
+      ]
     : baseNavItems
 
   return (

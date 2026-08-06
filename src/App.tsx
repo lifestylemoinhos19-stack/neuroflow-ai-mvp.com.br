@@ -50,6 +50,7 @@ import FtdrsPage from '@/pages/FtdrsPage'
 import FasPage from '@/pages/FasPage'
 import Gad7Page from '@/pages/Gad7Page'
 import Mini500 from '@/pages/Mini500'
+import AdminPainel from '@/pages/AdminPainel'
 
 function AppInner() {
   useGuestConversion()
@@ -174,6 +175,14 @@ function AppInner() {
             element={
               <AuthGuard requireAdmin>
                 <StressTestDashboard />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/admin/painel"
+            element={
+              <AuthGuard requireAdmin>
+                <AdminPainel />
               </AuthGuard>
             }
           />
