@@ -49,6 +49,7 @@ import MocaPage from '@/pages/MocaPage'
 import FtdrsPage from '@/pages/FtdrsPage'
 import FasPage from '@/pages/FasPage'
 import Gad7Page from '@/pages/Gad7Page'
+import Mini500 from '@/pages/Mini500'
 
 function AppInner() {
   useGuestConversion()
@@ -142,6 +143,7 @@ function AppInner() {
         >
           <Route path="/anamnesis" element={<Anamnesis />} />
           <Route path="/mini-interview" element={<MiniInterview />} />
+          <Route path="/mini" element={<Mini500 />} />
           <Route path="/scales" element={<Scales />} />
           <Route path="/modulos-clinicos" element={<ClinicalModulesHub />} />
           <Route path="/dashboard" element={<Dashboard />} />
@@ -165,6 +167,7 @@ function AppInner() {
           <Route path="/evaluations/ftdrs" element={<FtdrsPage />} />
           <Route path="/evaluations/fas" element={<FasPage />} />
           <Route path="/ybocs-assessment" element={<YbocsPage />} />
+          <Route path="/mini" element={<Mini500 />} />
           <Route path="/neuro-validation" element={<NeuroValidationPage />} />
           <Route path="/stress-test" element={<StressTestDashboard />} />
           <Route

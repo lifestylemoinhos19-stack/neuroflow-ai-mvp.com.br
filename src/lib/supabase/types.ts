@@ -393,6 +393,47 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_reports: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          patient_id: string
+          professional_id: string | null
+          risk_level: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          patient_id: string
+          professional_id?: string | null
+          risk_level?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          patient_id?: string
+          professional_id?: string | null
+          risk_level?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'clinical_reports_patient_id_fkey'
+            columns: ['patient_id']
+            isOneToOne: false
+            referencedRelation: 'patients'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       disponibilidade: {
         Row: {
           bloqueado: boolean
@@ -822,39 +863,137 @@ export type Database = {
           },
         ]
       }
+      patient_materials: {
+        Row: {
+          citations: Json | null
+          content: string
+          created_at: string
+          created_by: string | null
+          format: string
+          id: string
+          patient_id: string | null
+          target_audience: string
+          title: string
+          tone: string
+          topic: string
+          updated_at: string
+        }
+        Insert: {
+          citations?: Json | null
+          content: string
+          created_at?: string
+          created_by?: string | null
+          format?: string
+          id?: string
+          patient_id?: string | null
+          target_audience?: string
+          title: string
+          tone?: string
+          topic: string
+          updated_at?: string
+        }
+        Update: {
+          citations?: Json | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          format?: string
+          id?: string
+          patient_id?: string | null
+          target_audience?: string
+          title?: string
+          tone?: string
+          topic?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'patient_materials_patient_id_fkey'
+            columns: ['patient_id']
+            isOneToOne: false
+            referencedRelation: 'patients'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          birth_date: string | null
+          created_at: string
+          gender: string | null
+          id: string
+          initials: string
+          photo_url: string | null
+          responsible_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          birth_date?: string | null
+          created_at?: string
+          gender?: string | null
+          id?: string
+          initials: string
+          photo_url?: string | null
+          responsible_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          birth_date?: string | null
+          created_at?: string
+          gender?: string | null
+          id?: string
+          initials?: string
+          photo_url?: string | null
+          responsible_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
+          crm: string | null
           full_name: string | null
           guest_id: string | null
           has_completed_onboarding: boolean
           id: string
+          photo_url: string | null
           privacy_consent: boolean | null
           privacy_consent_accepted_at: string | null
           role: string
           signature_url: string | null
+          specialty: string | null
         }
         Insert: {
           created_at?: string
+          crm?: string | null
           full_name?: string | null
           guest_id?: string | null
           has_completed_onboarding?: boolean
           id: string
+          photo_url?: string | null
           privacy_consent?: boolean | null
           privacy_consent_accepted_at?: string | null
           role?: string
           signature_url?: string | null
+          specialty?: string | null
         }
         Update: {
           created_at?: string
+          crm?: string | null
           full_name?: string | null
           guest_id?: string | null
           has_completed_onboarding?: boolean
           id?: string
+          photo_url?: string | null
           privacy_consent?: boolean | null
           privacy_consent_accepted_at?: string | null
           role?: string
           signature_url?: string | null
+          specialty?: string | null
         }
         Relationships: [
           {
@@ -1537,6 +1676,19 @@ export type Database = {
           question_key: string
           question_label: string
           response_value: string
+        }[]
+      }
+      get_session_validation: {
+        Args: { p_session_id: string }
+        Returns: {
+          clinician_crm: string
+          clinician_name: string
+          clinician_rqe: string
+          completed_at: string
+          patient_initials: string
+          session_id: string
+          started_at: string
+          status: string
         }[]
       }
       get_user_guest_id: { Args: never; Returns: string }
