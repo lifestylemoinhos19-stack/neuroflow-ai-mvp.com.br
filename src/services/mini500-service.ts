@@ -20,7 +20,7 @@ export async function createMini500Session(info: Mini500PatientInfo): Promise<st
     .from('anamnesis_sessions')
     .insert({
       user_id: user.id,
-      status: 'started',
+      status: 'in_progress',
       started_at: new Date().toISOString(),
       metadata: { ...info, source: 'mini500' },
     } as never)
