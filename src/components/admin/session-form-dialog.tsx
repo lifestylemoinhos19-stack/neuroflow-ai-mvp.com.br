@@ -92,13 +92,15 @@ export function SessionFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{session ? 'Editar Testagem' : 'Nova Testagem (Mock)'}</DialogTitle>
+          <DialogTitle className="text-white">
+            {session ? 'Editar Testagem' : 'Nova Testagem (Mock)'}
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
           {!session && (
             <>
               <div className="space-y-1">
-                <Label className="text-sm">Paciente *</Label>
+                <Label className="text-sm text-slate-200">Paciente *</Label>
                 <Select value={guestId} onValueChange={setGuestId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione" />
@@ -113,7 +115,7 @@ export function SessionFormDialog({
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-sm">Escala *</Label>
+                <Label className="text-sm text-slate-200">Escala *</Label>
                 <Select value={scaleType} onValueChange={setScaleType}>
                   <SelectTrigger>
                     <SelectValue />
@@ -131,11 +133,11 @@ export function SessionFormDialog({
           )}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-sm">Pontuação</Label>
+              <Label className="text-sm text-slate-200">Pontuação</Label>
               <Input type="number" value={score} onChange={(e) => setScore(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <Label className="text-sm">Status</Label>
+              <Label className="text-sm text-slate-200">Status</Label>
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger>
                   <SelectValue />
@@ -148,7 +150,7 @@ export function SessionFormDialog({
               </Select>
             </div>
           </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p className="text-sm text-red-400">{error}</p>}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>

@@ -77,19 +77,21 @@ export function PatientFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{patient ? 'Editar Paciente' : 'Novo Paciente'}</DialogTitle>
+          <DialogTitle className="text-white">
+            {patient ? 'Editar Paciente' : 'Novo Paciente'}
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-sm">Nome *</Label>
+              <Label className="text-sm text-slate-200">Nome *</Label>
               <Input
                 value={form.first_name}
                 onChange={(e) => setForm({ ...form, first_name: e.target.value })}
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-sm">Sobrenome *</Label>
+              <Label className="text-sm text-slate-200">Sobrenome *</Label>
               <Input
                 value={form.last_name}
                 onChange={(e) => setForm({ ...form, last_name: e.target.value })}
@@ -97,7 +99,7 @@ export function PatientFormDialog({
             </div>
           </div>
           <div className="space-y-1">
-            <Label className="text-sm">E-mail</Label>
+            <Label className="text-sm text-slate-200">E-mail</Label>
             <Input
               type="email"
               value={form.email}
@@ -106,14 +108,14 @@ export function PatientFormDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-sm">Telefone</Label>
+              <Label className="text-sm text-slate-200">Telefone</Label>
               <Input
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-sm">Nascimento</Label>
+              <Label className="text-sm text-slate-200">Nascimento</Label>
               <Input
                 type="date"
                 value={form.birth_date}
@@ -121,7 +123,7 @@ export function PatientFormDialog({
               />
             </div>
           </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p className="text-sm text-red-400">{error}</p>}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>

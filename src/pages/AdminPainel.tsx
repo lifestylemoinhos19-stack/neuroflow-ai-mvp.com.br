@@ -54,7 +54,7 @@ function ActionButtons({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-slate-500 hover:text-slate-700"
+        className="h-8 w-8 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
         onClick={onEdit}
       >
         <Pencil className="h-4 w-4" />
@@ -62,7 +62,7 @@ function ActionButtons({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+        className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-950"
         onClick={onDelete}
       >
         <Trash2 className="h-4 w-4" />
@@ -126,9 +126,9 @@ export default function AdminPainel() {
   if (!isAdmin)
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <ShieldAlert className="h-12 w-12 text-red-500" />
-        <p className="text-lg font-semibold text-slate-700">Acesso Restrito</p>
-        <p className="text-sm text-slate-500">Você não tem permissão para acessar esta página.</p>
+        <ShieldAlert className="h-12 w-12 text-red-400" />
+        <p className="text-lg font-semibold text-white">Acesso Restrito</p>
+        <p className="text-sm text-slate-300">Você não tem permissão para acessar esta página.</p>
       </div>
     )
 
@@ -143,10 +143,10 @@ export default function AdminPainel() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-display font-bold text-slate-900 flex items-center gap-2">
+        <h1 className="text-2xl sm:text-3xl font-display font-bold text-white flex items-center gap-2">
           <ShieldAlert className="h-7 w-7 text-primary" /> Painel Admin
         </h1>
-        <p className="text-slate-500">
+        <p className="text-slate-300">
           Gerencie pacientes, testagens e laudos diretamente do banco de dados.
         </p>
       </div>
@@ -165,38 +165,38 @@ export default function AdminPainel() {
         </TabsList>
 
         <TabsContent value="patients">
-          <Card className="border-slate-100">
+          <Card className="border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-base">Pacientes Cadastrados</CardTitle>
+              <CardTitle className="text-base text-white">Pacientes Cadastrados</CardTitle>
               <Button size="sm" onClick={() => setPatientDialog({ open: true, patient: null })}>
                 <Plus className="h-4 w-4 mr-1" /> Novo
               </Button>
             </CardHeader>
             <CardContent>
               {patients.length === 0 ? (
-                <p className="text-center text-slate-400 py-8">Nenhum paciente encontrado.</p>
+                <p className="text-center text-slate-300 py-8">Nenhum paciente encontrado.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Nome</TableHead>
-                        <TableHead>E-mail</TableHead>
-                        <TableHead>Telefone</TableHead>
-                        <TableHead>Nascimento</TableHead>
-                        <TableHead className="text-center">Testes</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
+                        <TableHead className="text-slate-200">Nome</TableHead>
+                        <TableHead className="text-slate-200">E-mail</TableHead>
+                        <TableHead className="text-slate-200">Telefone</TableHead>
+                        <TableHead className="text-slate-200">Nascimento</TableHead>
+                        <TableHead className="text-slate-200 text-center">Testes</TableHead>
+                        <TableHead className="text-slate-200 text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {patients.map((p) => (
                         <TableRow key={p.id}>
-                          <TableCell className="text-sm font-medium text-slate-700">
+                          <TableCell className="text-sm font-semibold text-white">
                             {p.first_name} {p.last_name}
                           </TableCell>
-                          <TableCell className="text-sm text-slate-600">{p.email || '-'}</TableCell>
-                          <TableCell className="text-sm text-slate-600">{p.phone || '-'}</TableCell>
-                          <TableCell className="text-sm text-slate-600">
+                          <TableCell className="text-sm text-slate-300">{p.email || '-'}</TableCell>
+                          <TableCell className="text-sm text-slate-300">{p.phone || '-'}</TableCell>
+                          <TableCell className="text-sm text-slate-300">
                             {p.birth_date
                               ? new Date(p.birth_date).toLocaleDateString('pt-BR')
                               : '-'}
@@ -227,41 +227,41 @@ export default function AdminPainel() {
         </TabsContent>
 
         <TabsContent value="tests">
-          <Card className="border-slate-100">
+          <Card className="border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-base">Sessões de Teste</CardTitle>
+              <CardTitle className="text-base text-white">Sessões de Teste</CardTitle>
               <Button size="sm" onClick={() => setSessionDialog({ open: true, session: null })}>
                 <Plus className="h-4 w-4 mr-1" /> Nova
               </Button>
             </CardHeader>
             <CardContent>
               {tests.length === 0 ? (
-                <p className="text-center text-slate-400 py-8">Nenhuma testagem encontrada.</p>
+                <p className="text-center text-slate-300 py-8">Nenhuma testagem encontrada.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Tipo</TableHead>
-                        <TableHead>Paciente</TableHead>
-                        <TableHead>Data</TableHead>
-                        <TableHead className="text-center">Pontuação</TableHead>
-                        <TableHead>Origem</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
+                        <TableHead className="text-slate-200">Tipo</TableHead>
+                        <TableHead className="text-slate-200">Paciente</TableHead>
+                        <TableHead className="text-slate-200">Data</TableHead>
+                        <TableHead className="text-slate-200 text-center">Pontuação</TableHead>
+                        <TableHead className="text-slate-200">Origem</TableHead>
+                        <TableHead className="text-slate-200">Status</TableHead>
+                        <TableHead className="text-slate-200 text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {tests.map((t) => (
                         <TableRow key={t.id}>
-                          <TableCell className="text-sm font-medium text-slate-700">
+                          <TableCell className="text-sm font-semibold text-white">
                             {t.type}
                           </TableCell>
-                          <TableCell className="text-sm text-slate-600">{t.patient_name}</TableCell>
-                          <TableCell className="text-sm text-slate-600">
+                          <TableCell className="text-sm text-slate-300">{t.patient_name}</TableCell>
+                          <TableCell className="text-sm text-slate-300">
                             {new Date(t.started_at).toLocaleDateString('pt-BR')}
                           </TableCell>
-                          <TableCell className="text-sm text-center text-slate-600">
+                          <TableCell className="text-sm text-center text-slate-300">
                             {t.score !== null ? t.score : '-'}
                           </TableCell>
                           <TableCell>
@@ -269,14 +269,14 @@ export default function AdminPainel() {
                               variant="secondary"
                               className={
                                 t.origin === 'Mocado'
-                                  ? 'bg-amber-100 text-amber-700 hover:bg-amber-100'
-                                  : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                                  ? 'bg-amber-950 text-amber-300 hover:bg-amber-950'
+                                  : 'bg-emerald-950 text-emerald-300 hover:bg-emerald-950'
                               }
                             >
                               {t.origin}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-sm text-slate-600">
+                          <TableCell className="text-sm text-slate-300">
                             {translateStatus(t.status)}
                           </TableCell>
                           <TableCell>
@@ -298,39 +298,41 @@ export default function AdminPainel() {
         </TabsContent>
 
         <TabsContent value="reports">
-          <Card className="border-slate-100">
+          <Card className="border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-base">Laudos e Relatórios</CardTitle>
+              <CardTitle className="text-base text-white">Laudos e Relatórios</CardTitle>
               <Button size="sm" onClick={() => setReportDialog({ open: true, report: null })}>
                 <Plus className="h-4 w-4 mr-1" /> Novo
               </Button>
             </CardHeader>
             <CardContent>
               {reports.length === 0 ? (
-                <p className="text-center text-slate-400 py-8">Nenhum laudo encontrado.</p>
+                <p className="text-center text-slate-300 py-8">Nenhum laudo encontrado.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Tipo</TableHead>
-                        <TableHead>Data</TableHead>
-                        <TableHead className="min-w-[300px]">Interpretação</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
+                        <TableHead className="text-slate-200">Tipo</TableHead>
+                        <TableHead className="text-slate-200">Data</TableHead>
+                        <TableHead className="text-slate-200 min-w-[300px]">
+                          Interpretação
+                        </TableHead>
+                        <TableHead className="text-slate-200 text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {reports.map((r) => (
                         <TableRow key={r.id}>
-                          <TableCell className="text-sm font-medium text-slate-700">
+                          <TableCell className="text-sm font-semibold text-white">
                             {r.session_type}
                           </TableCell>
-                          <TableCell className="text-sm text-slate-600">
+                          <TableCell className="text-sm text-slate-300">
                             {r.session_date
                               ? new Date(r.session_date).toLocaleDateString('pt-BR')
                               : '-'}
                           </TableCell>
-                          <TableCell className="text-sm text-slate-600 max-w-xl whitespace-normal break-words">
+                          <TableCell className="text-sm text-slate-300 max-w-xl whitespace-normal break-words">
                             {r.admin_edited_interpretation || r.comments || '-'}
                           </TableCell>
                           <TableCell>
@@ -347,7 +349,7 @@ export default function AdminPainel() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                                  className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-950"
                                   onClick={() => setReportView(r)}
                                 >
                                   <Eye className="h-4 w-4" />
