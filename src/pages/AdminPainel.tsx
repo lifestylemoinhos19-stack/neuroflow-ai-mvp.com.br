@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, type ReactNode } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -21,21 +21,36 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, Users, FlaskConical, FileText, ShieldAlert, Plus, Pencil } from 'lucide-react'
+import { Trash2, Users, FlaskConical, FileText, ShieldAlert, Plus, Pencil, Eye } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { toast } from 'sonner'
 import { getAdminPatients, deletePatientData, type AdminPatient } from '@/services/admin-painel'
-import { getAdminTests, deleteTestData, type AdminTest } from '@/services/admin-sessions'
+import {
+  getAdminTests,
+  deleteTestData,
+  translateStatus,
+  type AdminTest,
+} from '@/services/admin-sessions'
 import { getAdminReports, deleteReport, type AdminReport } from '@/services/admin-reports'
 import { PatientFormDialog } from '@/components/admin/patient-form-dialog'
 import { SessionFormDialog } from '@/components/admin/session-form-dialog'
 import { ReportFormDialog } from '@/components/admin/report-form-dialog'
+import { ReportViewDialog } from '@/components/admin/report-view-dialog'
 
 type DeleteTarget = { type: 'patient' | 'session' | 'report'; id: string; name: string } | null
 
-function ActionButtons({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+function ActionButtons({
+  onEdit,
+  onDelete,
+  extra,
+}: {
+  onEdit: () => void
+  onDelete: () => void
+  extra?: ReactNode
+}) {
   return (
     <div className="flex justify-end gap-1">
+      {extra}
       <Button
         variant="ghost"
         size="icon"
@@ -74,6 +89,7 @@ export default function AdminPainel() {
     open: false,
     report: null,
   })
+  const [reportView, setReportView] = useState<AdminReport | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null)
   const [deleting, setDeleting] = useState(false)
 
@@ -118,14 +134,14 @@ export default function AdminPainel() {
 
   if (loading)
     return (
-      <div className="space-y-4 max-w-5xl mx-auto">
+      <div className="space-y-4 max-w-7xl mx-auto">
         <Skeleton className="h-10 w-72" />
         <Skeleton className="h-64 w-full" />
       </div>
     )
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto">
       <div>
         <h1 className="text-2xl sm:text-3xl font-display font-bold text-slate-900 flex items-center gap-2">
           <ShieldAlert className="h-7 w-7 text-primary" /> Painel Admin
@@ -165,6 +181,9 @@ export default function AdminPainel() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Nome</TableHead>
+                        <TableHead>E-mail</TableHead>
+                        <TableHead>Telefone</TableHead>
+                        <TableHead>Nascimento</TableHead>
                         <TableHead className="text-center">Testes</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
@@ -172,10 +191,17 @@ export default function AdminPainel() {
                     <TableBody>
                       {patients.map((p) => (
                         <TableRow key={p.id}>
-                          <TableCell className="font-medium text-slate-700">
+                          <TableCell className="text-sm font-medium text-slate-700">
                             {p.first_name} {p.last_name}
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-sm text-slate-600">{p.email || '-'}</TableCell>
+                          <TableCell className="text-sm text-slate-600">{p.phone || '-'}</TableCell>
+                          <TableCell className="text-sm text-slate-600">
+                            {p.birth_date
+                              ? new Date(p.birth_date).toLocaleDateString('pt-BR')
+                              : '-'}
+                          </TableCell>
+                          <TableCell className="text-sm text-center">
                             <Badge variant="secondary">{p.evaluation_count}</Badge>
                           </TableCell>
                           <TableCell>
@@ -218,6 +244,8 @@ export default function AdminPainel() {
                       <TableRow>
                         <TableHead>Tipo</TableHead>
                         <TableHead>Paciente</TableHead>
+                        <TableHead>Data</TableHead>
+                        <TableHead className="text-center">Pontuação</TableHead>
                         <TableHead>Origem</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
@@ -226,8 +254,16 @@ export default function AdminPainel() {
                     <TableBody>
                       {tests.map((t) => (
                         <TableRow key={t.id}>
-                          <TableCell className="font-medium text-slate-700">{t.type}</TableCell>
-                          <TableCell className="text-slate-600">{t.patient_name}</TableCell>
+                          <TableCell className="text-sm font-medium text-slate-700">
+                            {t.type}
+                          </TableCell>
+                          <TableCell className="text-sm text-slate-600">{t.patient_name}</TableCell>
+                          <TableCell className="text-sm text-slate-600">
+                            {new Date(t.started_at).toLocaleDateString('pt-BR')}
+                          </TableCell>
+                          <TableCell className="text-sm text-center text-slate-600">
+                            {t.score !== null ? t.score : '-'}
+                          </TableCell>
                           <TableCell>
                             <Badge
                               variant="secondary"
@@ -240,7 +276,9 @@ export default function AdminPainel() {
                               {t.origin}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-slate-600 text-xs">{t.status}</TableCell>
+                          <TableCell className="text-sm text-slate-600">
+                            {translateStatus(t.status)}
+                          </TableCell>
                           <TableCell>
                             <ActionButtons
                               onEdit={() => setSessionDialog({ open: true, session: t })}
@@ -277,29 +315,43 @@ export default function AdminPainel() {
                       <TableRow>
                         <TableHead>Tipo</TableHead>
                         <TableHead>Data</TableHead>
-                        <TableHead>Interpretação</TableHead>
+                        <TableHead className="min-w-[300px]">Interpretação</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {reports.map((r) => (
                         <TableRow key={r.id}>
-                          <TableCell className="font-medium text-slate-700">
+                          <TableCell className="text-sm font-medium text-slate-700">
                             {r.session_type}
                           </TableCell>
-                          <TableCell className="text-slate-600 text-xs">
+                          <TableCell className="text-sm text-slate-600">
                             {r.session_date
                               ? new Date(r.session_date).toLocaleDateString('pt-BR')
                               : '-'}
                           </TableCell>
-                          <TableCell className="text-slate-600 text-xs max-w-xs truncate">
+                          <TableCell className="text-sm text-slate-600 max-w-xl whitespace-normal break-words">
                             {r.admin_edited_interpretation || r.comments || '-'}
                           </TableCell>
                           <TableCell>
                             <ActionButtons
                               onEdit={() => setReportDialog({ open: true, report: r })}
                               onDelete={() =>
-                                setDeleteTarget({ type: 'report', id: r.id, name: r.session_type })
+                                setDeleteTarget({
+                                  type: 'report',
+                                  id: r.id,
+                                  name: r.session_type,
+                                })
+                              }
+                              extra={
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                                  onClick={() => setReportView(r)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
                               }
                             />
                           </TableCell>
@@ -333,6 +385,11 @@ export default function AdminPainel() {
         report={reportDialog.report}
         sessions={tests}
         onSaved={loadData}
+      />
+      <ReportViewDialog
+        open={!!reportView}
+        onOpenChange={(o) => !o && setReportView(null)}
+        report={reportView}
       />
 
       <AlertDialog

@@ -8,6 +8,7 @@ export interface AdminTest {
   started_at: string
   status: string
   guest_id: string | null
+  score: number | null
 }
 
 export interface SessionFormData {
@@ -31,6 +32,22 @@ export const SCALE_TYPES = [
   'FAS',
   'FTDRS',
 ]
+
+export function translateStatus(status: string): string {
+  const normalized = status.toLowerCase().trim()
+  const map: Record<string, string> = {
+    completed: 'Concluído',
+    in_progress: 'Em Progresso',
+    'in-progress': 'Em Progresso',
+    reset: 'Resetado',
+    validated: 'Validado',
+    pending: 'Pendente',
+    active: 'Ativo',
+    cancelled: 'Cancelado',
+    canceled: 'Cancelado',
+  }
+  return map[normalized] || status
+}
 
 function metaOf(m: unknown): Record<string, unknown> | null {
   return m && typeof m === 'object' ? (m as Record<string, unknown>) : null
@@ -85,6 +102,27 @@ export async function getAdminTests(): Promise<AdminTest[]> {
     }
   }
 
+  const scoreMap: Record<string, number | null> = {}
+  if (data.length) {
+    const { data: responses } = await supabase
+      .from('anamnesis_responses')
+      .select('session_id, response_value')
+      .in(
+        'session_id',
+        data.map((s) => s.id),
+      )
+      .like('question_key', '%_total')
+    ;(responses || []).forEach((r) => {
+      const val = r.response_value
+      if (typeof val === 'number') {
+        scoreMap[r.session_id] = val
+      } else if (typeof val === 'string') {
+        const parsed = parseInt(val, 10)
+        if (!isNaN(parsed)) scoreMap[r.session_id] = parsed
+      }
+    })
+  }
+
   return data.map((s) => {
     const meta = metaOf(s.metadata)
     const gid = (meta?.guest_id as string) || profileMap[s.user_id ?? '']?.guest_id || null
@@ -104,6 +142,7 @@ export async function getAdminTests(): Promise<AdminTest[]> {
       started_at: s.started_at,
       status: s.status,
       guest_id: gid,
+      score: scoreMap[s.id] ?? null,
     }
   })
 }
