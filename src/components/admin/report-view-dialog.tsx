@@ -28,35 +28,36 @@ export function ReportViewDialog({ open, onOpenChange, report }: ReportViewDialo
           <div className="space-y-4">
             {report?.session_date && (
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Data</p>
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">Data</p>{' '}
                 <p className="text-sm text-slate-200">
                   {new Date(report.session_date).toLocaleDateString('pt-BR')}
                 </p>
               </div>
             )}
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+              <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">
                 Interpretação
               </p>
-              <p className="text-sm text-slate-200 whitespace-pre-wrap break-words">
+              <p className="text-sm text-slate-100 whitespace-pre-wrap break-words">
                 {report?.admin_edited_interpretation || report?.comments || 'Sem interpretação.'}
               </p>
             </div>
             {report?.system_suggestion && (
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">
                   Sugestão do Sistema
                 </p>
-                <p className="text-sm text-slate-200 whitespace-pre-wrap break-words">
+                <p className="text-sm text-slate-100 whitespace-pre-wrap break-words">
+                  {' '}
                   {report.system_suggestion}
                 </p>
               </div>
             )}
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+              <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">
                 Precisão
               </p>
-              <p className="text-sm text-slate-200">
+              <p className="text-sm text-slate-100">
                 {report?.is_accurate === true
                   ? 'Preciso'
                   : report?.is_accurate === false

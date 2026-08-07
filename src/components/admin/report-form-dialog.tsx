@@ -79,12 +79,14 @@ export function ReportFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-white">{report ? 'Editar Laudo' : 'Novo Laudo'}</DialogTitle>
+          <DialogTitle className="text-white font-bold">
+            {report ? 'Editar Laudo' : 'Novo Laudo'}
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
           {!report && (
             <div className="space-y-1">
-              <Label className="text-sm text-slate-200">Sessão *</Label>
+              <Label className="text-sm text-slate-100">Sessão *</Label>
               <Select value={sessionId} onValueChange={setSessionId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma sessão" />
@@ -101,7 +103,7 @@ export function ReportFormDialog({
             </div>
           )}
           <div className="space-y-1">
-            <Label className="text-sm text-slate-200">Interpretação Clínica *</Label>
+            <Label className="text-sm text-slate-100">Interpretação Clínica *</Label>
             <Textarea
               value={interpretation}
               onChange={(e) => setInterpretation(e.target.value)}

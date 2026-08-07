@@ -84,7 +84,7 @@ export function Mini500Summary({
     <div className="max-w-3xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[#E6F1FF]">Relatório MINI 5.0.0</h1>
-        <p className="text-sm text-[#E6F1FF]/60 mt-1">Entrevista concluída com sucesso.</p>
+        <p className="text-sm text-[#E6F1FF]/80 mt-1">Entrevista concluída com sucesso.</p>
       </div>
 
       {alerts.length > 0 && (
@@ -112,29 +112,29 @@ export function Mini500Summary({
         <h2 className="text-lg font-bold text-[#E6F1FF] mb-4">Dados do(a) Entrevistado(a)</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <div>
-            <span className="text-[#E6F1FF]/50">Nome: </span>
+            <span className="text-[#E6F1FF]/80">Nome: </span>
             <span className="text-[#E6F1FF] font-medium">{patientInfo.name}</span>
           </div>
           <div>
-            <span className="text-[#E6F1FF]/50">Protocolo: </span>
+            <span className="text-[#E6F1FF]/80">Protocolo: </span>
             <span className="text-[#E6F1FF] font-medium">{patientInfo.protocol || '—'}</span>
           </div>
           <div>
-            <span className="text-[#E6F1FF]/50">Entrevistador: </span>
+            <span className="text-[#E6F1FF]/80">Entrevistador: </span>
             <span className="text-[#E6F1FF] font-medium">{patientInfo.interviewerName || '—'}</span>
           </div>
           <div>
-            <span className="text-[#E6F1FF]/50">Data: </span>
+            <span className="text-[#E6F1FF]/80">Data: </span>
             <span className="text-[#E6F1FF] font-medium">{patientInfo.interviewDate || '—'}</span>
           </div>
           <div>
-            <span className="text-[#E6F1FF]/50 flex items-center gap-1">
+            <span className="text-[#E6F1FF]/80 flex items-center gap-1">
               <Clock className="h-3 w-3" /> Início:{' '}
             </span>
             <span className="text-[#E6F1FF] font-medium">{patientInfo.startTime || '—'}</span>
           </div>
           <div>
-            <span className="text-[#E6F1FF]/50">Duração: </span>
+            <span className="text-[#E6F1FF]/80">Duração: </span>
             <span className="text-[#00FFFF] font-medium">
               {calcDuration(patientInfo.startTime, patientInfo.endTime)}
             </span>
@@ -169,7 +169,7 @@ export function Mini500Summary({
             style={{ backgroundColor: '#112240', border: '1px solid #233554' }}
           >
             <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-            <p className="text-sm text-[#E6F1FF]/70">Nenhum módulo positivo identificado.</p>
+            <p className="text-sm text-[#E6F1FF]/80">Nenhum módulo positivo identificado.</p>
           </div>
         )}
       </div>
@@ -202,9 +202,9 @@ export function Mini500Summary({
                     {i.status}
                   </span>
                 </div>
-                <p className="text-sm text-[#E6F1FF]/70 mb-2">{i.interpretation}</p>
-                <p className="text-xs text-[#E6F1FF]/50">
-                  <strong className="text-[#00FFFF]/70">Conduta:</strong> {i.referral}
+                <p className="text-sm text-[#E6F1FF]/80 mb-2">{i.interpretation}</p>
+                <p className="text-xs text-[#E6F1FF]/80">
+                  <strong className="text-[#00FFFF]">Conduta:</strong> {i.referral}
                 </p>
               </div>
             ))}
@@ -225,7 +225,7 @@ export function Mini500Summary({
                 {r.isPositive ? (
                   <AlertTriangle className="h-4 w-4 text-[#00FFFF] shrink-0" />
                 ) : (
-                  <XCircle className="h-4 w-4 text-[#E6F1FF]/30 shrink-0" />
+                  <XCircle className="h-4 w-4 text-[#E6F1FF]/50 shrink-0" />
                 )}
                 <span className="text-sm text-[#E6F1FF]">
                   <span className="font-bold mr-1">{r.letter}</span> — {r.title}
@@ -235,19 +235,19 @@ export function Mini500Summary({
                 <span
                   className={cn(
                     'text-sm font-medium',
-                    r.isPositive ? 'text-[#00FFFF]' : 'text-[#E6F1FF]/40',
+                    r.isPositive ? 'text-[#00FFFF]' : 'text-[#E6F1FF]/80',
                   )}
                 >
                   {r.label}
                 </span>
-                {r.details && <p className="text-xs text-[#E6F1FF]/30 mt-0.5">{r.details}</p>}
+                {r.details && <p className="text-xs text-[#E6F1FF]/80 mt-0.5">{r.details}</p>}
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      <p className="text-xs text-yellow-400/70 italic mb-6">
+      <p className="text-xs text-yellow-400/80 italic mb-6">
         AVISO: Este instrumento é uma ferramenta de triagem e não substitui a avaliação clínica
         profissional.
       </p>

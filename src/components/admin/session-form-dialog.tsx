@@ -92,7 +92,7 @@ export function SessionFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-white">
+          <DialogTitle className="text-white font-bold">
             {session ? 'Editar Testagem' : 'Nova Testagem (Mock)'}
           </DialogTitle>
         </DialogHeader>
@@ -100,7 +100,7 @@ export function SessionFormDialog({
           {!session && (
             <>
               <div className="space-y-1">
-                <Label className="text-sm text-slate-200">Paciente *</Label>
+                <Label className="text-sm text-slate-100">Paciente *</Label>
                 <Select value={guestId} onValueChange={setGuestId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione" />
@@ -115,7 +115,7 @@ export function SessionFormDialog({
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-sm text-slate-200">Escala *</Label>
+                <Label className="text-sm text-slate-100">Escala *</Label>
                 <Select value={scaleType} onValueChange={setScaleType}>
                   <SelectTrigger>
                     <SelectValue />
@@ -133,11 +133,11 @@ export function SessionFormDialog({
           )}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-sm text-slate-200">Pontuação</Label>
+              <Label className="text-sm text-slate-100">Pontuação</Label>
               <Input type="number" value={score} onChange={(e) => setScore(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <Label className="text-sm text-slate-200">Status</Label>
+              <Label className="text-sm text-slate-100">Status</Label>
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger>
                   <SelectValue />

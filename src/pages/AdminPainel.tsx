@@ -54,7 +54,7 @@ function ActionButtons({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+        className="h-8 w-8 text-slate-300 hover:text-white hover:bg-slate-800"
         onClick={onEdit}
       >
         <Pencil className="h-4 w-4" />
@@ -127,8 +127,8 @@ export default function AdminPainel() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <ShieldAlert className="h-12 w-12 text-red-400" />
-        <p className="text-lg font-semibold text-white">Acesso Restrito</p>
-        <p className="text-sm text-slate-300">Você não tem permissão para acessar esta página.</p>
+        <p className="text-lg font-bold text-white">Acesso Restrito</p>
+        <p className="text-sm text-slate-200">Você não tem permissão para acessar esta página.</p>
       </div>
     )
 
@@ -146,7 +146,7 @@ export default function AdminPainel() {
         <h1 className="text-2xl sm:text-3xl font-display font-bold text-white flex items-center gap-2">
           <ShieldAlert className="h-7 w-7 text-primary" /> Painel Admin
         </h1>
-        <p className="text-slate-300">
+        <p className="text-slate-200">
           Gerencie pacientes, testagens e laudos diretamente do banco de dados.
         </p>
       </div>
@@ -167,36 +167,40 @@ export default function AdminPainel() {
         <TabsContent value="patients">
           <Card className="border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-base text-white">Pacientes Cadastrados</CardTitle>
+              <CardTitle className="text-base font-bold text-white">
+                Pacientes Cadastrados
+              </CardTitle>
               <Button size="sm" onClick={() => setPatientDialog({ open: true, patient: null })}>
                 <Plus className="h-4 w-4 mr-1" /> Novo
               </Button>
             </CardHeader>
             <CardContent>
               {patients.length === 0 ? (
-                <p className="text-center text-slate-300 py-8">Nenhum paciente encontrado.</p>
+                <p className="text-center text-slate-200 py-8">Nenhum paciente encontrado.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-slate-200">Nome</TableHead>
-                        <TableHead className="text-slate-200">E-mail</TableHead>
-                        <TableHead className="text-slate-200">Telefone</TableHead>
-                        <TableHead className="text-slate-200">Nascimento</TableHead>
-                        <TableHead className="text-slate-200 text-center">Testes</TableHead>
-                        <TableHead className="text-slate-200 text-right">Ações</TableHead>
+                        <TableHead className="text-white font-semibold">Nome</TableHead>
+                        <TableHead className="text-white font-semibold">E-mail</TableHead>
+                        <TableHead className="text-white font-semibold">Telefone</TableHead>
+                        <TableHead className="text-white font-semibold">Nascimento</TableHead>
+                        <TableHead className="text-white font-semibold text-center">
+                          Testes
+                        </TableHead>
+                        <TableHead className="text-white font-semibold text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {patients.map((p) => (
                         <TableRow key={p.id}>
-                          <TableCell className="text-sm font-semibold text-white">
+                          <TableCell className="text-sm font-bold text-white">
                             {p.first_name} {p.last_name}
                           </TableCell>
-                          <TableCell className="text-sm text-slate-300">{p.email || '-'}</TableCell>
-                          <TableCell className="text-sm text-slate-300">{p.phone || '-'}</TableCell>
-                          <TableCell className="text-sm text-slate-300">
+                          <TableCell className="text-sm text-slate-200">{p.email || '-'}</TableCell>
+                          <TableCell className="text-sm text-slate-200">{p.phone || '-'}</TableCell>
+                          <TableCell className="text-sm text-slate-200">
                             {p.birth_date
                               ? new Date(p.birth_date).toLocaleDateString('pt-BR')
                               : '-'}
@@ -229,39 +233,39 @@ export default function AdminPainel() {
         <TabsContent value="tests">
           <Card className="border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-base text-white">Sessões de Teste</CardTitle>
+              <CardTitle className="text-base font-bold text-white">Sessões de Teste</CardTitle>
               <Button size="sm" onClick={() => setSessionDialog({ open: true, session: null })}>
                 <Plus className="h-4 w-4 mr-1" /> Nova
               </Button>
             </CardHeader>
             <CardContent>
               {tests.length === 0 ? (
-                <p className="text-center text-slate-300 py-8">Nenhuma testagem encontrada.</p>
+                <p className="text-center text-slate-200 py-8">Nenhuma testagem encontrada.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-slate-200">Tipo</TableHead>
-                        <TableHead className="text-slate-200">Paciente</TableHead>
-                        <TableHead className="text-slate-200">Data</TableHead>
-                        <TableHead className="text-slate-200 text-center">Pontuação</TableHead>
-                        <TableHead className="text-slate-200">Origem</TableHead>
-                        <TableHead className="text-slate-200">Status</TableHead>
-                        <TableHead className="text-slate-200 text-right">Ações</TableHead>
+                        <TableHead className="text-white font-semibold">Tipo</TableHead>
+                        <TableHead className="text-white font-semibold">Paciente</TableHead>
+                        <TableHead className="text-white font-semibold">Data</TableHead>
+                        <TableHead className="text-white font-semibold text-center">
+                          Pontuação
+                        </TableHead>
+                        <TableHead className="text-white font-semibold">Origem</TableHead>
+                        <TableHead className="text-white font-semibold">Status</TableHead>
+                        <TableHead className="text-white font-semibold text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {tests.map((t) => (
                         <TableRow key={t.id}>
-                          <TableCell className="text-sm font-semibold text-white">
-                            {t.type}
-                          </TableCell>
-                          <TableCell className="text-sm text-slate-300">{t.patient_name}</TableCell>
-                          <TableCell className="text-sm text-slate-300">
+                          <TableCell className="text-sm font-bold text-white">{t.type}</TableCell>
+                          <TableCell className="text-sm text-slate-200">{t.patient_name}</TableCell>
+                          <TableCell className="text-sm text-slate-200">
                             {new Date(t.started_at).toLocaleDateString('pt-BR')}
                           </TableCell>
-                          <TableCell className="text-sm text-center text-slate-300">
+                          <TableCell className="text-sm text-center text-slate-200">
                             {t.score !== null ? t.score : '-'}
                           </TableCell>
                           <TableCell>
@@ -276,7 +280,7 @@ export default function AdminPainel() {
                               {t.origin}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-sm text-slate-300">
+                          <TableCell className="text-sm text-slate-200">
                             {translateStatus(t.status)}
                           </TableCell>
                           <TableCell>
@@ -300,39 +304,39 @@ export default function AdminPainel() {
         <TabsContent value="reports">
           <Card className="border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-base text-white">Laudos e Relatórios</CardTitle>
+              <CardTitle className="text-base font-bold text-white">Laudos e Relatórios</CardTitle>
               <Button size="sm" onClick={() => setReportDialog({ open: true, report: null })}>
                 <Plus className="h-4 w-4 mr-1" /> Novo
               </Button>
             </CardHeader>
             <CardContent>
               {reports.length === 0 ? (
-                <p className="text-center text-slate-300 py-8">Nenhum laudo encontrado.</p>
+                <p className="text-center text-slate-200 py-8">Nenhum laudo encontrado.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-slate-200">Tipo</TableHead>
-                        <TableHead className="text-slate-200">Data</TableHead>
-                        <TableHead className="text-slate-200 min-w-[300px]">
+                        <TableHead className="text-white font-semibold">Tipo</TableHead>
+                        <TableHead className="text-white font-semibold">Data</TableHead>
+                        <TableHead className="text-white font-semibold min-w-[300px]">
                           Interpretação
                         </TableHead>
-                        <TableHead className="text-slate-200 text-right">Ações</TableHead>
+                        <TableHead className="text-white font-semibold text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {reports.map((r) => (
                         <TableRow key={r.id}>
-                          <TableCell className="text-sm font-semibold text-white">
+                          <TableCell className="text-sm font-bold text-white">
                             {r.session_type}
                           </TableCell>
-                          <TableCell className="text-sm text-slate-300">
+                          <TableCell className="text-sm text-slate-200">
                             {r.session_date
                               ? new Date(r.session_date).toLocaleDateString('pt-BR')
                               : '-'}
                           </TableCell>
-                          <TableCell className="text-sm text-slate-300 max-w-xl whitespace-normal break-words">
+                          <TableCell className="text-sm text-slate-200 max-w-xl whitespace-normal break-words">
                             {r.admin_edited_interpretation || r.comments || '-'}
                           </TableCell>
                           <TableCell>

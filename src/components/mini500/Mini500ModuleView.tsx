@@ -87,7 +87,7 @@ function QuestionRow({
       style={cardStyle}
     >
       <p className="text-sm text-[#E6F1FF] mb-3">
-        {isFollowUp && <span className="text-[#00FFFF]/60 text-xs mr-1.5">↳ Seguimento:</span>}
+        {isFollowUp && <span className="text-[#00FFFF] text-xs mr-1.5">↳ Seguimento:</span>}
         {question.label}
       </p>
       <div className="flex gap-2">
@@ -97,7 +97,7 @@ function QuestionRow({
             'px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200',
             answer === 'Sim'
               ? 'bg-[#00FFFF] text-[#0A192F] shadow-[0_0_12px_rgba(0,255,255,0.3)]'
-              : 'border border-[#233554] text-[#E6F1FF]/60 hover:border-[#00FFFF]/40 hover:text-[#E6F1FF]',
+              : 'border border-[#233554] text-[#E6F1FF]/80 hover:border-[#00FFFF]/40 hover:text-[#E6F1FF]',
           )}
         >
           Sim
@@ -108,7 +108,7 @@ function QuestionRow({
             'px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200',
             answer === 'Não'
               ? 'bg-[#FF6B6B] text-white shadow-[0_0_12px_rgba(255,107,107,0.3)]'
-              : 'border border-[#233554] text-[#E6F1FF]/60 hover:border-[#FF6B6B]/40 hover:text-[#E6F1FF]',
+              : 'border border-[#233554] text-[#E6F1FF]/80 hover:border-[#FF6B6B]/40 hover:text-[#E6F1FF]',
           )}
         >
           Não
@@ -125,8 +125,8 @@ export function Mini500ModuleView({ module, answers, onAnswer }: Mini500ModuleVi
       <div className="flex items-baseline gap-3 mb-2">
         <span className="text-3xl font-bold text-[#00FFFF]">{module.letter}</span>
         <div>
-          <h2 className="text-lg font-semibold text-[#E6F1FF]">{module.title}</h2>
-          <p className="text-xs text-[#E6F1FF]/50 mt-0.5">{module.description}</p>
+          <h2 className="text-lg font-bold text-[#E6F1FF]">{module.title}</h2>
+          <p className="text-sm text-[#E6F1FF]/80 mt-0.5">{module.description}</p>
         </div>
       </div>
       {visibleQuestions.map((q, i) => {
@@ -135,7 +135,7 @@ export function Mini500ModuleView({ module, answers, onAnswer }: Mini500ModuleVi
         return (
           <div key={q.key}>
             {showGroupLabel && (
-              <p className="text-xs text-[#00FFFF]/70 font-medium uppercase tracking-wide mt-4 mb-1.5">
+              <p className="text-xs text-[#00FFFF] font-medium uppercase tracking-wide mt-4 mb-1.5">
                 {q.group}
               </p>
             )}

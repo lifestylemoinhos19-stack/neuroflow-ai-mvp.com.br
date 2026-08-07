@@ -42,11 +42,11 @@ export function Mini500PatientForm({ onSubmit, initialInfo }: Mini500PatientForm
       <div className="flex items-center gap-2 mb-6">
         <FileText className="h-6 w-6 text-[#00FFFF]" />
         <h1 className="text-2xl font-bold text-[#E6F1FF]">MINI 5.0.0</h1>
-        <span className="text-xs text-[#00FFFF]/60 bg-[#00FFFF]/10 px-2 py-0.5 rounded-full">
+        <span className="text-xs text-[#00FFFF] bg-[#00FFFF]/10 px-2 py-0.5 rounded-full">
           Nova versão
         </span>
       </div>
-      <p className="text-sm text-[#E6F1FF]/60 mb-6">
+      <p className="text-sm text-[#E6F1FF]/80 mb-6">
         Mini International Neuropsychiatric Interview — Versão Brasileira DSM-IV com critérios
         atualizados e pontuação ponderada para risco de suicídio.
       </p>
@@ -54,11 +54,11 @@ export function Mini500PatientForm({ onSubmit, initialInfo }: Mini500PatientForm
         className="p-6 rounded-2xl space-y-4"
         style={{ backgroundColor: '#112240', border: '1px solid #233554' }}
       >
-        <h2 className="text-lg font-semibold text-[#E6F1FF] mb-2">
+        <h2 className="text-lg font-bold text-[#E6F1FF] mb-2">
           Identificação do(a) Entrevistado(a)
         </h2>
         <div className="space-y-2">
-          <label className="text-sm text-[#E6F1FF]/70">Nome do(a) Entrevistado(a)</label>
+          <label className="text-sm text-[#E6F1FF]/80">Nome do(a) Entrevistado(a)</label>
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -67,7 +67,7 @@ export function Mini500PatientForm({ onSubmit, initialInfo }: Mini500PatientForm
           />
         </div>
         <div className="space-y-2">
-          <label className="text-sm text-[#E6F1FF]/70 flex items-center gap-1.5">
+          <label className="text-sm text-[#E6F1FF]/80 flex items-center gap-1.5">
             <User className="h-3.5 w-3.5" /> Nome do Entrevistador
           </label>
           <Input
@@ -78,7 +78,7 @@ export function Mini500PatientForm({ onSubmit, initialInfo }: Mini500PatientForm
           />
         </div>
         <div className="space-y-2">
-          <label className="text-sm text-[#E6F1FF]/70">Protocolo Nº</label>
+          <label className="text-sm text-[#E6F1FF]/80">Protocolo Nº</label>
           <Input
             value={protocol}
             onChange={(e) => setProtocol(e.target.value)}
@@ -88,7 +88,7 @@ export function Mini500PatientForm({ onSubmit, initialInfo }: Mini500PatientForm
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm text-[#E6F1FF]/70">Data da Entrevista</label>
+            <label className="text-sm text-[#E6F1FF]/80">Data da Entrevista</label>
             <input
               type="date"
               value={interviewDate}
@@ -97,7 +97,7 @@ export function Mini500PatientForm({ onSubmit, initialInfo }: Mini500PatientForm
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-[#E6F1FF]/70">Data de Nascimento</label>
+            <label className="text-sm text-[#E6F1FF]/80">Data de Nascimento</label>
             <input
               type="date"
               value={birthDate}
@@ -108,7 +108,7 @@ export function Mini500PatientForm({ onSubmit, initialInfo }: Mini500PatientForm
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm text-[#E6F1FF]/70 flex items-center gap-1.5">
+            <label className="text-sm text-[#E6F1FF]/80 flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" /> Hora do Início
             </label>
             <input
@@ -127,7 +127,7 @@ export function Mini500PatientForm({ onSubmit, initialInfo }: Mini500PatientForm
           Iniciar Entrevista <ArrowRight className="h-4 w-4 ml-2" />
         </Button>
       </div>
-      <p className="text-xs text-yellow-400/70 italic mt-4">
+      <p className="text-xs text-yellow-400/80 italic mt-4">
         AVISO: Este instrumento é uma ferramenta de triagem e não substitui a avaliação clínica
         profissional.
       </p>

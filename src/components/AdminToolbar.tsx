@@ -84,7 +84,7 @@ export function AdminToolbar() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="bg-[#0A192F] border-[#00FFFF]/20 overflow-y-auto">
           <SheetHeader>
-            <SheetTitle className="text-[#00FFFF] flex items-center gap-2">
+            <SheetTitle className="text-[#00FFFF] flex items-center gap-2 font-bold">
               <Shield className="h-5 w-5" /> Painel Administrativo
             </SheetTitle>
           </SheetHeader>
@@ -108,7 +108,7 @@ export function AdminToolbar() {
             </div>
 
             <div>
-              <h3 className="text-sm font-bold text-white/80 mb-2 flex items-center gap-2">
+              <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
                 <Clock className="h-3 w-3" /> Gerenciamento de Sessões
               </h3>
               {loading ? (
@@ -116,7 +116,7 @@ export function AdminToolbar() {
                   <Loader2 className="h-5 w-5 text-[#00FFFF] animate-spin" />
                 </div>
               ) : sessions.length === 0 ? (
-                <p className="text-sm text-white/40 text-center py-4">Nenhuma sessão encontrada.</p>
+                <p className="text-sm text-white/80 text-center py-4">Nenhuma sessão encontrada.</p>
               ) : (
                 <div className="space-y-2">
                   {sessions.map((s) => (
@@ -125,7 +125,7 @@ export function AdminToolbar() {
                       className="flex items-center justify-between bg-white/5 rounded-lg p-3 border border-white/10"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-white/60 flex items-center gap-1">
+                        <p className="text-xs text-white/80 flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {new Date(s.started_at).toLocaleDateString('pt-BR')}
                         </p>

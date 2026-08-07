@@ -37,7 +37,7 @@ export function AdminInterpretationWorkspace() {
   return (
     <Card className="border-slate-200 shadow-subtle">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
+        <CardTitle className="flex items-center gap-2 text-lg font-bold text-white">
           <Brain className="h-5 w-5 text-primary" />
           Interpretação Contextual Clínica
         </CardTitle>
@@ -66,13 +66,13 @@ export function AdminInterpretationWorkspace() {
 
           <TabsContent value="interpretation" className="space-y-4 mt-4">
             {loading ? (
-              <p className="text-sm text-slate-400">Carregando sessões...</p>
+              <p className="text-sm text-slate-200">Carregando sessões...</p>
             ) : sessions.length === 0 ? (
-              <p className="text-sm text-slate-400">Nenhuma sessão encontrada.</p>
+              <p className="text-sm text-slate-200">Nenhuma sessão encontrada.</p>
             ) : (
               <>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Selecionar Sessão</label>
+                  <label className="text-sm font-semibold text-white">Selecionar Sessão</label>
                   <Select value={selectedId} onValueChange={setSelectedId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Escolha uma sessão" />
