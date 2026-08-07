@@ -10,7 +10,7 @@ export function Mini500ProgressBar({ current, total }: Mini500ProgressBarProps) 
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center text-sm">
-        <span className="text-[#E6F1FF]/80 font-medium">
+        <span className="text-[#E6F1FF] font-medium">
           Módulo {current} de {total}
         </span>
         <span className={cn('text-[#00FFFF] font-bold tabular-nums')}>{percentage}%</span>

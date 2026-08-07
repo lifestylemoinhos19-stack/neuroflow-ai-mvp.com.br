@@ -46,7 +46,7 @@ export function Mini500PatientForm({ onSubmit, initialInfo }: Mini500PatientForm
           Nova versão
         </span>
       </div>
-      <p className="text-sm text-[#E6F1FF]/80 mb-6">
+      <p className="text-sm text-[#E6F1FF] mb-6">
         Mini International Neuropsychiatric Interview — Versão Brasileira DSM-IV com critérios
         atualizados e pontuação ponderada para risco de suicídio.
       </p>

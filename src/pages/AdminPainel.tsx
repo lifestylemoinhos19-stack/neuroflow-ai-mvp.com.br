@@ -128,7 +128,7 @@ export default function AdminPainel() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <ShieldAlert className="h-12 w-12 text-red-400" />
         <p className="text-lg font-bold text-white">Acesso Restrito</p>
-        <p className="text-sm text-slate-200">Você não tem permissão para acessar esta página.</p>
+        <p className="text-sm text-white/80">Você não tem permissão para acessar esta página.</p>
       </div>
     )
 
@@ -146,7 +146,7 @@ export default function AdminPainel() {
         <h1 className="text-2xl sm:text-3xl font-display font-bold text-white flex items-center gap-2">
           <ShieldAlert className="h-7 w-7 text-primary" /> Painel Admin
         </h1>
-        <p className="text-slate-200">
+        <p className="text-white/80">
           Gerencie pacientes, testagens e laudos diretamente do banco de dados.
         </p>
       </div>
@@ -176,7 +176,7 @@ export default function AdminPainel() {
             </CardHeader>
             <CardContent>
               {patients.length === 0 ? (
-                <p className="text-center text-slate-200 py-8">Nenhum paciente encontrado.</p>
+                <p className="text-center text-white/80 py-8">Nenhum paciente encontrado.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
@@ -198,9 +198,9 @@ export default function AdminPainel() {
                           <TableCell className="text-sm font-bold text-white">
                             {p.first_name} {p.last_name}
                           </TableCell>
-                          <TableCell className="text-sm text-slate-200">{p.email || '-'}</TableCell>
-                          <TableCell className="text-sm text-slate-200">{p.phone || '-'}</TableCell>
-                          <TableCell className="text-sm text-slate-200">
+                          <TableCell className="text-sm text-white/80">{p.email || '-'}</TableCell>
+                          <TableCell className="text-sm text-white/80">{p.phone || '-'}</TableCell>
+                          <TableCell className="text-sm text-white/80">
                             {p.birth_date
                               ? new Date(p.birth_date).toLocaleDateString('pt-BR')
                               : '-'}
@@ -240,7 +240,7 @@ export default function AdminPainel() {
             </CardHeader>
             <CardContent>
               {tests.length === 0 ? (
-                <p className="text-center text-slate-200 py-8">Nenhuma testagem encontrada.</p>
+                <p className="text-center text-white/80 py-8">Nenhuma testagem encontrada.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
@@ -261,11 +261,11 @@ export default function AdminPainel() {
                       {tests.map((t) => (
                         <TableRow key={t.id}>
                           <TableCell className="text-sm font-bold text-white">{t.type}</TableCell>
-                          <TableCell className="text-sm text-slate-200">{t.patient_name}</TableCell>
-                          <TableCell className="text-sm text-slate-200">
+                          <TableCell className="text-sm text-white/80">{t.patient_name}</TableCell>
+                          <TableCell className="text-sm text-white/80">
                             {new Date(t.started_at).toLocaleDateString('pt-BR')}
                           </TableCell>
-                          <TableCell className="text-sm text-center text-slate-200">
+                          <TableCell className="text-sm text-center text-white/80">
                             {t.score !== null ? t.score : '-'}
                           </TableCell>
                           <TableCell>
@@ -311,7 +311,7 @@ export default function AdminPainel() {
             </CardHeader>
             <CardContent>
               {reports.length === 0 ? (
-                <p className="text-center text-slate-200 py-8">Nenhum laudo encontrado.</p>
+                <p className="text-center text-white/80 py-8">Nenhum laudo encontrado.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
@@ -331,12 +331,12 @@ export default function AdminPainel() {
                           <TableCell className="text-sm font-bold text-white">
                             {r.session_type}
                           </TableCell>
-                          <TableCell className="text-sm text-slate-200">
+                          <TableCell className="text-sm text-white/80">
                             {r.session_date
                               ? new Date(r.session_date).toLocaleDateString('pt-BR')
                               : '-'}
                           </TableCell>
-                          <TableCell className="text-sm text-slate-200 max-w-xl whitespace-normal break-words">
+                          <TableCell className="text-sm text-white/80 max-w-xl whitespace-normal break-words">
                             {r.admin_edited_interpretation || r.comments || '-'}
                           </TableCell>
                           <TableCell>

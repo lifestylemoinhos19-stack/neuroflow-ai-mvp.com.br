@@ -125,8 +125,8 @@ export function Mini500ModuleView({ module, answers, onAnswer }: Mini500ModuleVi
       <div className="flex items-baseline gap-3 mb-2">
         <span className="text-3xl font-bold text-[#00FFFF]">{module.letter}</span>
         <div>
-          <h2 className="text-lg font-bold text-[#E6F1FF]">{module.title}</h2>
-          <p className="text-sm text-[#E6F1FF]/80 mt-0.5">{module.description}</p>
+          <h2 className="text-lg font-bold text-white">{module.title}</h2>
+          <p className="text-sm text-[#E6F1FF] mt-0.5">{module.description}</p>
         </div>
       </div>
       {visibleQuestions.map((q, i) => {

@@ -65,7 +65,7 @@ export default function Scales() {
     return (
       <div className="min-h-[calc(100vh-8rem)] bg-[#0A192F] rounded-2xl p-6 flex flex-col items-center justify-center gap-4">
         <Loader2 className="h-8 w-8 text-[#00FFFF] animate-spin" />
-        <p className="text-white/60 text-sm">Carregando questões...</p>
+        <p className="text-white/80 text-sm">Carregando questões...</p>
       </div>
     )
   }
@@ -90,7 +90,7 @@ export default function Scales() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-white">Escalas Clínicas</h1>
-          <p className="text-white/50 text-sm">
+          <p className="text-white/80 text-sm">
             Avaliações especializadas para triagem neurológica.
           </p>
         </div>
@@ -112,7 +112,7 @@ export default function Scales() {
 
       <div className="rounded-xl border border-[#00FFFF]/20 bg-[#00FFFF]/5 p-3 flex items-start gap-2">
         <ClipboardCheck className="h-4 w-4 text-[#00FFFF] shrink-0 mt-0.5" />
-        <p className="text-xs text-white/70">
+        <p className="text-xs text-white/80">
           Cada escala cria uma sessão independente. Responda todas as perguntas e clique em{' '}
           <strong className="text-[#00FFFF]">Salvar & Continuar</strong>.
         </p>
@@ -120,7 +120,7 @@ export default function Scales() {
 
       <div className="rounded-xl border border-white/10 bg-white/5 p-3 flex items-start gap-2">
         <Scale className="h-4 w-4 text-[#00FFFF] shrink-0 mt-0.5" />
-        <p className="text-xs text-white/60">{TELEMEDICINE_DISCLAIMER.text}</p>
+        <p className="text-xs text-white/80">{TELEMEDICINE_DISCLAIMER.text}</p>
       </div>
 
       <Tabs defaultValue="mchat" className="w-full">
@@ -144,7 +144,7 @@ export default function Scales() {
           <Card className="border-white/10 bg-white/5">
             <CardHeader>
               <CardTitle className="text-white">M-CHAT-R — Triagem para Autismo</CardTitle>
-              <CardDescription className="text-white/50">
+              <CardDescription className="text-white/80">
                 Modified Checklist for Autism in Toddlers. 20 questões.
               </CardDescription>
             </CardHeader>
@@ -157,7 +157,7 @@ export default function Scales() {
           <Card className="border-white/10 bg-white/5">
             <CardHeader>
               <CardTitle className="text-white">SNAP-IV — Avaliação de TDAH</CardTitle>
-              <CardDescription className="text-white/50">
+              <CardDescription className="text-white/80">
                 Swanson, Nolan, and Pelham Rating Scale. 18 questões.
               </CardDescription>
             </CardHeader>

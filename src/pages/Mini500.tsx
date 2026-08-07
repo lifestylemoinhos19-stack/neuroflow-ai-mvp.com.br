@@ -133,7 +133,11 @@ export default function Mini500() {
   }
 
   if (step === 'patient') {
-    return <Mini500PatientForm onSubmit={handleStart} initialInfo={patientInfo} />
+    return (
+      <div className="min-h-[calc(100vh-4rem)] bg-[#0A192F] px-4 py-8">
+        <Mini500PatientForm onSubmit={handleStart} initialInfo={patientInfo} />
+      </div>
+    )
   }
 
   if (step === 'summary') {
@@ -142,14 +146,16 @@ export default function Mini500() {
     const alerts = getCriticalAlerts(interpretations)
     const summary = generateSummaryText(results)
     return (
-      <Mini500Summary
-        patientInfo={patientInfo}
-        results={results}
-        interpretations={interpretations}
-        alerts={alerts}
-        summary={summary}
-        onRestart={handleRestart}
-      />
+      <div className="min-h-[calc(100vh-4rem)] bg-[#0A192F] px-4 py-8">
+        <Mini500Summary
+          patientInfo={patientInfo}
+          results={results}
+          interpretations={interpretations}
+          alerts={alerts}
+          summary={summary}
+          onRestart={handleRestart}
+        />
+      </div>
     )
   }
 
@@ -162,11 +168,11 @@ export default function Mini500() {
   ).length
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto min-h-[calc(100vh-4rem)] bg-[#0A192F] px-4 py-8">
       <div className="mb-4 sticky top-0 z-10 pt-2 pb-3 bg-[#0A192F]/95 backdrop-blur-sm">
         <Mini500ProgressBar current={currentModule + 1} total={TOTAL_MODULES} />
         {visibleCount > 0 && (
-          <p className="text-xs text-[#E6F1FF]/80 mt-1.5">
+          <p className="text-xs text-[#E6F1FF] mt-1.5">
             {answeredCount}/{visibleCount} perguntas respondidas neste módulo
           </p>
         )}
