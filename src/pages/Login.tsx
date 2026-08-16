@@ -25,7 +25,10 @@ export default function Login() {
   const [loginError, setLoginError] = useState<string | null>(null)
   const [emailError, setEmailError] = useState<string | null>(null)
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false)
-  const { signIn, signUp } = useAuth()
+  const [canResend, setCanResend] = useState(false)
+  const [resending, setResending] = useState(false)
+  const [resendMessage, setResendMessage] = useState<string | null>(null)
+  const { signIn, signUp, resendConfirmation } = useAuth()
   const { toast } = useToast()
   const hasGuestData =
     typeof window !== 'undefined' && !!localStorage.getItem('neuroflow_guest_token')
@@ -35,6 +38,8 @@ export default function Login() {
     setLoginError(null)
     setEmailError(null)
     setShowEmailConfirmation(false)
+    setCanResend(false)
+    setResendMessage(null)
 
     if (isSignUp) {
       if (password !== confirmPassword) {
@@ -65,7 +70,7 @@ export default function Login() {
           setShowEmailConfirmation(true)
           toast({
             title: 'Confirmação necessária',
-            description: 'Check your email for a confirmation link',
+            description: 'Verifique seu e-mail para o link de confirmação.',
           })
         } else {
           toast({ title: 'Conta criada!', description: 'Faça login para continuar.' })
@@ -77,6 +82,8 @@ export default function Login() {
         const { error } = await signIn(email, password)
         if (error) {
           setLoginError(error)
+          const lc = error.toLowerCase()
+          setCanResend(lc.includes('não confirmado') || lc.includes('not confirmed'))
           toast({ variant: 'destructive', title: 'Erro no login', description: error })
         } else {
           toast({
@@ -90,6 +97,25 @@ export default function Login() {
       toast({ variant: 'destructive', title: 'Erro', description: err.message })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleResendConfirmation = async () => {
+    if (!email) return
+    setResending(true)
+    setResendMessage(null)
+    try {
+      const { error } = await resendConfirmation(email)
+      if (error) {
+        setResendMessage(error)
+      } else {
+        setResendMessage(
+          'E-mail de confirmação reenviado! Verifique sua caixa de entrada e o spam.',
+        )
+        setCanResend(false)
+      }
+    } finally {
+      setResending(false)
     }
   }
 
@@ -122,13 +148,47 @@ export default function Login() {
                   <MailCheck className="h-5 w-5 text-[#00FFFF] shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-[#00FFFF]">
-                      Check your email for a confirmation link
+                      Verifique seu e-mail para o link de confirmação
                     </p>
                     <p className="text-xs text-white/85 mt-1">
                       Enviamos um link de confirmação para <strong>{email}</strong>. Clique no link
                       para ativar sua conta.
                     </p>
                   </div>
+                </div>
+              )}
+              {canResend && (
+                <div className="flex items-start gap-3 rounded-lg bg-amber-400/10 p-4 border border-amber-400/30 animate-fade-in">
+                  <MailCheck className="h-5 w-5 text-amber-300 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-amber-200">
+                      Não recebeu o e-mail de confirmação?
+                    </p>
+                    <p className="text-xs text-white/85 mt-1 mb-2">
+                      Podemos reenviar o link de ativação para <strong>{email}</strong>. O Supabase
+                      limita o envio a 4 e-mails/hora no plano gratuito.
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleResendConfirmation}
+                      disabled={resending || !email}
+                      className="bg-amber-400 text-slate-950 hover:bg-amber-400/90"
+                    >
+                      {resending ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <MailCheck className="h-4 w-4 mr-2" />
+                      )}
+                      Reenviar e-mail
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {resendMessage && (
+                <div className="flex items-start gap-3 rounded-lg bg-[#00FFFF]/10 p-3 border border-[#00FFFF]/30 animate-fade-in">
+                  <MailCheck className="h-5 w-5 text-[#00FFFF] shrink-0 mt-0.5" />
+                  <p className="text-sm text-[#00FFFF]">{resendMessage}</p>
                 </div>
               )}
               <div className="space-y-2">
@@ -242,6 +302,8 @@ export default function Login() {
                         setLoginError(null)
                         setEmailError(null)
                         setShowEmailConfirmation(false)
+                        setCanResend(false)
+                        setResendMessage(null)
                       }}
                       className="text-[#00FFFF] hover:underline font-medium inline-flex items-center"
                     >
@@ -258,6 +320,8 @@ export default function Login() {
                         setIsSignUp(true)
                         setLoginError(null)
                         setEmailError(null)
+                        setCanResend(false)
+                        setResendMessage(null)
                       }}
                       className="text-[#00FFFF] hover:underline font-medium inline-flex items-center"
                     >

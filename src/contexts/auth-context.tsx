@@ -31,6 +31,7 @@ interface AuthContextType {
   bleOnboardingCompleted: boolean
   pairedSensorId: string | null
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
+  resendConfirmation: (email: string) => Promise<{ error: string | null }>
   signUp: (
     email: string,
     password: string,
@@ -187,6 +188,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
     if (error) {
       const msg = error.message.toLowerCase()
+      if (
+        msg.includes('rate') ||
+        msg.includes('too many') ||
+        msg.includes('429') ||
+        msg.includes('security purposes') ||
+        msg.includes('seconds')
+      ) {
+        return {
+          error:
+            'Muitas tentativas em pouco tempo. O plano gratuito do Supabase limita o envio de e-mails (4/hora). Aguarde alguns minutos e tente novamente.',
+          needsEmailConfirmation: false,
+        }
+      }
       if (msg.includes('already') || msg.includes('registered')) {
         return { error: 'Este e-mail já está cadastrado.', needsEmailConfirmation: false }
       }
@@ -214,6 +228,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     return { error: null, needsEmailConfirmation: true }
+  }
+
+  const resendConfirmation = async (email: string) => {
+    const { error } = await supabase.auth.resend({ email, type: 'signup' })
+    if (error) {
+      const msg = error.message.toLowerCase()
+      if (
+        msg.includes('rate') ||
+        msg.includes('too many') ||
+        msg.includes('429') ||
+        msg.includes('security purposes') ||
+        msg.includes('seconds')
+      ) {
+        return { error: 'Aguarde alguns minutos antes de solicitar um novo e-mail.' }
+      }
+      return { error: error.message }
+    }
+    return { error: null }
   }
 
   const verifyMfa = async (code: string) => {
@@ -287,6 +319,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         bleOnboardingCompleted,
         pairedSensorId: onboarding?.paired_sensor_id ?? null,
         signIn,
+        resendConfirmation,
         signUp,
         verifyMfa,
         logout,
