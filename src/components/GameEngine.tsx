@@ -85,7 +85,7 @@ export function GameEngine({ controller, onExit, externalBpm, biometricConnected
           fill="currentColor"
         />
         <Diamond
-          className="absolute top-48 right-12 text-[#00FFFF]/60 h-3 w-3 animate-float"
+          className="absolute top-48 right-12 text-[#00FFFF]/80 h-3 w-3 animate-float"
           fill="currentColor"
           style={{ animationDuration: '6s' }}
         />
@@ -125,7 +125,7 @@ export function GameEngine({ controller, onExit, externalBpm, biometricConnected
               'rounded-full text-xs h-8',
               state.simulationMode === 'simulation'
                 ? 'bg-[#FFB347]/10 text-[#FFB347]'
-                : 'bg-white/5 text-white/50',
+                : 'bg-white/5 text-white/75',
             )}
             onClick={() => controller.toggleSimulation()}
           >
@@ -176,7 +176,7 @@ export function GameEngine({ controller, onExit, externalBpm, biometricConnected
                 }}
               />
               {isInRestZone && (
-                <p className="text-center text-xs text-white/50 mt-2 animate-fade-in">
+                <p className="text-center text-xs text-white/75 mt-2 animate-fade-in">
                   Zona de descanso — respire fundo
                 </p>
               )}
@@ -200,14 +200,14 @@ export function GameEngine({ controller, onExit, externalBpm, biometricConnected
         <div className="text-3xl font-medium text-[#00FFFF] mb-2 tabular-nums">
           {formatTime(session.timeLeft)}
         </div>
-        <div className="text-xs text-white/40 mb-4">
+        <div className="text-xs text-white/70 mb-4">
           {session.phase === 'focus' ? 'Tempo de Foco' : 'Tempo de Pausa'}
         </div>
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
-            className="h-14 w-14 rounded-full bg-white/5 border border-white/10 text-[#E6F1FF]/60 hover:bg-white/10"
+            className="h-14 w-14 rounded-full bg-white/5 border border-white/10 text-[#E6F1FF]/85 hover:bg-white/10"
             onClick={onExit}
           >
             <X className="h-6 w-6" />
@@ -229,7 +229,7 @@ export function GameEngine({ controller, onExit, externalBpm, biometricConnected
             </Button>
           )}
         </div>
-        <p className="text-[10px] text-white/30 mt-2">Sair</p>
+        <p className="text-[10px] text-white/70 mt-2">Sair</p>
       </footer>
 
       <EventLogOverlay events={state.events} />

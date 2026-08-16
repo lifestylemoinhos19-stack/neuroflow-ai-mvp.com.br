@@ -34,7 +34,7 @@ export default function ValidateDocument() {
       <PublicPageShell>
         <div className="flex flex-col items-center justify-center py-24">
           <Loader2 className="h-10 w-10 animate-spin text-[#00FFFF] mb-4" />
-          <p className="text-white/50 text-sm">Verificando autenticidade do documento...</p>
+          <p className="text-white/75 text-sm">Verificando autenticidade do documento...</p>
         </div>
       </PublicPageShell>
     )
@@ -47,7 +47,7 @@ export default function ValidateDocument() {
           <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-8 text-center animate-fade-in-up">
             <XCircle className="mx-auto h-16 w-16 text-red-400 mb-4" />
             <h1 className="text-2xl font-bold text-white mb-2">❌ Documento não localizado</h1>
-            <p className="text-white/60 mb-6">
+            <p className="text-white/85 mb-6">
               O protocolo informado não foi encontrado em nossa base de dados. Verifique se o código
               ou QR Code foi lido corretamente.
             </p>
@@ -56,11 +56,11 @@ export default function ValidateDocument() {
                 Para verificar a autenticidade deste documento, entre em contato com a clínica:
               </p>
               <div className="space-y-1.5">
-                <p className="text-sm text-white/60">📞 WhatsApp: 51 3282-6929</p>
-                <p className="text-sm text-white/60">
+                <p className="text-sm text-white/85">📞 WhatsApp: 51 3282-6929</p>
+                <p className="text-sm text-white/85">
                   📍 Ramiro Barcelos, 839, Moinhos de Vento, Porto Alegre/RS
                 </p>
-                <p className="text-sm text-white/60">🏥 Casa Branca Saúde</p>
+                <p className="text-sm text-white/85">🏥 Casa Branca Saúde</p>
               </div>
             </div>
           </div>
@@ -83,7 +83,7 @@ export default function ValidateDocument() {
         <div className="rounded-2xl border border-green-500/20 bg-green-500/5 p-8 text-center animate-fade-in-up">
           <ShieldCheck className="mx-auto h-16 w-16 text-green-400 mb-4" />
           <h1 className="text-2xl font-bold text-white mb-2">✅ Documento Autêntico</h1>
-          <p className="text-white/60">
+          <p className="text-white/85">
             Este documento foi emitido pelo NeuroFlow AI e sua autenticidade foi confirmada em nossa
             base de dados.
           </p>
@@ -96,7 +96,7 @@ export default function ValidateDocument() {
               <h2 className="text-lg font-semibold text-white">Profissional Responsável</h2>
             </div>
             <p className="text-white/90 font-medium">{result.clinician_name}</p>
-            <p className="text-white/50 text-sm mt-0.5">
+            <p className="text-white/75 text-sm mt-0.5">
               {result.clinician_crm} · {result.clinician_rqe}
             </p>
           </div>
@@ -108,19 +108,19 @@ export default function ValidateDocument() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div>
-                <span className="text-white/40">Data de assinatura</span>
+                <span className="text-white/70">Data de assinatura</span>
                 <p className="text-white/80">{dateStr}</p>
               </div>
               <div>
-                <span className="text-white/40">Horário</span>
+                <span className="text-white/70">Horário</span>
                 <p className="text-white/80">{timeStr}</p>
               </div>
               <div>
-                <span className="text-white/40">Protocolo</span>
+                <span className="text-white/70">Protocolo</span>
                 <p className="text-white/80 font-mono">#{protocolShort}</p>
               </div>
               <div>
-                <span className="text-white/40">Status</span>
+                <span className="text-white/70">Status</span>
                 <p className="text-white/80">
                   {result.status === 'completed' ? 'Concluído' : 'Em Progresso'}
                 </p>
@@ -136,7 +136,7 @@ export default function ValidateDocument() {
             <p className="text-white/80">
               Paciente: <span className="font-medium">{result.patient_initials || '—'}</span>
             </p>
-            <p className="text-white/30 text-xs mt-2">
+            <p className="text-white/70 text-xs mt-2">
               🔒 Informações protegidas conforme LGPD (Lei nº 13.709/2018). A identificação completa
               do paciente é restrita e preservada por questões de privacidade.
             </p>
@@ -148,7 +148,7 @@ export default function ValidateDocument() {
               <p className="text-sm text-white/80 font-medium">
                 Documento gerado pelo NeuroFlow AI
               </p>
-              <p className="text-xs text-white/40 mt-1">
+              <p className="text-xs text-white/70 mt-1">
                 Sistema de suporte à decisão clínica. A validação médica é obrigatória para
                 confirmação diagnóstica.
               </p>

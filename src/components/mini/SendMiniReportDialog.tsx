@@ -71,7 +71,7 @@ export function SendMiniReportDialog({ open, onOpenChange, sessionId }: SendMini
             <Mail className="h-5 w-5 text-[#00FFFF]" />
             Enviar Relatório por E-mail
           </DialogTitle>
-          <DialogDescription className="text-[#E6F1FF]/60">
+          <DialogDescription className="text-[#E6F1FF]/85">
             O relatório MINI 5.0.0 será enviado para o endereço de e-mail informado abaixo.
           </DialogDescription>
         </DialogHeader>
@@ -89,7 +89,7 @@ export function SendMiniReportDialog({ open, onOpenChange, sessionId }: SendMini
             className="bg-[#112240] border-[#233554] text-[#E6F1FF]"
           />
           {loadingEmail && (
-            <p className="text-xs text-[#E6F1FF]/40 mt-1 flex items-center gap-1">
+            <p className="text-xs text-[#E6F1FF]/70 mt-1 flex items-center gap-1">
               <Loader2 className="h-3 w-3 animate-spin" />
               Buscando e-mail do paciente...
             </p>

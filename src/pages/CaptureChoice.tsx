@@ -37,13 +37,13 @@ export default function CaptureChoice() {
       <div className="relative z-10 max-w-md w-full">
         <Link
           to="/welcome"
-          className="inline-flex items-center gap-1.5 text-sm text-white/50 hover:text-[#00FFFF] transition-colors mb-6"
+          className="inline-flex items-center gap-1.5 text-sm text-white/75 hover:text-[#00FFFF] transition-colors mb-6"
         >
           <ArrowLeft className="h-4 w-4" /> Voltar
         </Link>
 
         <h1 className="text-2xl font-bold mb-2">Escolha seu método</h1>
-        <p className="text-white/60 text-sm mb-8">
+        <p className="text-white/85 text-sm mb-8">
           Como você gostaria de monitorar seus batimentos durante a sessão?
         </p>
 
@@ -64,7 +64,7 @@ export default function CaptureChoice() {
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-sm">Usar Câmera</h3>
-              <p className="text-xs text-white/50 mt-0.5 leading-relaxed">
+              <p className="text-xs text-white/75 mt-0.5 leading-relaxed">
                 Detecta batimentos via análise facial. Recomendado para melhor experiência.
               </p>
             </div>
@@ -77,14 +77,14 @@ export default function CaptureChoice() {
           >
             <div className="h-14 w-14 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
               {selecting === 'skip' ? (
-                <Loader2 className="h-7 w-7 text-white/60 animate-spin" />
+                <Loader2 className="h-7 w-7 text-white/85 animate-spin" />
               ) : (
-                <SkipForward className="h-7 w-7 text-white/60" />
+                <SkipForward className="h-7 w-7 text-white/85" />
               )}
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-sm">Pular por enquanto</h3>
-              <p className="text-xs text-white/50 mt-0.5 leading-relaxed">
+              <p className="text-xs text-white/75 mt-0.5 leading-relaxed">
                 Continue no modo simulação. Você pode habilitar a câmera depois.
               </p>
             </div>

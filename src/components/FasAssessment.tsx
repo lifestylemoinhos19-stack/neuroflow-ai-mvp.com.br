@@ -91,7 +91,7 @@ export function FasAssessment() {
         <div className="p-6 rounded-xl border border-white/10 text-center" style={CARD_BG}>
           <Timer className="h-10 w-10 text-[#00FFFF] mx-auto mb-3" />
           <h2 className="text-white font-bold text-lg mb-2">Teste de Fluência Verbal FAS</h2>
-          <p className="text-sm text-white/60 leading-relaxed">
+          <p className="text-sm text-white/85 leading-relaxed">
             Você terá <strong className="text-[#00FFFF]">60 segundos</strong> para cada letra (F, A,
             S). Digite o máximo de palavras que conseguir, uma por linha. Não use nomes próprios,
             nomes de lugares ou variações da mesma palavra.
@@ -113,7 +113,7 @@ export function FasAssessment() {
       <div ref={topRef} className="space-y-4 animate-fade-in-up">
         <div className="text-center py-4 rounded-xl border border-white/10" style={CARD_BG}>
           <p className="text-4xl font-bold text-[#00FFFF]">{result.totalUnique}</p>
-          <p className="text-sm text-white/50 mt-1">Total de palavras válidas únicas</p>
+          <p className="text-sm text-white/75 mt-1">Total de palavras válidas únicas</p>
         </div>
         <div className="space-y-2">
           <h3 className="text-sm font-semibold text-white/80 flex items-center gap-2">
@@ -128,7 +128,7 @@ export function FasAssessment() {
               <span className="text-white font-bold text-lg">Letra {r.letter}</span>
               <div className="text-right">
                 <p className="text-[#00FFFF] font-bold text-xl">{r.uniqueValid}</p>
-                <p className="text-xs text-white/40">
+                <p className="text-xs text-white/70">
                   {r.validWords} válidas / {r.totalEntered} digitadas
                 </p>
               </div>
@@ -171,7 +171,7 @@ export function FasAssessment() {
                 ? 'bg-[#00FFFF]/20 border-[#00FFFF]/40 text-[#00FFFF]'
                 : i === letterIndex
                   ? 'bg-[#00FFFF] border-[#00FFFF] text-[#0A192F]'
-                  : 'border-white/10 text-white/30',
+                  : 'border-white/10 text-white/70',
             )}
           >
             {l}
@@ -179,7 +179,7 @@ export function FasAssessment() {
         ))}
       </div>
       <div className="text-center py-6 rounded-xl border border-white/10" style={CARD_BG}>
-        <p className="text-xs text-white/40 mb-1">Letra atual</p>
+        <p className="text-xs text-white/70 mb-1">Letra atual</p>
         <p className="text-6xl font-bold text-[#00FFFF] mb-2">{currentLetter}</p>
         <p className="text-3xl font-bold text-white">{timeLeft}s</p>
       </div>

@@ -165,7 +165,7 @@ export default function MiniInterview() {
       <div className="mb-4 sticky top-0 z-10 pt-2 pb-3 bg-[#0A192F]/95 backdrop-blur-sm">
         <MiniProgressBar current={currentModule + 1} total={TOTAL_MODULES} />
         {visibleCount > 0 && (
-          <p className="text-xs text-[#E6F1FF]/40 mt-1.5">
+          <p className="text-xs text-[#E6F1FF]/70 mt-1.5">
             {answeredCount}/{visibleCount} perguntas respondidas neste módulo
           </p>
         )}
@@ -185,7 +185,7 @@ export default function MiniInterview() {
         </Button>
 
         <div className="flex items-center gap-2">
-          {saving && <Loader2 className="h-4 w-4 text-[#00FFFF]/50 animate-spin" />}
+          {saving && <Loader2 className="h-4 w-4 text-[#00FFFF]/85 animate-spin" />}
           {isLast ? (
             <Button
               onClick={handleFinish}

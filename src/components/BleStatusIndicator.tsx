@@ -28,15 +28,15 @@ export function BleStatusIndicator({ state, className }: BleStatusIndicatorProps
         className={cn('flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5', className)}
       >
         <Bluetooth className="h-4 w-4 text-[#00FFFF] animate-pulse" />
-        <span className="text-xs font-medium text-white/50">Buscando</span>
+        <span className="text-xs font-medium text-white/75">Buscando</span>
       </div>
     )
   }
 
   return (
     <div className={cn('flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5', className)}>
-      <Bluetooth className="h-4 w-4 text-white/30" />
-      <span className="text-xs font-medium text-white/30">Offline</span>
+      <Bluetooth className="h-4 w-4 text-white/70" />
+      <span className="text-xs font-medium text-white/70">Offline</span>
     </div>
   )
 }

@@ -10,7 +10,7 @@ export function AssessmentProgress({ answered, total }: AssessmentProgressProps)
 
   return (
     <div className="space-y-1.5">
-      <div className="flex justify-between text-xs text-white/50">
+      <div className="flex justify-between text-xs text-white/75">
         <span>
           {answered}/{total} respondidas
         </span>

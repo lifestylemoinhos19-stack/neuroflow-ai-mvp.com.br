@@ -17,7 +17,7 @@ const stateConfig: Record<
   idle: {
     label: 'Desconectado',
     tooltip: 'Sensor não conectado.',
-    color: 'text-white/40',
+    color: 'text-white/70',
     icon: Bluetooth,
   },
   scanning: {

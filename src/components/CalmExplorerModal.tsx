@@ -35,7 +35,7 @@ export function CalmExplorerModal() {
               Quer testar o Explorador da Calma?
             </DialogTitle>
           </div>
-          <DialogDescription className="text-white/60 pt-3 leading-relaxed">
+          <DialogDescription className="text-white/85 pt-3 leading-relaxed">
             Jogo de biofeedback que ajuda seu filho a treinar foco e relaxamento de forma divertida.
             Ganhe cristais e explore um mundo calmo!
           </DialogDescription>

@@ -221,7 +221,7 @@ export function CameraOnboarding({ onComplete, onOpenFieldTest }: Props) {
       <div className="max-w-md w-full">
         <div className="text-center mb-6">
           <h1 className="text-xl font-bold tracking-tight text-[#E6F1FF]">NeuroFlow AI</h1>
-          <p className="text-xs text-[#00FFFF]/70 font-medium mt-1">
+          <p className="text-xs text-[#00FFFF]/85 font-medium mt-1">
             Onboarding · Calibração de Câmera
           </p>
           {!adapterRef.current.isAvailable && (
@@ -251,7 +251,7 @@ export function CameraOnboarding({ onComplete, onOpenFieldTest }: Props) {
                   ? `Reconnecting... (${retryAttempt}/${MAX_CAMERA_RETRIES})`
                   : 'Initializing camera...'}
               </p>
-              {autoRetrying && errorMsg && <p className="text-xs text-[#00FFFF]/60">{errorMsg}</p>}
+              {autoRetrying && errorMsg && <p className="text-xs text-[#00FFFF]/80">{errorMsg}</p>}
             </div>
           )}
 
@@ -261,7 +261,7 @@ export function CameraOnboarding({ onComplete, onOpenFieldTest }: Props) {
                 <ErrIcon className="h-8 w-8 text-red-400" />
               </div>
               <p className="text-sm font-medium text-[#E6F1FF]">{errConfig?.title}</p>
-              <p className="text-xs text-white/50 max-w-xs">{errorMsg || errConfig?.hint}</p>
+              <p className="text-xs text-white/75 max-w-xs">{errorMsg || errConfig?.hint}</p>
             </div>
           )}
 
@@ -289,7 +289,7 @@ export function CameraOnboarding({ onComplete, onOpenFieldTest }: Props) {
         {status === 'calibrating' && (
           <div className="mb-4 space-y-2">
             <Progress value={progress} className="h-2 bg-white/10" />
-            <p className="text-xs text-white/50 text-center">{secondsLeft}s restantes</p>
+            <p className="text-xs text-white/75 text-center">{secondsLeft}s restantes</p>
           </div>
         )}
 
@@ -322,7 +322,7 @@ export function CameraOnboarding({ onComplete, onOpenFieldTest }: Props) {
             <Button
               variant="ghost"
               onClick={handleSkip}
-              className="text-white/40 hover:text-[#00FFFF] text-xs"
+              className="text-white/70 hover:text-[#00FFFF] text-xs"
             >
               Pular (BPM: 72)
             </Button>
@@ -330,7 +330,7 @@ export function CameraOnboarding({ onComplete, onOpenFieldTest }: Props) {
               <Button
                 variant="ghost"
                 onClick={onOpenFieldTest}
-                className="text-white/40 hover:text-[#00FFFF] text-xs"
+                className="text-white/70 hover:text-[#00FFFF] text-xs"
               >
                 <FlaskConical className="h-3 w-3 mr-1" /> Field Test
               </Button>

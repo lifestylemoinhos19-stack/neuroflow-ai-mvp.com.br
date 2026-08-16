@@ -73,7 +73,7 @@ export default function FocusSession() {
             <h2 className="text-xl font-medium text-center mb-3">
               Bem-vindo ao Explorador da Calma
             </h2>
-            <p className="text-sm text-white/60 text-center mb-8 leading-relaxed">
+            <p className="text-sm text-white/85 text-center mb-8 leading-relaxed">
               Vamos guiá-lo na configuração da captura de batimentos cardíacos. Você pode usar a
               câmera do dispositivo ou um sensor Bluetooth.
             </p>
@@ -82,7 +82,7 @@ export default function FocusSession() {
                 <Check className="h-5 w-5 text-[#00FFFF] shrink-0 mt-0.5" />
                 <div>
                   <h3 className="font-medium text-sm">Captura por Câmera</h3>
-                  <p className="text-xs text-white/50 mt-1">
+                  <p className="text-xs text-white/75 mt-1">
                     Detecta batimentos via análise facial (rPPG) ou dedo sobre a câmera (PPG).
                   </p>
                 </div>
@@ -91,7 +91,7 @@ export default function FocusSession() {
                 <Bluetooth className="h-5 w-5 text-[#00FFFF] shrink-0 mt-0.5" />
                 <div>
                   <h3 className="font-medium text-sm">Sensor Bluetooth</h3>
-                  <p className="text-xs text-white/50 mt-1">
+                  <p className="text-xs text-white/75 mt-1">
                     Conecte um sensor de frequência cardíaca externo via Web Bluetooth.
                   </p>
                 </div>
@@ -109,7 +109,7 @@ export default function FocusSession() {
                 completeBleOnboarding()
                 setPhase('onboarding')
               }}
-              className="w-full text-center text-xs text-white/40 hover:text-white/60 mt-4 transition-colors"
+              className="w-full text-center text-xs text-white/70 hover:text-white/85 mt-4 transition-colors"
             >
               Pular tutorial
             </button>

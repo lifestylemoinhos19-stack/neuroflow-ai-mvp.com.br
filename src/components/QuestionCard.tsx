@@ -30,7 +30,7 @@ export function QuestionCard({
               'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
               selectedValue === opt.value
                 ? 'bg-[#00FFFF] text-[#0A192F] shadow-[0_0_8px_rgba(0,255,255,0.3)]'
-                : 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/10',
+                : 'bg-white/5 text-white/85 hover:bg-white/10 border border-white/10',
             )}
           >
             {opt.label}

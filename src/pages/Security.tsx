@@ -106,7 +106,7 @@ export default function Security() {
             <div className="flex items-center justify-between p-4 rounded-lg bg-[#0A192F] border border-[#00FFFF]/10">
               <div>
                 <p className="font-medium text-white">Consentimento de Tratamento de Dados</p>
-                <p className="text-sm text-white/50">
+                <p className="text-sm text-white/75">
                   Permite processamento dos seus dados para análise pela IA.
                 </p>
               </div>
@@ -114,7 +114,7 @@ export default function Security() {
             </div>
           ) : (
             <div className="p-4 rounded-lg bg-[#0A192F] border border-[#00FFFF]/10">
-              <p className="text-sm text-white/50">
+              <p className="text-sm text-white/75">
                 <Link to="/login" className="text-[#00FFFF] hover:underline">
                   Faça login
                 </Link>{' '}
@@ -144,7 +144,7 @@ export default function Security() {
           </ul>
           <div className="flex items-start gap-3 p-4 rounded-lg bg-[#FF5C5C]/5 border border-[#FF5C5C]/20">
             <AlertTriangle className="h-5 w-5 text-[#FF5C5C] shrink-0 mt-0.5" />
-            <p className="text-sm text-white/60">
+            <p className="text-sm text-white/85">
               Este sistema é uma ferramenta de apoio e NÃO substitui a avaliação médica para
               diagnóstico.
             </p>
@@ -164,7 +164,7 @@ export default function Security() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-white">MFA via App</p>
-                  <p className="text-sm text-white/50">Atualmente ativo e obrigatório.</p>
+                  <p className="text-sm text-white/75">Atualmente ativo e obrigatório.</p>
                 </div>
                 <Badge
                   variant="outline"
@@ -189,10 +189,10 @@ export default function Security() {
             <CardContent>
               <div className="flex items-center justify-between p-4 rounded-lg bg-[#0A192F] border border-[#00FFFF]/10">
                 <div className="flex items-center gap-3">
-                  <Laptop className="h-6 w-6 text-white/40" />
+                  <Laptop className="h-6 w-6 text-white/70" />
                   <div>
                     <p className="font-medium text-white">Navegador Web</p>
-                    <p className="text-xs text-white/50">Sessão atual</p>
+                    <p className="text-xs text-white/75">Sessão atual</p>
                   </div>
                 </div>
                 <Badge
@@ -223,10 +223,10 @@ export default function Security() {
       )}
 
       <div className="mt-10 pt-6 border-t border-[#00FFFF]/10 flex flex-wrap gap-4 text-sm">
-        <Link to="/terms" className="text-white/50 hover:text-[#00FFFF] transition-colors">
+        <Link to="/terms" className="text-white/75 hover:text-[#00FFFF] transition-colors">
           Termos de Uso
         </Link>
-        <Link to="/about" className="text-white/50 hover:text-[#00FFFF] transition-colors">
+        <Link to="/about" className="text-white/75 hover:text-[#00FFFF] transition-colors">
           Institucional
         </Link>
       </div>

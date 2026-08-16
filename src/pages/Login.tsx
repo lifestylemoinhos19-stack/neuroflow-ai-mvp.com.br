@@ -106,7 +106,7 @@ export default function Login() {
             <CardTitle className="text-2xl font-display font-bold text-white">
               NeuroFlow AI
             </CardTitle>
-            <CardDescription className="text-white/60">
+            <CardDescription className="text-white/85">
               {isSignUp ? 'Crie sua conta segura' : 'Acesse seu painel clínico seguro'}
             </CardDescription>
             {hasGuestData && !isSignUp && (
@@ -124,7 +124,7 @@ export default function Login() {
                     <p className="text-sm font-medium text-[#00FFFF]">
                       Check your email for a confirmation link
                     </p>
-                    <p className="text-xs text-white/60 mt-1">
+                    <p className="text-xs text-white/85 mt-1">
                       Enviamos um link de confirmação para <strong>{email}</strong>. Clique no link
                       para ativar sua conta.
                     </p>
@@ -146,7 +146,7 @@ export default function Login() {
                     setEmailError(null)
                     setLoginError(null)
                   }}
-                  className="bg-white/5 border-[#00FFFF]/40 text-[#E6F1FF] placeholder:text-white/40 focus-visible:border-[#00FFFF] focus-visible:ring-[#00FFFF]/30"
+                  className="bg-white/5 border-[#00FFFF]/40 text-[#E6F1FF] placeholder:text-white/70 focus-visible:border-[#00FFFF] focus-visible:ring-[#00FFFF]/30"
                 />
                 {emailError && (
                   <div className="flex items-center gap-2 text-red-400 text-sm animate-fade-in">
@@ -168,7 +168,7 @@ export default function Login() {
                     setPassword(e.target.value)
                     setLoginError(null)
                   }}
-                  className="bg-white/5 border-[#00FFFF]/40 text-[#E6F1FF] placeholder:text-white/40 focus-visible:border-[#00FFFF] focus-visible:ring-[#00FFFF]/30"
+                  className="bg-white/5 border-[#00FFFF]/40 text-[#E6F1FF] placeholder:text-white/70 focus-visible:border-[#00FFFF] focus-visible:ring-[#00FFFF]/30"
                 />
                 {loginError && (
                   <div className="flex items-center gap-2 text-red-400 text-sm animate-fade-in">
@@ -188,7 +188,7 @@ export default function Login() {
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="bg-white/5 border-[#00FFFF]/40 text-[#E6F1FF] placeholder:text-white/40 focus-visible:border-[#00FFFF] focus-visible:ring-[#00FFFF]/30"
+                    className="bg-white/5 border-[#00FFFF]/40 text-[#E6F1FF] placeholder:text-white/70 focus-visible:border-[#00FFFF] focus-visible:ring-[#00FFFF]/30"
                   />
                 </div>
               )}
@@ -210,7 +210,7 @@ export default function Login() {
                       Política de Privacidade (LGPD)
                     </a>
                   </Label>
-                  <p className="text-xs text-white/40 mt-0.5">
+                  <p className="text-xs text-white/70 mt-0.5">
                     Seus dados de saúde serão criptografados (AES-256) e tratados conforme a LGPD.
                   </p>
                 </div>
@@ -231,7 +231,7 @@ export default function Login() {
                 )}
                 {isSignUp ? 'Criar conta' : 'Entrar com segurança'}
               </Button>
-              <div className="text-center text-sm text-white/50">
+              <div className="text-center text-sm text-white/75">
                 {isSignUp ? (
                   <>
                     Já tem uma conta?{' '}

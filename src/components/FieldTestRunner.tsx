@@ -71,7 +71,7 @@ export function FieldTestRunner({ onClose }: Props) {
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="text-[#E6F1FF]/60 hover:text-[#E6F1FF]"
+            className="text-[#E6F1FF]/85 hover:text-[#E6F1FF]"
           >
             <X className="h-5 w-5" />
           </Button>
@@ -82,7 +82,7 @@ export function FieldTestRunner({ onClose }: Props) {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-[#E6F1FF]">Biofeedback Accuracy Test</CardTitle>
-                <CardDescription className="text-[#E6F1FF]/60">
+                <CardDescription className="text-[#E6F1FF]/85">
                   5 cenários · 30 amostras cada
                 </CardDescription>
               </div>
@@ -103,7 +103,7 @@ export function FieldTestRunner({ onClose }: Props) {
           <CardContent>
             {(running || progress > 0) && (
               <div className="space-y-2 mb-4">
-                <div className="flex justify-between text-sm text-[#E6F1FF]/60">
+                <div className="flex justify-between text-sm text-[#E6F1FF]/85">
                   <span>Progresso: {Math.round(progress)}%</span>
                 </div>
                 <Progress value={progress} className="h-2 bg-white/10" />
@@ -113,19 +113,19 @@ export function FieldTestRunner({ onClose }: Props) {
               <div className="grid grid-cols-3 gap-3">
                 <div className="rounded-lg border border-[#00FFFF]/20 bg-[#00FFFF]/5 p-3 text-center">
                   <p className="text-2xl font-bold text-[#00FFFF]">{results.length}</p>
-                  <p className="text-xs text-[#E6F1FF]/60">Cenários</p>
+                  <p className="text-xs text-[#E6F1FF]/85">Cenários</p>
                 </div>
                 <div className="rounded-lg border border-[#00FFFF]/20 bg-[#00FFFF]/5 p-3 text-center">
                   <p className="text-2xl font-bold text-[#00FFFF]">
                     {(results.reduce((a, r) => a + r.mae, 0) / results.length).toFixed(1)}
                   </p>
-                  <p className="text-xs text-[#E6F1FF]/60">MAE Médio</p>
+                  <p className="text-xs text-[#E6F1FF]/85">MAE Médio</p>
                 </div>
                 <div className="rounded-lg border border-[#00FFFF]/20 bg-[#00FFFF]/5 p-3 text-center">
                   <p className="text-2xl font-bold text-[#00FFFF]">
                     {(results.reduce((a, r) => a + r.rmse, 0) / results.length).toFixed(1)}
                   </p>
-                  <p className="text-xs text-[#E6F1FF]/60">RMSE Médio</p>
+                  <p className="text-xs text-[#E6F1FF]/85">RMSE Médio</p>
                 </div>
               </div>
             )}
@@ -157,15 +157,15 @@ export function FieldTestRunner({ onClose }: Props) {
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-xs">
                     <div>
-                      <span className="text-[#E6F1FF]/50">MAE: </span>
+                      <span className="text-[#E6F1FF]/75">MAE: </span>
                       <span className="text-[#E6F1FF] font-medium">{r.mae.toFixed(2)}</span>
                     </div>
                     <div>
-                      <span className="text-[#E6F1FF]/50">RMSE: </span>
+                      <span className="text-[#E6F1FF]/75">RMSE: </span>
                       <span className="text-[#E6F1FF] font-medium">{r.rmse.toFixed(2)}</span>
                     </div>
                     <div>
-                      <span className="text-[#E6F1FF]/50">Accuracy: </span>
+                      <span className="text-[#E6F1FF]/75">Accuracy: </span>
                       <span className="text-[#00FFFF] font-medium">{r.accuracy.toFixed(1)}%</span>
                     </div>
                   </div>
@@ -176,7 +176,7 @@ export function FieldTestRunner({ onClose }: Props) {
         )}
 
         {completed && (
-          <p className="text-xs text-[#E6F1FF]/40 text-center mt-4">
+          <p className="text-xs text-[#E6F1FF]/70 text-center mt-4">
             Resultados salvos em calibration_logs e logged no console.
           </p>
         )}

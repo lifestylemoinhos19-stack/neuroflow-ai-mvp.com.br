@@ -29,7 +29,7 @@ export function BreathingOverlay({ onClose }: { onClose: () => void }) {
         </div>
       </div>
       <div className="flex items-center gap-2 mb-6 max-w-xs text-center">
-        <Wind className="h-5 w-5 text-[#00FFFF]/70 shrink-0" />
+        <Wind className="h-5 w-5 text-[#00FFFF]/85 shrink-0" />
         <p className="text-white/70 text-sm">
           Você esteve agitado por um tempo. Respire fundo para recuperar o foco.
         </p>

@@ -147,10 +147,10 @@ export function PublicFocusExplorador({ guestId, onSave }: Props) {
             <Gamepad2 className="h-10 w-10 text-[#00FFFF]" />
           </div>
           <h1 className="text-2xl font-bold text-[#E6F1FF] mb-2">Explorador da Calma</h1>
-          <p className="text-sm text-[#00FFFF]/70 mb-2">
+          <p className="text-sm text-[#00FFFF]/85 mb-2">
             Sessão pública de foco e biofeedback — sem necessidade de login.
           </p>
-          <p className="text-xs text-white/50 mb-8 max-w-md mx-auto">
+          <p className="text-xs text-white/75 mb-8 max-w-md mx-auto">
             Você está no modo convidado. Seu progresso será salvo localmente neste dispositivo. Faça
             login para sincronizar suas sessões com a nuvem e ganhar cristais permanentes.
           </p>
@@ -189,7 +189,7 @@ export function PublicFocusExplorador({ guestId, onSave }: Props) {
             <Sparkles className="h-8 w-8 text-[#00FFFF]" />
           </div>
           <h1 className="text-xl font-bold text-[#E6F1FF] mb-2">Sessão Concluída!</h1>
-          <p className="text-sm text-[#00FFFF]/70 mb-6">
+          <p className="text-sm text-[#00FFFF]/85 mb-6">
             Você coletou {crystals + masterCrystals} cristais.
           </p>
           <div className="rounded-xl border border-[#00FFFF]/20 bg-[#00FFFF]/5 p-4 mb-6 text-left">
@@ -228,7 +228,7 @@ export function PublicFocusExplorador({ guestId, onSave }: Props) {
         <div className="flex items-center gap-2">
           <Diamond className="h-5 w-5 text-[#00FFFF]" fill="currentColor" />
           <span className="font-medium text-sm">Explorador da Calma</span>
-          <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/60">
+          <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/85">
             Modo Convidado
           </span>
         </div>
@@ -298,7 +298,7 @@ export function PublicFocusExplorador({ guestId, onSave }: Props) {
         <div className="text-3xl font-medium text-[#00FFFF] mb-2 tabular-nums">
           {formatTime(timeLeft)}
         </div>
-        <div className="text-xs text-white/40 mb-4">Tempo de Foco</div>
+        <div className="text-xs text-white/70 mb-4">Tempo de Foco</div>
         <Button
           size="icon"
           className="h-16 w-16 rounded-full bg-[#00FFFF] hover:bg-[#00FFFF]/90 text-[#0A192F] shadow-lg"

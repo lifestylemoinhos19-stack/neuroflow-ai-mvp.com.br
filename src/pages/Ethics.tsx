@@ -135,7 +135,7 @@ export default function Ethics() {
             <p className="text-sm font-medium text-white">
               {ethics?.title || 'Código de Ética do NeuroFlow AI'}
             </p>
-            <p className="text-xs text-white/60 mt-1 leading-relaxed">
+            <p className="text-xs text-white/85 mt-1 leading-relaxed">
               {TELEMEDICINE_DISCLAIMER.text}
             </p>
           </div>
@@ -154,7 +154,7 @@ export default function Ethics() {
             <CardTitle className="flex items-center gap-2 text-xl text-white">
               <Brain className="h-5 w-5 text-[#00FFFF]" /> Princípios Éticos Fundamentais
             </CardTitle>
-            <CardDescription className="text-white/50">
+            <CardDescription className="text-white/75">
               Estes princípios regem toda a operação do NeuroFlow AI.
             </CardDescription>
           </CardHeader>
@@ -195,7 +195,7 @@ export default function Ethics() {
             <Badge variant="outline" className="text-[#3DFFB0] border-[#3DFFB0]/30 bg-[#3DFFB0]/10">
               LGPD
             </Badge>
-            <p className="text-sm text-white/60">Conformidade com a Lei nº 13.709/2018</p>
+            <p className="text-sm text-white/85">Conformidade com a Lei nº 13.709/2018</p>
           </CardContent>
         </Card>
         <Card className="bg-white/5 border-[#00FFFF]/10">
@@ -203,7 +203,7 @@ export default function Ethics() {
             <Badge variant="outline" className="text-[#00FFFF] border-[#00FFFF]/30 bg-[#00FFFF]/10">
               CFM 2.314/2022
             </Badge>
-            <p className="text-sm text-white/60">Telemedicina conforme resolução do CFM</p>
+            <p className="text-sm text-white/85">Telemedicina conforme resolução do CFM</p>
           </CardContent>
         </Card>
       </div>

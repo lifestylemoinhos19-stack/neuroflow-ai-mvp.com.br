@@ -17,7 +17,7 @@ function ScoreCard({ label, value }: { label: string; value: number }) {
       style={{ backgroundColor: 'rgba(17, 34, 64, 0.85)' }}
     >
       <p className="text-4xl font-bold text-[#00FFFF]">{value}</p>
-      <p className="text-sm text-white/50 mt-1">{label}</p>
+      <p className="text-sm text-white/75 mt-1">{label}</p>
     </div>
   )
 }
@@ -46,7 +46,7 @@ export function SdsResult({ answers, totalSds, totalSherra, daysLost, onReset }:
             >
               <div className="flex-1 min-w-0">
                 <span className="text-xs text-[#00FFFF] font-medium">{q.label}</span>
-                <span className="block text-xs text-white/60 mt-0.5">{q.text}</span>
+                <span className="block text-xs text-white/85 mt-0.5">{q.text}</span>
                 <span className="block text-xs mt-0.5" style={{ color: level.color }}>
                   {level.label}
                 </span>

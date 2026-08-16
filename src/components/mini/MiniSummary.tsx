@@ -41,7 +41,7 @@ function StatusIcon({ isPositive }: { isPositive: boolean }) {
   return isPositive ? (
     <AlertTriangle className="h-4 w-4 text-[#00FFFF] shrink-0" />
   ) : (
-    <XCircle className="h-4 w-4 text-[#E6F1FF]/30 shrink-0" />
+    <XCircle className="h-4 w-4 text-[#E6F1FF]/70 shrink-0" />
   )
 }
 
@@ -85,7 +85,7 @@ export function MiniSummary({ patientInfo, results, onRestart, sessionId }: Mini
 
       <div className="mb-6 mini-print-hide">
         <h1 className="text-2xl font-bold text-[#E6F1FF]">Relatório MINI 5.0.0</h1>
-        <p className="text-sm text-[#E6F1FF]/60 mt-1">Entrevista concluída com sucesso.</p>
+        <p className="text-sm text-[#E6F1FF]/85 mt-1">Entrevista concluída com sucesso.</p>
       </div>
 
       <div
@@ -95,41 +95,41 @@ export function MiniSummary({ patientInfo, results, onRestart, sessionId }: Mini
         <h2 className="text-lg font-bold text-[#E6F1FF] mb-4">Dados do(a) Entrevistado(a)</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <div>
-            <span className="text-[#E6F1FF]/50">Nome: </span>
+            <span className="text-[#E6F1FF]/75">Nome: </span>
             <span className="text-[#E6F1FF] font-medium">{patientInfo.name}</span>
           </div>
           <div>
-            <span className="text-[#E6F1FF]/50">Protocolo: </span>
+            <span className="text-[#E6F1FF]/75">Protocolo: </span>
             <span className="text-[#E6F1FF] font-medium">{patientInfo.protocol || '—'}</span>
           </div>
           <div>
-            <span className="text-[#E6F1FF]/50">Entrevistador: </span>
+            <span className="text-[#E6F1FF]/75">Entrevistador: </span>
             <span className="text-[#E6F1FF] font-medium">{patientInfo.interviewerName || '—'}</span>
           </div>
           <div>
-            <span className="text-[#E6F1FF]/50">Data da Entrevista: </span>
+            <span className="text-[#E6F1FF]/75">Data da Entrevista: </span>
             <span className="text-[#E6F1FF] font-medium">{patientInfo.interviewDate || '—'}</span>
           </div>
           <div>
-            <span className="text-[#E6F1FF]/50">Data de Nascimento: </span>
+            <span className="text-[#E6F1FF]/75">Data de Nascimento: </span>
             <span className="text-[#E6F1FF] font-medium">{patientInfo.birthDate || '—'}</span>
           </div>
           <div>
-            <span className="text-[#E6F1FF]/50 flex items-center gap-1">
+            <span className="text-[#E6F1FF]/75 flex items-center gap-1">
               <Clock className="h-3 w-3" />
               Início:{' '}
             </span>
             <span className="text-[#E6F1FF] font-medium">{patientInfo.startTime || '—'}</span>
           </div>
           <div>
-            <span className="text-[#E6F1FF]/50 flex items-center gap-1">
+            <span className="text-[#E6F1FF]/75 flex items-center gap-1">
               <Clock className="h-3 w-3" />
               Fim:{' '}
             </span>
             <span className="text-[#E6F1FF] font-medium">{patientInfo.endTime || '—'}</span>
           </div>
           <div>
-            <span className="text-[#E6F1FF]/50">Duração: </span>
+            <span className="text-[#E6F1FF]/75">Duração: </span>
             <span className="text-[#00FFFF] font-medium">
               {patientInfo.startTime && patientInfo.endTime
                 ? calcDuration(patientInfo.startTime, patientInfo.endTime)
@@ -190,12 +190,12 @@ export function MiniSummary({ patientInfo, results, onRestart, sessionId }: Mini
                 <span
                   className={cn(
                     'text-sm font-medium',
-                    r.isPositive ? 'text-[#00FFFF]' : 'text-[#E6F1FF]/40',
+                    r.isPositive ? 'text-[#00FFFF]' : 'text-[#E6F1FF]/70',
                   )}
                 >
                   {r.label}
                 </span>
-                {r.details && <p className="text-xs text-[#E6F1FF]/30 mt-0.5">{r.details}</p>}
+                {r.details && <p className="text-xs text-[#E6F1FF]/70 mt-0.5">{r.details}</p>}
               </div>
             </div>
           ))}

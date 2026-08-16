@@ -44,7 +44,7 @@ export function MiniPatientForm({ onSubmit, initialInfo }: MiniPatientFormProps)
         <FileText className="h-6 w-6 text-[#00FFFF]" />
         <h1 className="text-2xl font-bold text-[#E6F1FF]">MINI 5.0.0</h1>
       </div>
-      <p className="text-sm text-[#E6F1FF]/60 mb-6">
+      <p className="text-sm text-[#E6F1FF]/85 mb-6">
         Mini International Neuropsychiatric Interview — Versão Brasileira DSM-IV. Entrevista
         estruturada para triagem de transtornos psiquiátricos.
       </p>

@@ -53,7 +53,7 @@ export default function OpticalOnboarding() {
       <div className="max-w-md w-full rounded-3xl bg-[#0A192F]/80 border border-[#00FFFF]/20 p-6 shadow-[0_0_40px_-10px_rgba(0,255,255,0.15)]">
         <header className="text-center mb-6">
           <h1 className="text-xl font-bold tracking-tight">NeuroFlow AI</h1>
-          <p className="text-[#00FFFF]/70 text-sm mt-1">Onboarding · Captura Óptica</p>
+          <p className="text-[#00FFFF]/85 text-sm mt-1">Onboarding · Captura Óptica</p>
         </header>
 
         <div className="flex gap-2 mb-6 bg-white/5 p-1 rounded-full">
@@ -61,7 +61,7 @@ export default function OpticalOnboarding() {
             onClick={() => capture.changeMode('rppg')}
             className={cn(
               'flex-1 px-4 py-2 rounded-full text-sm font-medium transition-all',
-              capture.mode === 'rppg' ? 'bg-[#00FFFF] text-[#0A192F]' : 'text-white/60',
+              capture.mode === 'rppg' ? 'bg-[#00FFFF] text-[#0A192F]' : 'text-white/85',
             )}
           >
             <User className="h-4 w-4 inline mr-1.5" /> Rosto (rPPG)
@@ -70,7 +70,7 @@ export default function OpticalOnboarding() {
             onClick={() => capture.changeMode('ppg')}
             className={cn(
               'flex-1 px-4 py-2 rounded-full text-sm font-medium transition-all',
-              capture.mode === 'ppg' ? 'bg-[#00FFFF] text-[#0A192F]' : 'text-white/60',
+              capture.mode === 'ppg' ? 'bg-[#00FFFF] text-[#0A192F]' : 'text-white/85',
             )}
           >
             <Fingerprint className="h-4 w-4 inline mr-1.5" /> Dedo (PPG)
@@ -92,9 +92,9 @@ export default function OpticalOnboarding() {
 
           {capture.phase === 'intro' && (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-              <Camera className="h-12 w-12 text-[#00FFFF]/40 mb-4" />
+              <Camera className="h-12 w-12 text-[#00FFFF]/85 mb-4" />
               <h2 className="text-lg font-medium mb-3">Vamos medir seus batimentos sem sensores</h2>
-              <p className="text-xs text-white/60 mb-4">
+              <p className="text-xs text-white/85 mb-4">
                 A tecnologia rPPG (fotopletismografia remota) analisa variações de cor no rosto para
                 estimar batimentos cardíacos.
               </p>
@@ -126,7 +126,7 @@ export default function OpticalOnboarding() {
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0A192F]/90 gap-3">
               <Check className="h-12 w-12 text-[#00FFFF]" />
               <p className="text-[#00FFFF] font-medium">Calibração concluída!</p>
-              {capture.bpm && <p className="text-white/60 text-sm">BPM detectado: {capture.bpm}</p>}
+              {capture.bpm && <p className="text-white/85 text-sm">BPM detectado: {capture.bpm}</p>}
             </div>
           )}
 
@@ -172,7 +172,7 @@ export default function OpticalOnboarding() {
               <span className="text-[#00FFFF] font-medium tabular-nums">
                 {capture.countdown}s restantes
               </span>
-              {capture.bpm && <span className="text-white/60">{capture.bpm} BPM</span>}
+              {capture.bpm && <span className="text-white/85">{capture.bpm} BPM</span>}
             </div>
           </div>
         )}
@@ -196,7 +196,7 @@ export default function OpticalOnboarding() {
                     })
                   }, 500)
                 }}
-                className="text-xs text-white/40 hover:text-[#00FFFF] underline transition-colors mt-2"
+                className="text-xs text-white/70 hover:text-[#00FFFF] underline transition-colors mt-2"
               >
                 Pular calibração (BPM padrão: 72)
               </button>
@@ -213,7 +213,7 @@ export default function OpticalOnboarding() {
                 Iniciar Medição
               </Button>
             ) : (
-              <p className="text-xs text-white/50 text-center py-2">
+              <p className="text-xs text-white/75 text-center py-2">
                 {capture.mode === 'rppg'
                   ? 'Posicione seu rosto no círculo'
                   : 'Cubra a câmera com o dedo'}{' '}

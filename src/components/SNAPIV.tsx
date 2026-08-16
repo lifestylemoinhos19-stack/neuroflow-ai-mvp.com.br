@@ -68,7 +68,7 @@ export function SNAPIV({ sessionId }: SNAPIVProps) {
     return (
       <div className="flex items-center justify-center py-8">
         <Loader2 className="h-5 w-5 text-[#00FFFF] animate-spin" />
-        <span className="ml-2 text-white/60 text-sm">Aguardando sessão...</span>
+        <span className="ml-2 text-white/85 text-sm">Aguardando sessão...</span>
       </div>
     )
   }
@@ -87,11 +87,11 @@ export function SNAPIV({ sessionId }: SNAPIVProps) {
         <div className="grid grid-cols-2 gap-3">
           <div className="text-center p-3 rounded-xl bg-white/5 border border-white/10">
             <p className="text-2xl font-bold text-[#00FFFF]">{inattentionAvg.toFixed(1)}</p>
-            <p className="text-xs text-white/50">Desatenção</p>
+            <p className="text-xs text-white/75">Desatenção</p>
           </div>
           <div className="text-center p-3 rounded-xl bg-white/5 border border-white/10">
             <p className="text-2xl font-bold text-[#00FFFF]">{hyperactivityAvg.toFixed(1)}</p>
-            <p className="text-xs text-white/50">Hiperatividade</p>
+            <p className="text-xs text-white/75">Hiperatividade</p>
           </div>
         </div>
         <div className={cn('p-4 rounded-xl border', riskColors[riskLevel])}>
@@ -119,8 +119,8 @@ export function SNAPIV({ sessionId }: SNAPIVProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-white/50">{answeredCount}/18 respondidas</span>
-        <span className="text-xs text-white/40">Corte: {SNAP_IV_CUTOFF}</span>
+        <span className="text-xs text-white/75">{answeredCount}/18 respondidas</span>
+        <span className="text-xs text-white/70">Corte: {SNAP_IV_CUTOFF}</span>
       </div>
       {snapivQuestions.map((q, i) => (
         <div key={q.key} className="p-3 rounded-xl bg-white/5 border border-white/10">
@@ -136,7 +136,7 @@ export function SNAPIV({ sessionId }: SNAPIVProps) {
                   'px-2.5 py-1 rounded-lg text-xs font-medium transition-all',
                   answers[q.key] === opt.value
                     ? 'bg-[#00FFFF] text-[#0A192F]'
-                    : 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/10',
+                    : 'bg-white/5 text-white/85 hover:bg-white/10 border border-white/10',
                 )}
               >
                 {opt.label}

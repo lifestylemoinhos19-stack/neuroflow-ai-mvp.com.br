@@ -47,7 +47,7 @@ export function AssessmentScoreChart({ scaleType, result }: Props) {
 
   return (
     <div className="mt-4">
-      <p className="text-xs text-white/50 mb-2 text-center">
+      <p className="text-xs text-white/75 mb-2 text-center">
         Gráfico de Pontuação vs Limiar Clínico
       </p>
       <ChartContainer config={chartConfig} className="h-[200px] w-full">

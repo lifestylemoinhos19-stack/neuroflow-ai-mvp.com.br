@@ -40,7 +40,7 @@ function ScaleGrid({
             'h-9 rounded-lg text-xs font-bold transition-all border',
             value === i
               ? 'bg-[#00FFFF] border-[#00FFFF] text-[#0A192F]'
-              : 'border-white/10 text-white/60 hover:bg-[rgba(0,255,255,0.08)] hover:border-[#00FFFF]/30',
+              : 'border-white/10 text-white/85 hover:bg-[rgba(0,255,255,0.08)] hover:border-[#00FFFF]/30',
           )}
         >
           {i}
@@ -149,7 +149,7 @@ export function SdsAssessment() {
           <div key={section.id} className="space-y-2">
             <div className="pt-2">
               <h2 className="text-sm font-bold text-[#00FFFF]">{section.title}</h2>
-              <p className="text-xs text-white/50">{section.description}</p>
+              <p className="text-xs text-white/75">{section.description}</p>
             </div>
             {sectionQuestions.map((q) => (
               <div
@@ -167,13 +167,13 @@ export function SdsAssessment() {
                   onSelect={handleAnswer}
                 />
                 {q.max === 10 && (
-                  <p className="text-xs text-white/30 mt-1.5 flex justify-between">
+                  <p className="text-xs text-white/70 mt-1.5 flex justify-between">
                     <span>0 = Nada prejudicou</span>
                     <span>10 = Extremamente prejudicou</span>
                   </p>
                 )}
                 {q.max === 7 && (
-                  <p className="text-xs text-white/30 mt-1.5 flex justify-between">
+                  <p className="text-xs text-white/70 mt-1.5 flex justify-between">
                     <span>0 = Nenhum dia</span>
                     <span>7 = Todos os dias</span>
                   </p>

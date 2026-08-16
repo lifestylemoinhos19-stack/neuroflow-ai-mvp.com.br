@@ -47,7 +47,7 @@ export class FocusSessionErrorBoundary extends Component<Props, State> {
             <Icon className="h-8 w-8 text-red-400" />
           </div>
           <h2 className="text-lg font-medium mb-2 text-[#E6F1FF]">{title}</h2>
-          <p className="text-sm text-white/60 mb-6 leading-relaxed">{hint}</p>
+          <p className="text-sm text-white/85 mb-6 leading-relaxed">{hint}</p>
           <Button
             onClick={this.handleRetry}
             className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/90 rounded-full"

@@ -119,11 +119,11 @@ export default function PublicAssessment() {
             <p className="text-[#00FFFF]/80 text-sm sm:text-base font-medium max-w-md mx-auto">
               Avaliação carinhosa para entender melhor o seu filho
             </p>
-            <p className="text-white/60 text-xs sm:text-sm max-w-md mx-auto">
+            <p className="text-white/85 text-xs sm:text-sm max-w-md mx-auto">
               Escalas clínicas de triagem para neurodesenvolvimento. Responda no conforto da sua
               casa, sem necessidade de cadastro ou sensores.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center text-xs text-white/50">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center text-xs text-white/75">
               <div className="flex items-center gap-1.5">
                 <Lock className="h-3.5 w-3.5 text-[#00FFFF]" />
                 <span>Sem login necessário</span>
@@ -152,10 +152,10 @@ export default function PublicAssessment() {
                         {opt.subtitle}
                       </span>
                     </div>
-                    <p className="text-sm text-white/60">{opt.description}</p>
+                    <p className="text-sm text-white/85">{opt.description}</p>
                   </div>
                   <div className="flex flex-col items-end gap-2 shrink-0">
-                    <div className="flex items-center gap-1 text-xs text-white/50">
+                    <div className="flex items-center gap-1 text-xs text-white/75">
                       <Clock className="h-3.5 w-3.5" />
                       <span>{opt.time}</span>
                     </div>
@@ -235,7 +235,7 @@ export default function PublicAssessment() {
           </TabsContent>
         </Tabs>
         <div className="mt-4 pt-4 border-t border-[#00FFFF]/10 text-center">
-          <p className="text-xs text-white/40 italic mb-4">
+          <p className="text-xs text-white/70 italic mb-4">
             Esta avaliação é um apoio educativo e não substitui uma consulta profissional.
           </p>
           <Button

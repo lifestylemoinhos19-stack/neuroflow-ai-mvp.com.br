@@ -52,7 +52,7 @@ export function MChatR({ sessionId }: MChatRProps) {
     return (
       <div className="flex items-center justify-center py-8">
         <Loader2 className="h-5 w-5 text-[#00FFFF] animate-spin" />
-        <span className="ml-2 text-white/60 text-sm">Aguardando sessão...</span>
+        <span className="ml-2 text-white/85 text-sm">Aguardando sessão...</span>
       </div>
     )
   }
@@ -69,7 +69,7 @@ export function MChatR({ sessionId }: MChatRProps) {
       <div className="space-y-4">
         <div className="text-center py-4">
           <p className="text-4xl font-bold text-[#00FFFF]">{score}</p>
-          <p className="text-sm text-white/50 mt-1">respostas de risco em 20 questões</p>
+          <p className="text-sm text-white/75 mt-1">respostas de risco em 20 questões</p>
         </div>
         <div className={cn('p-4 rounded-xl border', riskColors[riskLevel])}>
           <div className="flex items-center gap-2 mb-2">
@@ -81,7 +81,7 @@ export function MChatR({ sessionId }: MChatRProps) {
             <p className="font-semibold">{flowchart.flowchart.label}</p>
           </div>
           <p className="text-sm text-white/70">{flowchart.flowchart.action}</p>
-          <p className="text-xs text-white/50 mt-2">{flowchart.flowchart.nextStep}</p>
+          <p className="text-xs text-white/75 mt-2">{flowchart.flowchart.nextStep}</p>
         </div>
         <Button
           variant="outline"
@@ -97,7 +97,7 @@ export function MChatR({ sessionId }: MChatRProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-white/50">{answeredCount}/20 respondidas</span>
+        <span className="text-xs text-white/75">{answeredCount}/20 respondidas</span>
       </div>
       {mchatQuestions.map((q, i) => (
         <div key={q.key} className="p-3 rounded-xl bg-white/5 border border-white/10">

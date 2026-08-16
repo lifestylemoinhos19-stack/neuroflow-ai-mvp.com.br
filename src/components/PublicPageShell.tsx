@@ -26,7 +26,7 @@ export function PublicPageShell({ children }: { children: ReactNode }) {
               asChild
               variant="ghost"
               size="sm"
-              className="text-white/60 hover:text-[#00FFFF] hover:bg-white/5"
+              className="text-white/85 hover:text-[#00FFFF] hover:bg-white/5"
             >
               <Link to="/security">
                 <Shield className="h-4 w-4 mr-1.5" />
@@ -37,7 +37,7 @@ export function PublicPageShell({ children }: { children: ReactNode }) {
               asChild
               variant="ghost"
               size="sm"
-              className="text-white/60 hover:text-[#00FFFF] hover:bg-white/5"
+              className="text-white/85 hover:text-[#00FFFF] hover:bg-white/5"
             >
               <Link to="/about">
                 <Info className="h-4 w-4 mr-1.5" />
@@ -76,15 +76,15 @@ export function PublicPageShell({ children }: { children: ReactNode }) {
       </main>
       <footer className="border-t border-[#00FFFF]/10 px-6 py-6">
         <div className="mx-auto max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-sm text-white/40">NeuroFlow AI © 2026 — Conformidade LGPD</span>
+          <span className="text-sm text-white/70">NeuroFlow AI © 2026 — Conformidade LGPD</span>
           <div className="flex items-center gap-4 text-sm">
-            <Link to="/security" className="text-white/50 hover:text-[#00FFFF] transition-colors">
+            <Link to="/security" className="text-white/75 hover:text-[#00FFFF] transition-colors">
               Segurança
             </Link>
-            <Link to="/about" className="text-white/50 hover:text-[#00FFFF] transition-colors">
+            <Link to="/about" className="text-white/75 hover:text-[#00FFFF] transition-colors">
               Institucional
             </Link>
-            <Link to="/terms" className="text-white/50 hover:text-[#00FFFF] transition-colors">
+            <Link to="/terms" className="text-white/75 hover:text-[#00FFFF] transition-colors">
               Termos
             </Link>
           </div>

@@ -36,7 +36,7 @@ function ScoreInput({
             'h-8 w-8 rounded-lg text-xs font-bold transition-all border',
             value === i
               ? 'bg-[#00FFFF] border-[#00FFFF] text-[#0A192F]'
-              : 'border-white/10 text-white/60 hover:bg-[rgba(0,255,255,0.08)]',
+              : 'border-white/10 text-white/85 hover:bg-[rgba(0,255,255,0.08)]',
           )}
         >
           {i}
@@ -112,7 +112,7 @@ export function MocaAssessment() {
           <p className="text-4xl font-bold" style={{ color: severity.color }}>
             {totalScore}
           </p>
-          <p className="text-sm text-white/50 mt-1">Pontuação total (0-30)</p>
+          <p className="text-sm text-white/75 mt-1">Pontuação total (0-30)</p>
           <p className="text-lg font-semibold mt-2" style={{ color: severity.color }}>
             {severity.label}
           </p>
@@ -129,7 +129,7 @@ export function MocaAssessment() {
                 className="flex items-center justify-between p-2.5 rounded-lg border border-white/10"
                 style={CARD_BG}
               >
-                <span className="text-xs text-white/60">{d.title}</span>
+                <span className="text-xs text-white/85">{d.title}</span>
                 <span className="text-xs font-medium text-[#00FFFF]">
                   {getMocaDomainScore(d.id, scores)}/{d.maxScore}
                 </span>
@@ -159,7 +159,7 @@ export function MocaAssessment() {
           <div key={domain.id} className="space-y-2">
             <div className="pt-2">
               <h2 className="text-sm font-bold text-[#00FFFF]">{domain.title}</h2>
-              <p className="text-xs text-white/50">{domain.description}</p>
+              <p className="text-xs text-white/75">{domain.description}</p>
             </div>
             {domainItems.map((item) => (
               <div
@@ -170,7 +170,7 @@ export function MocaAssessment() {
                 <p className="text-white text-sm mb-3">
                   <span className="text-[#00FFFF] font-medium">{item.label}.</span> {item.text}
                   {!item.scored && (
-                    <span className="text-white/30 text-xs ml-2">(não pontuado)</span>
+                    <span className="text-white/70 text-xs ml-2">(não pontuado)</span>
                   )}
                 </p>
                 <ScoreInput

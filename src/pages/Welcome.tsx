@@ -30,7 +30,7 @@ export default function Welcome() {
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
             Neuro<span className="text-[#00FFFF]">Flow</span> AI
           </h1>
-          <p className="text-white/60 mt-3 text-sm sm:text-base max-w-md mx-auto">
+          <p className="text-white/85 mt-3 text-sm sm:text-base max-w-md mx-auto">
             Vamos conhecer seu filho?
           </p>
         </div>
@@ -69,13 +69,13 @@ export default function Welcome() {
             <>
               <Link
                 to="/evaluations/sds"
-                className="text-sm text-white/50 hover:text-[#00FFFF] transition-colors"
+                className="text-sm text-white/75 hover:text-[#00FFFF] transition-colors"
               >
                 Avaliação SDS →
               </Link>
               <Link
                 to="/dashboard"
-                className="text-sm text-white/50 hover:text-[#00FFFF] transition-colors"
+                className="text-sm text-white/75 hover:text-[#00FFFF] transition-colors"
               >
                 Ir para o painel →
               </Link>
@@ -84,7 +84,7 @@ export default function Welcome() {
           {isAdmin && (
             <Link
               to="/documentos"
-              className="text-sm text-[#00FFFF]/70 hover:text-[#00FFFF] transition-colors flex items-center gap-1"
+              className="text-sm text-[#00FFFF]/85 hover:text-[#00FFFF] transition-colors flex items-center gap-1"
             >
               <Shield className="h-3 w-3" /> Gerenciar Documentos →
             </Link>

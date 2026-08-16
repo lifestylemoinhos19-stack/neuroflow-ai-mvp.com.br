@@ -96,7 +96,7 @@ export function BleOnboardingTutorial({
         </div>
 
         <h2 className="text-xl font-medium text-center mb-3">{steps[step].title}</h2>
-        <p className="text-sm text-white/60 text-center mb-8 leading-relaxed">
+        <p className="text-sm text-white/85 text-center mb-8 leading-relaxed">
           {steps[step].description}
         </p>
 
@@ -135,7 +135,7 @@ export function BleOnboardingTutorial({
 
         <div className="flex gap-3 justify-center">
           {step > 0 && !isLastStep && (
-            <Button variant="ghost" onClick={() => setStep(step - 1)} className="text-white/60">
+            <Button variant="ghost" onClick={() => setStep(step - 1)} className="text-white/85">
               Voltar
             </Button>
           )}
@@ -179,7 +179,7 @@ export function BleOnboardingTutorial({
         {(step === 0 || isConnectStep) && (
           <button
             onClick={handleSkip}
-            className="w-full text-center text-xs text-white/40 hover:text-white/60 mt-6 transition-colors"
+            className="w-full text-center text-xs text-white/70 hover:text-white/85 mt-6 transition-colors"
           >
             {isConnectStep ? 'Continuar sem sensor' : 'Pular tutorial'}
           </button>

@@ -14,7 +14,7 @@ const statusConfig: Record<
   CameraStatus,
   { icon: typeof Camera; label: string; color: string; bgColor: string }
 > = {
-  idle: { icon: Camera, label: 'Câmera inativa', color: 'text-white/50', bgColor: 'bg-white/5' },
+  idle: { icon: Camera, label: 'Câmera inativa', color: 'text-white/75', bgColor: 'bg-white/5' },
   active: {
     icon: Video,
     label: 'Câmera ativa',
@@ -42,7 +42,7 @@ const statusConfig: Record<
   unsupported: {
     icon: CameraOff,
     label: 'Não suportado',
-    color: 'text-white/30',
+    color: 'text-white/70',
     bgColor: 'bg-white/5',
   },
 }
@@ -74,9 +74,9 @@ export function CameraStatusPanel({
         </div>
         <div className="min-w-0">
           <p className={cn('text-sm font-medium', config.color)}>{config.label}</p>
-          {error && <p className="text-xs text-white/50 mt-0.5 truncate">{error}</p>}
+          {error && <p className="text-xs text-white/75 mt-0.5 truncate">{error}</p>}
           {status === 'active' && (
-            <p className="text-xs text-[#00FFFF]/70 mt-0.5 flex items-center gap-1">
+            <p className="text-xs text-[#00FFFF]/85 mt-0.5 flex items-center gap-1">
               <Wifi className="h-3 w-3" /> Pronto para biofeedback
             </p>
           )}

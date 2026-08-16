@@ -27,12 +27,12 @@ export function EventLogOverlay({ events }: { events: GameEvent[] }) {
 
   return (
     <div className="absolute bottom-4 left-4 z-40 w-64 max-w-[60vw] bg-[#0A192F]/80 backdrop-blur-md rounded-xl border border-[#00FFFF]/10 p-3 max-h-48 overflow-y-auto">
-      <div className="text-[10px] font-medium text-[#00FFFF]/60 mb-2 uppercase tracking-wide">
+      <div className="text-[10px] font-medium text-[#00FFFF]/80 mb-2 uppercase tracking-wide">
         Log de Eventos
       </div>
       <div className="space-y-1">
         {recentEvents.length === 0 ? (
-          <div className="text-[10px] text-white/30">Aguardando eventos...</div>
+          <div className="text-[10px] text-white/70">Aguardando eventos...</div>
         ) : (
           recentEvents.map((e) => (
             <div
@@ -42,7 +42,7 @@ export function EventLogOverlay({ events }: { events: GameEvent[] }) {
                 eventBg[e.type],
               )}
             >
-              <span className="text-[9px] text-white/30 tabular-nums shrink-0 mt-0.5">
+              <span className="text-[9px] text-white/70 tabular-nums shrink-0 mt-0.5">
                 {formatTime(e.timestamp)}
               </span>
               <span className={cn('text-[10px] leading-tight', eventColors[e.type])}>

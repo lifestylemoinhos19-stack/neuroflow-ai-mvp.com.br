@@ -96,7 +96,7 @@ export function EnergyBar({ bpm, energy, stateLevel }: EnergyBarProps) {
               ? 'text-[#00FFFF]'
               : stateLevel === 'alert'
                 ? 'text-blue-400'
-                : 'text-white/40 animate-pulse',
+                : 'text-white/70 animate-pulse',
           )}
           style={{ animationDuration: `${60 / bpm}s` }}
         />

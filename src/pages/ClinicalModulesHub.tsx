@@ -79,7 +79,7 @@ export default function ClinicalModulesHub() {
             variant="ghost"
             size="icon"
             onClick={() => setSelectedModule(null)}
-            className="text-white/60 hover:text-white"
+            className="text-white/85 hover:text-white"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -88,7 +88,7 @@ export default function ClinicalModulesHub() {
           <h1 className="text-xl sm:text-2xl font-bold text-white">
             {module ? module.title : 'Módulos Clínicos'}
           </h1>
-          <p className="text-white/50 text-sm">
+          <p className="text-white/75 text-sm">
             {module
               ? module.description
               : 'Selecione uma categoria para visualizar as escalas disponíveis.'}
@@ -113,13 +113,13 @@ export default function ClinicalModulesHub() {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-white font-semibold">{m.title}</h3>
-                      <p className="text-white/40 text-xs mt-0.5">
+                      <p className="text-white/70 text-xs mt-0.5">
                         {m.scales.length} escalas disponíveis
                       </p>
                     </div>
-                    <ArrowRight className="h-5 w-5 text-white/20 group-hover:text-cyan-400 transition-colors" />
+                    <ArrowRight className="h-5 w-5 text-white/70 group-hover:text-cyan-400 transition-colors" />
                   </div>
-                  <p className="text-white/50 text-sm leading-relaxed">{m.description}</p>
+                  <p className="text-white/75 text-sm leading-relaxed">{m.description}</p>
                 </CardContent>
               </Card>
             )
@@ -137,19 +137,19 @@ export default function ClinicalModulesHub() {
                       {!scale.available && (
                         <Badge
                           variant="outline"
-                          className="border-white/20 text-white/40 text-[10px]"
+                          className="border-white/20 text-white/70 text-[10px]"
                         >
                           Em breve
                         </Badge>
                       )}
                     </div>
-                    <p className="text-white/50 text-sm leading-relaxed">{scale.purpose}</p>
+                    <p className="text-white/75 text-sm leading-relaxed">{scale.purpose}</p>
                     <div className="flex flex-wrap gap-4 pt-1">
-                      <span className="flex items-center gap-1.5 text-xs text-white/40">
+                      <span className="flex items-center gap-1.5 text-xs text-white/70">
                         <Users className="h-3.5 w-3.5" />
                         {scale.targetAudience}
                       </span>
-                      <span className="flex items-center gap-1.5 text-xs text-white/40">
+                      <span className="flex items-center gap-1.5 text-xs text-white/70">
                         <Clock className="h-3.5 w-3.5" />
                         {scale.estimatedTime}
                       </span>
@@ -162,7 +162,7 @@ export default function ClinicalModulesHub() {
                       'shrink-0 rounded-full',
                       scale.available
                         ? 'bg-cyan-400 text-[#0A192F] hover:bg-cyan-400/90'
-                        : 'bg-white/5 text-white/40 border border-white/10',
+                        : 'bg-white/5 text-white/70 border border-white/10',
                     )}
                   >
                     {starting === scale.key ? (

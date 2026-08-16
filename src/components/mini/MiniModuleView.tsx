@@ -87,7 +87,7 @@ function QuestionRow({
             'px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200',
             answer === 'Sim'
               ? 'bg-[#00FFFF] text-[#0A192F] shadow-[0_0_12px_rgba(0,255,255,0.3)]'
-              : 'border border-[#233554] text-[#E6F1FF]/60 hover:border-[#00FFFF]/40 hover:text-[#E6F1FF]',
+              : 'border border-[#233554] text-[#E6F1FF]/85 hover:border-[#00FFFF]/40 hover:text-[#E6F1FF]',
           )}
         >
           Sim
@@ -98,7 +98,7 @@ function QuestionRow({
             'px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200',
             answer === 'Não'
               ? 'bg-[#FF6B6B] text-white shadow-[0_0_12px_rgba(255,107,107,0.3)]'
-              : 'border border-[#233554] text-[#E6F1FF]/60 hover:border-[#FF6B6B]/40 hover:text-[#E6F1FF]',
+              : 'border border-[#233554] text-[#E6F1FF]/85 hover:border-[#FF6B6B]/40 hover:text-[#E6F1FF]',
           )}
         >
           Não
@@ -117,7 +117,7 @@ export function MiniModuleView({ module, answers, onAnswer }: MiniModuleViewProp
         <span className="text-3xl font-bold text-[#00FFFF]">{module.letter}</span>
         <div>
           <h2 className="text-lg font-semibold text-[#E6F1FF]">{module.title}</h2>
-          <p className="text-xs text-[#E6F1FF]/50 mt-0.5">{module.description}</p>
+          <p className="text-xs text-[#E6F1FF]/75 mt-0.5">{module.description}</p>
         </div>
       </div>
 
@@ -128,7 +128,7 @@ export function MiniModuleView({ module, answers, onAnswer }: MiniModuleViewProp
         return (
           <div key={q.key}>
             {showGroupLabel && (
-              <p className="text-xs text-[#00FFFF]/70 font-medium uppercase tracking-wide mt-4 mb-1.5">
+              <p className="text-xs text-[#00FFFF]/85 font-medium uppercase tracking-wide mt-4 mb-1.5">
                 {q.group}
               </p>
             )}

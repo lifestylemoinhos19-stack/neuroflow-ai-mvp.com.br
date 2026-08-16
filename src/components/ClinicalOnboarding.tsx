@@ -26,7 +26,7 @@ export function ClinicalOnboarding({ onContinue }: { onContinue: () => void }) {
         <h1 className="text-2xl sm:text-3xl font-bold text-white">
           Bem-vindo aos Módulos Clínicos
         </h1>
-        <p className="text-white/60 text-sm max-w-2xl mx-auto">
+        <p className="text-white/85 text-sm max-w-2xl mx-auto">
           Este espaço reúne todas as avaliações clínicas disponíveis. Aqui você encontrará
           orientações claras para cada instrumento de avaliação.
         </p>
@@ -42,14 +42,14 @@ export function ClinicalOnboarding({ onContinue }: { onContinue: () => void }) {
               <card.icon className="h-5 w-5 text-cyan-400" />
             </div>
             <h3 className="text-white font-semibold text-sm">{card.title}</h3>
-            <p className="text-white/50 text-xs leading-relaxed">{card.text}</p>
+            <p className="text-white/75 text-xs leading-relaxed">{card.text}</p>
           </div>
         ))}
       </div>
 
       <div className="rounded-xl border border-white/10 bg-white/5 p-4 flex items-start gap-3 max-w-4xl mx-auto">
         <CheckCircle2 className="h-5 w-5 text-cyan-400 shrink-0 mt-0.5" />
-        <p className="text-white/60 text-xs leading-relaxed">
+        <p className="text-white/85 text-xs leading-relaxed">
           As avaliações são ferramentas de triagem e não substituem uma consulta presencial com um
           profissional qualificado. Os resultados serão compartilhados com sua equipe de saúde.
         </p>

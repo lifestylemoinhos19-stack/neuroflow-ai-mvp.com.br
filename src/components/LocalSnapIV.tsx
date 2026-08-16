@@ -64,11 +64,11 @@ export function LocalSnapIV() {
         <div className="grid grid-cols-2 gap-3">
           <div className="text-center p-3 rounded-xl bg-[#112240] border border-white/10">
             <p className="text-2xl font-bold text-[#00FFFF]">{result.inattentionHigh}</p>
-            <p className="text-xs text-white/50">Itens altos — Desatenção</p>
+            <p className="text-xs text-white/75">Itens altos — Desatenção</p>
           </div>
           <div className="text-center p-3 rounded-xl bg-[#112240] border border-white/10">
             <p className="text-2xl font-bold text-[#00FFFF]">{result.hyperactivityHigh}</p>
-            <p className="text-xs text-white/50">Itens altos — Hiperatividade</p>
+            <p className="text-xs text-white/75">Itens altos — Hiperatividade</p>
           </div>
         </div>
         <div

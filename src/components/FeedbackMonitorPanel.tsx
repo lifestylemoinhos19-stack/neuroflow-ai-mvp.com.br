@@ -39,7 +39,7 @@ export function FeedbackMonitorPanel() {
             <CardTitle className="text-[#E6F1FF] flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-[#00FFFF]" /> NeuroFlow Feedback Monitor
             </CardTitle>
-            <CardDescription className="text-[#E6F1FF]/60">
+            <CardDescription className="text-[#E6F1FF]/85">
               Analise de calibration_logs e sugestoes de ajuste
             </CardDescription>
           </div>
@@ -75,7 +75,7 @@ export function FeedbackMonitorPanel() {
       <CardContent className="space-y-4">
         {report && (
           <>
-            <p className="text-xs text-[#E6F1FF]/40">
+            <p className="text-xs text-[#E6F1FF]/70">
               {report.totalLogs} logs analisados em {new Date(report.fetchedAt).toLocaleString()}
             </p>
             <div className="space-y-3">
@@ -87,55 +87,55 @@ export function FeedbackMonitorPanel() {
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                     <div>
-                      <span className="text-[#E6F1FF]/40">Avg MAE: </span>
+                      <span className="text-[#E6F1FF]/70">Avg MAE: </span>
                       <span className="text-[#E6F1FF] font-medium">
                         {s.metrics.avgMae.toFixed(2)}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[#E6F1FF]/40">Min MAE: </span>
+                      <span className="text-[#E6F1FF]/70">Min MAE: </span>
                       <span className="text-[#E6F1FF] font-medium">
                         {s.metrics.minMae.toFixed(2)}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[#E6F1FF]/40">Max MAE: </span>
+                      <span className="text-[#E6F1FF]/70">Max MAE: </span>
                       <span className="text-[#E6F1FF] font-medium">
                         {s.metrics.maxMae.toFixed(2)}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[#E6F1FF]/40">Samples: </span>
+                      <span className="text-[#E6F1FF]/70">Samples: </span>
                       <span className="text-[#E6F1FF] font-medium">{s.metrics.sampleCount}</span>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className="bg-black/30 rounded p-2">
-                      <p className="text-[#E6F1FF]/40 mb-1">Current Range</p>
+                      <p className="text-[#E6F1FF]/70 mb-1">Current Range</p>
                       <p className="text-[#E6F1FF]">
                         min={s.currentRange.min}, max={s.currentRange.max}, tol=
                         {s.currentRange.tolerance}
                       </p>
                     </div>
                     <div className="bg-[#00FFFF]/5 rounded p-2 border border-[#00FFFF]/10">
-                      <p className="text-[#00FFFF]/60 mb-1">Suggested Range</p>
+                      <p className="text-[#00FFFF]/80 mb-1">Suggested Range</p>
                       <p className="text-[#00FFFF]">
                         min={s.suggestedRange.min}, max={s.suggestedRange.max}, tol=
                         {s.suggestedRange.tolerance}
                       </p>
                     </div>
                   </div>
-                  <p className="text-xs text-[#E6F1FF]/50">{s.reason}</p>
+                  <p className="text-xs text-[#E6F1FF]/75">{s.reason}</p>
                 </div>
               ))}
             </div>
-            <pre className="bg-black/40 border border-[#00FFFF]/10 rounded-lg p-3 text-xs text-[#E6F1FF]/60 overflow-auto max-h-48">
+            <pre className="bg-black/40 border border-[#00FFFF]/10 rounded-lg p-3 text-xs text-[#E6F1FF]/85 overflow-auto max-h-48">
               {formatReport(report)}
             </pre>
           </>
         )}
         {!report && !loading && (
-          <p className="text-center text-[#E6F1FF]/40 py-8 text-sm">
+          <p className="text-center text-[#E6F1FF]/70 py-8 text-sm">
             Clique em "Analisar" para buscar calibration_logs e gerar sugestoes.
           </p>
         )}

@@ -105,15 +105,15 @@ export function YbocsAssessment() {
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
           <div className="text-center py-3 rounded-xl border border-white/10" style={CARD_BG}>
             <p className="text-2xl sm:text-3xl font-bold text-[#00FFFF]">{obsessionsSubtotal}</p>
-            <p className="text-xs text-white/50 mt-0.5">Obsessões (0-20)</p>
+            <p className="text-xs text-white/75 mt-0.5">Obsessões (0-20)</p>
           </div>
           <div className="text-center py-3 rounded-xl border border-white/10" style={CARD_BG}>
             <p className="text-2xl sm:text-3xl font-bold text-[#00FFFF]">{compulsionsSubtotal}</p>
-            <p className="text-xs text-white/50 mt-0.5">Compulsões (0-20)</p>
+            <p className="text-xs text-white/75 mt-0.5">Compulsões (0-20)</p>
           </div>
           <div className="text-center py-3 rounded-xl border border-white/10" style={CARD_BG}>
             <p className="text-2xl sm:text-3xl font-bold text-[#00FFFF]">{totalScore}</p>
-            <p className="text-xs text-white/50 mt-0.5">Total (0-40)</p>
+            <p className="text-xs text-white/75 mt-0.5">Total (0-40)</p>
           </div>
         </div>
 
@@ -127,7 +127,7 @@ export function YbocsAssessment() {
               className="flex items-start justify-between gap-3 p-2.5 rounded-lg border border-white/10"
               style={CARD_BG}
             >
-              <span className="text-xs text-white/60 flex-1">
+              <span className="text-xs text-white/85 flex-1">
                 <span className="text-[#00FFFF] font-medium">{i + 1}.</span> {q.text}
               </span>
               <span className="text-xs font-medium text-[#00FFFF] whitespace-nowrap">
@@ -161,7 +161,7 @@ export function YbocsAssessment() {
           <div key={section.id} className="space-y-2">
             <div className="pt-2">
               <h2 className="text-sm font-bold text-[#00FFFF]">{section.title}</h2>
-              <p className="text-xs text-white/50">{section.description}</p>
+              <p className="text-xs text-white/75">{section.description}</p>
             </div>
             {sectionQuestions.map((q) => {
               const globalIndex = ybocsQuestions.indexOf(q) + 1
@@ -183,7 +183,7 @@ export function YbocsAssessment() {
                           'px-3 py-2.5 rounded-lg text-xs font-medium transition-all border text-left',
                           answers[q.key] === opt.value
                             ? 'border-[#00FFFF] text-[#00FFFF]'
-                            : 'border-white/10 text-white/60 hover:border-[#00FFFF]/30',
+                            : 'border-white/10 text-white/85 hover:border-[#00FFFF]/30',
                         )}
                         style={
                           answers[q.key] === opt.value

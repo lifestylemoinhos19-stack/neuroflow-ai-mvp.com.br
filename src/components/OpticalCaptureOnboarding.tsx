@@ -188,7 +188,7 @@ export function OpticalCaptureOnboarding({ initialMode, onComplete, onCancel, on
                 variant="ghost"
                 onClick={redoCapture}
                 disabled={saving}
-                className="text-white/60 hover:text-white"
+                className="text-white/85 hover:text-white"
               >
                 <RefreshCw className="h-4 w-4 mr-2" /> Refazer Leitura
               </Button>
@@ -196,7 +196,7 @@ export function OpticalCaptureOnboarding({ initialMode, onComplete, onCancel, on
                 variant="ghost"
                 onClick={resetAll}
                 disabled={saving}
-                className="text-white/60 hover:text-white"
+                className="text-white/85 hover:text-white"
               >
                 <RotateCcw className="h-4 w-4 mr-2" /> Reiniciar Onboarding
               </Button>
@@ -212,7 +212,7 @@ export function OpticalCaptureOnboarding({ initialMode, onComplete, onCancel, on
       <div className="max-w-md w-full">
         <div className="text-center mb-6">
           <h1 className="text-xl font-bold tracking-tight">NeuroFlow AI</h1>
-          <p className="text-xs text-[#00FFFF]/70 font-medium mt-1">Onboarding · Captura Óptica</p>
+          <p className="text-xs text-[#00FFFF]/85 font-medium mt-1">Onboarding · Captura Óptica</p>
         </div>
 
         <div className="flex gap-2 mb-6">
@@ -222,7 +222,7 @@ export function OpticalCaptureOnboarding({ initialMode, onComplete, onCancel, on
               'flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border transition-all duration-200 text-sm font-medium',
               isRppg
                 ? 'bg-[#00FFFF]/15 border-[#00FFFF]/40 text-[#00FFFF]'
-                : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10',
+                : 'bg-white/5 border-white/10 text-white/75 hover:bg-white/10',
             )}
           >
             <Camera className="h-4 w-4" /> Rosto (rPPG)
@@ -233,7 +233,7 @@ export function OpticalCaptureOnboarding({ initialMode, onComplete, onCancel, on
               'flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border transition-all duration-200 text-sm font-medium',
               !isRppg
                 ? 'bg-[#00FFFF]/15 border-[#00FFFF]/40 text-[#00FFFF]'
-                : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10',
+                : 'bg-white/5 border-white/10 text-white/75 hover:bg-white/10',
             )}
           >
             <Fingerprint className="h-4 w-4" /> Dedo (PPG)
@@ -277,19 +277,19 @@ export function OpticalCaptureOnboarding({ initialMode, onComplete, onCancel, on
           )}
           {permState === 'idle' && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <Camera className="h-12 w-12 text-white/20" />
+              <Camera className="h-12 w-12 text-white/70" />
             </div>
           )}
         </div>
 
         {permState === 'granted' && (
-          <p className="text-sm text-[#00FFFF]/70 font-medium text-center mb-4">{instruction}</p>
+          <p className="text-sm text-[#00FFFF]/85 font-medium text-center mb-4">{instruction}</p>
         )}
 
         {captureState === 'capturing' && (
           <div className="mb-4 space-y-2">
             <Progress value={progress} className="h-2 bg-white/10" />
-            <p className="text-xs text-white/50 text-center">{secondsLeft}s restantes</p>
+            <p className="text-xs text-white/75 text-center">{secondsLeft}s restantes</p>
           </div>
         )}
 
@@ -314,7 +314,7 @@ export function OpticalCaptureOnboarding({ initialMode, onComplete, onCancel, on
                 <Button
                   variant="ghost"
                   onClick={onCancel}
-                  className="text-white/60 hover:text-white"
+                  className="text-white/85 hover:text-white"
                 >
                   Voltar
                 </Button>
@@ -322,7 +322,7 @@ export function OpticalCaptureOnboarding({ initialMode, onComplete, onCancel, on
                   <Button
                     variant="ghost"
                     onClick={onSkip}
-                    className="text-white/40 hover:text-[#00FFFF] text-xs"
+                    className="text-white/70 hover:text-[#00FFFF] text-xs"
                   >
                     Pular (BPM: 72)
                   </Button>

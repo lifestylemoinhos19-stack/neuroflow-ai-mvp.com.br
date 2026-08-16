@@ -456,7 +456,7 @@ export default function AdminPainel() {
                           <TableCell className="text-sm font-bold text-white">
                             {u.full_name || '—'}
                           </TableCell>
-                          <TableCell className="text-xs text-white/60 font-mono">
+                          <TableCell className="text-xs text-white/85 font-mono">
                             {u.id.slice(0, 8)}…
                           </TableCell>
                           <TableCell className="text-sm text-white/80">

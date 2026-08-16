@@ -1157,6 +1157,60 @@ export type Database = {
           },
         ]
       }
+      scale_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          patient_id: string
+          scale_type: string
+          session_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          patient_id: string
+          scale_type: string
+          session_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          patient_id?: string
+          scale_type?: string
+          session_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'scale_assignments_patient_id_fkey'
+            columns: ['patient_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'scale_assignments_session_id_fkey'
+            columns: ['session_id']
+            isOneToOne: false
+            referencedRelation: 'anamnesis_sessions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       security_logs: {
         Row: {
           created_at: string
@@ -1421,60 +1475,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      scale_assignments: {
-        Row: {
-          id: string
-          patient_id: string
-          session_id: string | null
-          scale_type: string
-          status: string
-          assigned_by: string | null
-          assigned_at: string
-          completed_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          patient_id: string
-          session_id?: string | null
-          scale_type: string
-          status?: string
-          assigned_by?: string | null
-          assigned_at?: string
-          completed_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          patient_id?: string
-          session_id?: string | null
-          scale_type?: string
-          status?: string
-          assigned_by?: string | null
-          assigned_at?: string
-          completed_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'scale_assignments_patient_id_fkey'
-            columns: ['patient_id']
-            isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'scale_assignments_session_id_fkey'
-            columns: ['session_id']
-            isOneToOne: false
-            referencedRelation: 'anamnesis_sessions'
-            referencedColumns: ['id']
-          },
-        ]
       }
       system_settings: {
         Row: {

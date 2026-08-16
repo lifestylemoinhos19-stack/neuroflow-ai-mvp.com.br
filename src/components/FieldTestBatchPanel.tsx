@@ -60,7 +60,7 @@ export function FieldTestBatchPanel({ userId }: Props) {
             <CardTitle className="text-[#E6F1FF] flex items-center gap-2">
               <FlaskConical className="h-5 w-5 text-[#00FFFF]" /> Field Test Batch Automation
             </CardTitle>
-            <CardDescription className="text-[#E6F1FF]/60">
+            <CardDescription className="text-[#E6F1FF]/85">
               {TEAM_DEVICES.length} dispositivos team
             </CardDescription>
           </div>
@@ -87,7 +87,7 @@ export function FieldTestBatchPanel({ userId }: Props) {
       <CardContent className="space-y-4">
         {(running || progress > 0) && (
           <div className="space-y-1">
-            <div className="flex justify-between text-xs text-[#E6F1FF]/60">
+            <div className="flex justify-between text-xs text-[#E6F1FF]/85">
               <span>Progresso: {Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="h-2 bg-white/10" />
@@ -106,7 +106,7 @@ export function FieldTestBatchPanel({ userId }: Props) {
                 className="rounded-lg border border-[#00FFFF]/20 bg-[#00FFFF]/5 p-3 text-center"
               >
                 <p className={'text-2xl font-bold ' + s.color}>{s.value}</p>
-                <p className="text-xs text-[#E6F1FF]/60">{s.label}</p>
+                <p className="text-xs text-[#E6F1FF]/85">{s.label}</p>
               </div>
             ))}
           </div>
@@ -115,7 +115,7 @@ export function FieldTestBatchPanel({ userId }: Props) {
           <div className="bg-black/40 rounded-lg border border-[#00FFFF]/10 p-3 max-h-48 overflow-y-auto space-y-1 font-mono text-xs">
             {logs.map((log, i) => (
               <div key={i} className={levelColor[log.level]}>
-                <span className="text-[#E6F1FF]/40">[{log.timestamp}]</span> {log.message}
+                <span className="text-[#E6F1FF]/70">[{log.timestamp}]</span> {log.message}
               </div>
             ))}
             <div ref={logEndRef} />
@@ -139,9 +139,9 @@ export function FieldTestBatchPanel({ userId }: Props) {
                     {r.device.id}
                   </Badge>
                 </div>
-                <div className="text-[#E6F1FF]/60">
+                <div className="text-[#E6F1FF]/85">
                   {r.success ? 'MAE: ' + r.avgMae?.toFixed(2) : r.error}
-                  <span className="ml-2 text-[#E6F1FF]/30">
+                  <span className="ml-2 text-[#E6F1FF]/70">
                     {new Date(r.completedAt).toLocaleTimeString()}
                   </span>
                 </div>

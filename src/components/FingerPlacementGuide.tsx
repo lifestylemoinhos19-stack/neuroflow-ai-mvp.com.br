@@ -11,13 +11,13 @@ export function FingerPlacementGuide({ flashEnabled, onToggleFlash }: FingerPlac
   return (
     <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-20 gap-4">
       <div className="h-24 w-24 rounded-full border-2 border-[#00FFFF]/40 flex items-center justify-center animate-pulse">
-        <Fingerprint className="h-12 w-12 text-[#00FFFF]/60" />
+        <Fingerprint className="h-12 w-12 text-[#00FFFF]/80" />
       </div>
       <div className="text-center px-6">
-        <p className="text-sm text-[#00FFFF]/70 font-medium">
+        <p className="text-sm text-[#00FFFF]/85 font-medium">
           Coloque seu dedo sobre a câmera frontal
         </p>
-        <p className="text-xs text-white/40 mt-1">
+        <p className="text-xs text-white/70 mt-1">
           Cubra completamente a lente da câmera com a ponta do dedo
         </p>
       </div>
@@ -30,7 +30,7 @@ export function FingerPlacementGuide({ flashEnabled, onToggleFlash }: FingerPlac
             'rounded-full border text-xs',
             flashEnabled
               ? 'bg-[#00FFFF]/20 border-[#00FFFF]/40 text-[#00FFFF]'
-              : 'bg-white/5 border-white/10 text-white/50',
+              : 'bg-white/5 border-white/10 text-white/75',
           )}
         >
           {flashEnabled ? (

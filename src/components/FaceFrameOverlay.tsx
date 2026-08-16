@@ -7,7 +7,7 @@ export function FaceFrameOverlay() {
           style={{ boxShadow: '0 0 20px rgba(0, 255, 255, 0.2)' }}
         />
         <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap">
-          <p className="text-xs text-[#00FFFF]/70 font-medium">Centralize seu rosto no quadro</p>
+          <p className="text-xs text-[#00FFFF]/85 font-medium">Centralize seu rosto no quadro</p>
         </div>
       </div>
     </div>

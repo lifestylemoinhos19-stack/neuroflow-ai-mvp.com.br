@@ -18,7 +18,7 @@ export function OpticalCaptureOverlay({ mode, isCapturing }: OpticalCaptureOverl
             style={{ boxShadow: '0 0 20px rgba(0, 255, 255, 0.2)' }}
           />
           <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap">
-            <p className="text-xs text-[#00FFFF]/70 font-medium">Posicione seu rosto no círculo</p>
+            <p className="text-xs text-[#00FFFF]/85 font-medium">Posicione seu rosto no círculo</p>
           </div>
         </div>
       </div>
@@ -36,7 +36,7 @@ export function OpticalCaptureOverlay({ mode, isCapturing }: OpticalCaptureOverl
       >
         <span className="text-4xl">👆</span>
       </div>
-      <p className="text-xs text-[#00FFFF]/70 font-medium">Cubra a câmera traseira com o dedo</p>
+      <p className="text-xs text-[#00FFFF]/85 font-medium">Cubra a câmera traseira com o dedo</p>
     </div>
   )
 }

@@ -7,7 +7,7 @@ export default function FtdrsPage() {
         <h1 className="text-2xl font-bold text-white">
           Frontotemporal Dementia Rating Scale (FTDRS)
         </h1>
-        <p className="text-sm text-white/50 mt-1">
+        <p className="text-sm text-white/75 mt-1">
           Avaliação específica para Demência Frontotemporal
         </p>
       </div>

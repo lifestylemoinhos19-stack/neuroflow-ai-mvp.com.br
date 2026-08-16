@@ -22,7 +22,7 @@ export default function BetaLanding() {
           style={{ animationDuration: '5s' }}
         />
         <Diamond
-          className="absolute top-1/2 left-1/4 text-[#00FFFF]/60 h-5 w-5 animate-float"
+          className="absolute top-1/2 left-1/4 text-[#00FFFF]/80 h-5 w-5 animate-float"
           fill="currentColor"
           style={{ animationDuration: '7s' }}
         />
@@ -39,7 +39,7 @@ export default function BetaLanding() {
         <h1 className="text-4xl sm:text-5xl font-medium text-white tracking-tight mb-4">
           Explorador da Calma
         </h1>
-        <p className="text-[#00FFFF]/70 text-lg font-medium mb-8">
+        <p className="text-[#00FFFF]/85 text-lg font-medium mb-8">
           Uma jornada de auto-regulação e foco para o seu filho
         </p>
 
@@ -51,7 +51,7 @@ export default function BetaLanding() {
               </div>
               <div>
                 <h3 className="text-white font-medium text-base mb-1">Biofeedback em Tempo Real</h3>
-                <p className="text-white/60 text-sm font-medium">
+                <p className="text-white/85 text-sm font-medium">
                   Sensores de batimento cardíaco monitoram o estado do seu filho a cada instante,
                   transformando dados biológicos em uma experiência visual envolvente.
                 </p>
@@ -64,7 +64,7 @@ export default function BetaLanding() {
               </div>
               <div>
                 <h3 className="text-white font-medium text-base mb-1">Jogo do Explorador</h3>
-                <p className="text-white/60 text-sm font-medium">
+                <p className="text-white/85 text-sm font-medium">
                   Um mascote em formato de balão flutua e reflete o nível de calma. Quanto mais
                   focado o seu filho permanece, mais cristais ele coleta a cada 2 minutos.
                 </p>
@@ -79,7 +79,7 @@ export default function BetaLanding() {
                 <h3 className="text-white font-medium text-base mb-1">
                   Variabilidade da Resposta Cardíaca (VRC)
                 </h3>
-                <p className="text-white/60 text-sm font-medium">
+                <p className="text-white/85 text-sm font-medium">
                   Ao final da sessão, um relatório detalhado mostra a VRC, indicando o nível de
                   auto-regulação alcançado durante a jornada.
                 </p>
@@ -92,7 +92,7 @@ export default function BetaLanding() {
               </div>
               <div>
                 <h3 className="text-white font-medium text-base mb-1">Seguro e Ético</h3>
-                <p className="text-white/60 text-sm font-medium">
+                <p className="text-white/85 text-sm font-medium">
                   Desenvolvido com orientação clínica, em conformidade com protocolos de
                   telemedicina e com soberania médica absoluta.
                 </p>
@@ -123,7 +123,7 @@ export default function BetaLanding() {
           </Button>
         </div>
 
-        <p className="text-white/40 text-xs font-medium mt-8">
+        <p className="text-white/70 text-xs font-medium mt-8">
           Ao participar da versão Beta, você concorda em fornecer feedback sobre a experiência.
         </p>
       </div>

@@ -100,7 +100,7 @@ export function MainDeployment({ sessionId, userId, autoStart = false }: MainDep
             <h1 className="text-2xl font-bold text-[#E6F1FF] mb-2">
               NeuroFlow AI - Sessao de Foco
             </h1>
-            <p className="text-sm text-[#00FFFF]/70 mb-8">
+            <p className="text-sm text-[#00FFFF]/85 mb-8">
               Pronto para testes de campo e calibracao de dispositivos
             </p>
             <Button
@@ -112,10 +112,10 @@ export function MainDeployment({ sessionId, userId, autoStart = false }: MainDep
               Iniciar Deploy
             </Button>
             {effectiveUserId && (
-              <p className="text-xs text-white/40 mt-4">User: {effectiveUserId.slice(0, 8)}...</p>
+              <p className="text-xs text-white/70 mt-4">User: {effectiveUserId.slice(0, 8)}...</p>
             )}
             {sessionId && (
-              <p className="text-xs text-white/40 mt-1">Session: {sessionId.slice(0, 8)}...</p>
+              <p className="text-xs text-white/70 mt-1">Session: {sessionId.slice(0, 8)}...</p>
             )}
           </div>
           <div className="mt-8 space-y-6">
@@ -162,7 +162,7 @@ export function MainDeployment({ sessionId, userId, autoStart = false }: MainDep
               <BarChart3 className="h-8 w-8 text-[#00FFFF]" />
             </div>
             <h1 className="text-xl font-bold text-[#E6F1FF]">Session Ended</h1>
-            <p className="text-sm text-[#00FFFF]/70">Deployment Summary</p>
+            <p className="text-sm text-[#00FFFF]/85">Deployment Summary</p>
           </div>
           <pre
             className="bg-black/40 border border-[#00FFFF]/20 rounded-xl p-4 text-xs text-[#E6F1FF]/80 overflow-auto max-h-96"

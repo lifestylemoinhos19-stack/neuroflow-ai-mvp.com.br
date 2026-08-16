@@ -7,7 +7,7 @@ export default function YbocsPage() {
         <h1 className="text-2xl font-bold text-white">
           Yale-Brown Obsessive-Compulsive Scale (Y-BOCS)
         </h1>
-        <p className="text-sm text-white/50 mt-1">
+        <p className="text-sm text-white/75 mt-1">
           Avaliação da gravidade de sintomas obsessivo-compulsivos
         </p>
       </div>

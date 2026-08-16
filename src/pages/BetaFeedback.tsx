@@ -57,10 +57,10 @@ export default function BetaFeedback() {
         <div className="z-10 text-center animate-fade-in-up">
           <CheckCircle2 className="h-16 w-16 text-[#00FFFF] mx-auto mb-4" />
           <h1 className="text-2xl font-medium text-white mb-2">Obrigado pelo seu feedback!</h1>
-          <p className="text-white/60 font-medium text-sm">
+          <p className="text-white/85 font-medium text-sm">
             Sua opinião nos ajuda a melhorar a experiência do Explorador da Calma.
           </p>
-          <p className="text-white/40 font-medium text-xs mt-4">Redirecionando para o painel...</p>
+          <p className="text-white/70 font-medium text-xs mt-4">Redirecionando para o painel...</p>
         </div>
       </div>
     )
@@ -84,13 +84,13 @@ export default function BetaFeedback() {
 
       <div className="z-10 max-w-lg w-full animate-fade-in-up">
         <div className="text-center mb-8">
-          <span className="text-[#00FFFF]/70 text-sm font-medium tracking-wide uppercase">
+          <span className="text-[#00FFFF]/85 text-sm font-medium tracking-wide uppercase">
             Feedback Beta
           </span>
           <h1 className="text-3xl font-medium text-white tracking-tight mt-2 mb-2">
             Conte-nos sua experiência
           </h1>
-          <p className="text-white/60 font-medium text-sm">
+          <p className="text-white/85 font-medium text-sm">
             Sua opinião é essencial para refinarmos o Explorador da Calma
           </p>
         </div>
@@ -113,14 +113,14 @@ export default function BetaFeedback() {
                   <Diamond
                     className={cn(
                       'h-10 w-10 transition-colors',
-                      (hoverRating || rating) >= value ? 'text-[#00FFFF]' : 'text-white/20',
+                      (hoverRating || rating) >= value ? 'text-[#00FFFF]' : 'text-white/70',
                     )}
                     fill="currentColor"
                   />
                 </button>
               ))}
             </div>
-            <p className="text-center text-xs text-white/50 font-medium mt-2">
+            <p className="text-center text-xs text-white/75 font-medium mt-2">
               {rating === 0
                 ? 'Toque nos cristais para avaliar'
                 : rating === 1
@@ -147,7 +147,7 @@ export default function BetaFeedback() {
               value={childExperience}
               onChange={(e) => setChildExperience(e.target.value)}
               placeholder="Descreva como seu filho reagiu ao jogo, se se engajou, se percebeu mudanças..."
-              className="bg-white/5 border-[#00FFFF]/20 text-white placeholder:text-white/30 rounded-xl min-h-[100px] resize-none focus-visible:border-[#00FFFF]/40"
+              className="bg-white/5 border-[#00FFFF]/20 text-white placeholder:text-white/70 rounded-xl min-h-[100px] resize-none focus-visible:border-[#00FFFF]/40"
             />
           </div>
 
@@ -163,7 +163,7 @@ export default function BetaFeedback() {
               value={parentComments}
               onChange={(e) => setParentComments(e.target.value)}
               placeholder="Compartilhe suas impressões como responsável: facilidade de uso, relevância do biofeedback, sugestões..."
-              className="bg-white/5 border-[#00FFFF]/20 text-white placeholder:text-white/30 rounded-xl min-h-[100px] resize-none focus-visible:border-[#00FFFF]/40"
+              className="bg-white/5 border-[#00FFFF]/20 text-white placeholder:text-white/70 rounded-xl min-h-[100px] resize-none focus-visible:border-[#00FFFF]/40"
             />
           </div>
 

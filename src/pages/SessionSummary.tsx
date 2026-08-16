@@ -71,7 +71,7 @@ export default function SessionSummary() {
       ? { label: 'Excelente', color: 'text-[#00FFFF]' }
       : vrc >= 20
         ? { label: 'Bom', color: 'text-blue-400' }
-        : { label: 'Em desenvolvimento', color: 'text-white/60' }
+        : { label: 'Em desenvolvimento', color: 'text-white/85' }
 
   return (
     <div className="min-h-screen bg-[#0A192F] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden font-medium">
@@ -91,14 +91,14 @@ export default function SessionSummary() {
 
       <div className="z-10 max-w-md w-full text-center animate-fade-in-up">
         <div className="mb-2">
-          <span className="text-[#00FFFF]/70 text-sm font-medium tracking-wide uppercase">
+          <span className="text-[#00FFFF]/85 text-sm font-medium tracking-wide uppercase">
             Sessão Concluída
           </span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-medium text-white tracking-tight mb-2">
           O Explorador da Calma
         </h1>
-        <p className="text-white/60 font-medium text-sm mb-8">
+        <p className="text-white/85 font-medium text-sm mb-8">
           Parabéns pela jornada de auto-regulação!
         </p>
 
@@ -117,14 +117,14 @@ export default function SessionSummary() {
                 <Diamond className="h-4 w-4 text-[#00FFFF] mr-1" fill="currentColor" />
                 <span className="text-2xl font-medium text-white">{crystals}</span>
               </div>
-              <span className="text-xs text-white/50 font-medium">Cristais de Foco</span>
+              <span className="text-xs text-white/75 font-medium">Cristais de Foco</span>
             </div>
             <div className="bg-[#00FFFF]/5 rounded-2xl p-4 border border-[#00FFFF]/10">
               <div className="flex items-center justify-center mb-1">
                 <Diamond className="h-4 w-4 text-[#00FFFF] mr-1" fill="currentColor" />
                 <span className="text-2xl font-medium text-white">{masterCrystals}</span>
               </div>
-              <span className="text-xs text-white/50 font-medium">Cristais Mestres</span>
+              <span className="text-xs text-white/75 font-medium">Cristais Mestres</span>
             </div>
           </div>
 

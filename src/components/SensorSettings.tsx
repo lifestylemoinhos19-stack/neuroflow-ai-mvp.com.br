@@ -16,7 +16,7 @@ export function SensorSettings({ source }: { source: BiofeedbackSourceState }) {
               'flex flex-col items-center gap-1 p-2 rounded-lg border text-xs font-medium transition-all',
               source.mode === m
                 ? 'bg-[#00FFFF]/10 border-[#00FFFF]/30 text-[#00FFFF]'
-                : 'bg-white/5 border-white/10 text-white/60 hover:text-white',
+                : 'bg-white/5 border-white/10 text-white/85 hover:text-white',
             )}
           >
             {m === 'camera' && <Camera className="h-4 w-4" />}
@@ -92,7 +92,7 @@ export function SensorSettings({ source }: { source: BiofeedbackSourceState }) {
       )}
 
       {source.mode === 'simulation' && (
-        <p className="text-xs text-white/50">
+        <p className="text-xs text-white/75">
           Modo simulação ativo. Dados de BPM são gerados automaticamente para teste.
         </p>
       )}

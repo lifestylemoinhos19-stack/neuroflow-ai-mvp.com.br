@@ -63,8 +63,8 @@ export function LocalAssq() {
       <div className="space-y-4 animate-fade-in-up">
         <div className="text-center py-4">
           <p className="text-4xl font-bold text-[#00FFFF]">{result.total}</p>
-          <p className="text-sm text-white/50 mt-1">Pontuação total (máx. 54)</p>
-          <p className="text-xs text-white/40 mt-1">
+          <p className="text-sm text-white/75 mt-1">Pontuação total (máx. 54)</p>
+          <p className="text-xs text-white/70 mt-1">
             Limiar: {result.threshold} ({gender === 'boy' ? 'Menino' : 'Menina'})
           </p>
         </div>
@@ -109,7 +109,7 @@ export function LocalAssq() {
     <div className="space-y-3">
       <AssessmentProgress answered={answeredCount} total={27} />
       <div className="mt-2">
-        <p className="text-xs text-white/50 mb-1.5">Sexo da criança</p>
+        <p className="text-xs text-white/75 mb-1.5">Sexo da criança</p>
         <div className="flex gap-2">
           {(['boy', 'girl'] as const).map((g) => (
             <button
@@ -119,7 +119,7 @@ export function LocalAssq() {
                 'px-4 py-1.5 rounded-lg text-sm font-medium transition-all',
                 gender === g
                   ? 'bg-[#00FFFF] text-[#0A192F]'
-                  : 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/10',
+                  : 'bg-white/5 text-white/85 hover:bg-white/10 border border-white/10',
               )}
             >
               {g === 'boy' ? 'Menino' : 'Menina'}

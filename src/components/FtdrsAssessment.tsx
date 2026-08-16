@@ -84,7 +84,7 @@ export function FtdrsAssessment() {
           <p className="text-4xl font-bold" style={{ color: severity.color }}>
             {totalScore}
           </p>
-          <p className="text-sm text-white/50 mt-1">Pontuação total (0-45)</p>
+          <p className="text-sm text-white/75 mt-1">Pontuação total (0-45)</p>
           <p className="text-lg font-semibold mt-2" style={{ color: severity.color }}>
             {severity.label}
           </p>
@@ -99,7 +99,7 @@ export function FtdrsAssessment() {
               className="flex items-start justify-between gap-3 p-2.5 rounded-lg border border-white/10"
               style={CARD_BG}
             >
-              <span className="text-xs text-white/60 flex-1">
+              <span className="text-xs text-white/85 flex-1">
                 <span className="text-[#00FFFF] font-medium">{i + 1}.</span> {item.text}
               </span>
               <span className="text-xs font-medium text-[#00FFFF] whitespace-nowrap">
@@ -131,7 +131,7 @@ export function FtdrsAssessment() {
           <div key={domain.id} className="space-y-2">
             <div className="pt-2">
               <h2 className="text-sm font-bold text-[#00FFFF]">{domain.title}</h2>
-              <p className="text-xs text-white/50">{domain.description}</p>
+              <p className="text-xs text-white/75">{domain.description}</p>
             </div>
             {domainItems.map((item) => (
               <div
@@ -151,7 +151,7 @@ export function FtdrsAssessment() {
                         'px-3 py-2.5 rounded-lg text-xs font-medium transition-all border text-left',
                         answers[item.key] === opt.value
                           ? 'border-[#00FFFF] text-[#00FFFF]'
-                          : 'border-white/10 text-white/60 hover:border-[#00FFFF]/30',
+                          : 'border-white/10 text-white/85 hover:border-[#00FFFF]/30',
                       )}
                       style={
                         answers[item.key] === opt.value

@@ -338,7 +338,7 @@ export function AuthGuard({
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-950 text-white p-6">
         <AlertCircle className="h-12 w-12 text-red-400 mb-4" />
         <h2 className="text-xl font-semibold mb-2">Tempo excedido</h2>
-        <p className="text-sm text-white/60 mb-6 text-center max-w-sm">
+        <p className="text-sm text-white/85 mb-6 text-center max-w-sm">
           A verificacao de autenticacao esta demorando mais do que o esperado. Verifique sua conexao
           e tente novamente.
         </p>
@@ -360,7 +360,7 @@ export function AuthGuard({
           <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-2xl" />
           <Loader2 className="relative h-10 w-10 animate-spin text-cyan-400" />
         </div>
-        <p className="text-sm text-white/50">Carregando...</p>
+        <p className="text-sm text-white/75">Carregando...</p>
       </div>
     )
   }

@@ -43,7 +43,7 @@ export function CaptureModeSelector({ onSelect }: CaptureModeSelectorProps) {
     <div className="min-h-screen bg-[#0A192F] text-white flex items-center justify-center p-6">
       <div className="max-w-md w-full">
         <h2 className="text-xl font-medium text-center mb-2">Escolha o Método de Captura</h2>
-        <p className="text-sm text-white/60 text-center mb-8">
+        <p className="text-sm text-white/85 text-center mb-8">
           Selecione como deseja monitorar seus batimentos cardíacos durante a sessão de foco.
         </p>
         <div className="space-y-3">
@@ -76,9 +76,9 @@ export function CaptureModeSelector({ onSelect }: CaptureModeSelectorProps) {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-white/50 mt-0.5 leading-relaxed">{opt.desc}</p>
+                  <p className="text-xs text-white/75 mt-0.5 leading-relaxed">{opt.desc}</p>
                 </div>
-                <ChevronRight className="h-4 w-4 text-white/30 shrink-0" />
+                <ChevronRight className="h-4 w-4 text-white/70 shrink-0" />
               </button>
             )
           })}

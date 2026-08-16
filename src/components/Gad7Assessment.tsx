@@ -119,7 +119,7 @@ export function Gad7Assessment() {
             <CheckCircle2 className="h-8 w-8 text-cyan-400" />
             <div>
               <h2 className="text-xl font-bold text-white">Avaliação Concluída</h2>
-              <p className="text-sm text-white/50">GAD-7 — Generalized Anxiety Disorder 7-item</p>
+              <p className="text-sm text-white/75">GAD-7 — Generalized Anxiety Disorder 7-item</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -134,7 +134,7 @@ export function Gad7Assessment() {
               style={{ width: `${(result.score / 21) * 100}%` }}
             />
           </div>
-          <p className="text-xs text-white/40 pt-2">
+          <p className="text-xs text-white/70 pt-2">
             {CLINIC_BRANDING.name} — Esta ferramenta é apenas para triagem e não substitui avaliação
             clínica.
           </p>
@@ -156,15 +156,15 @@ export function Gad7Assessment() {
       <CardContent className="p-6 space-y-5">
         <div className="flex items-center gap-2 pb-3 border-b border-white/10">
           <Brain className="h-5 w-5 text-cyan-400" />
-          <span className="text-sm text-white/60">{CLINIC_BRANDING.name}</span>
+          <span className="text-sm text-white/85">{CLINIC_BRANDING.name}</span>
         </div>
-        <p className="text-sm text-white/50">
+        <p className="text-sm text-white/75">
           Nas últimas 2 semanas, com que frequência você foi incomodado pelos seguintes problemas?
         </p>
         {gad7Questions.map((q, idx) => (
           <div key={q.id} className="space-y-2">
             <div className="flex items-start gap-2">
-              <span className="text-xs text-cyan-400/60 font-mono mt-0.5">{idx + 1}.</span>
+              <span className="text-xs text-cyan-400/80 font-mono mt-0.5">{idx + 1}.</span>
               <Label className="text-sm text-white/80 leading-relaxed">{q.question}</Label>
             </div>
             <RadioGroup
@@ -177,7 +177,7 @@ export function Gad7Assessment() {
                   <RadioGroupItem value={opt.value.toString()} id={`gad7-${q.id}-${opt.value}`} />
                   <Label
                     htmlFor={`gad7-${q.id}-${opt.value}`}
-                    className="text-xs text-white/60 cursor-pointer"
+                    className="text-xs text-white/85 cursor-pointer"
                   >
                     {opt.label}
                   </Label>

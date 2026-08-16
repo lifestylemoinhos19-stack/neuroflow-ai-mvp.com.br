@@ -79,7 +79,7 @@ export function GameEngineWithAutoSimulation({
           fill="currentColor"
         />
         <Diamond
-          className="absolute top-48 right-12 text-[#00FFFF]/60 h-3 w-3 animate-float"
+          className="absolute top-48 right-12 text-[#00FFFF]/80 h-3 w-3 animate-float"
           fill="currentColor"
           style={{ animationDuration: '6s' }}
         />
@@ -206,14 +206,14 @@ export function GameEngineWithAutoSimulation({
         <div className="text-3xl font-medium text-[#00FFFF] mb-2 tabular-nums">
           {formatTime(session.timeLeft)}
         </div>
-        <div className="text-xs text-white/40 mb-4">
+        <div className="text-xs text-white/70 mb-4">
           {session.phase === 'focus' ? 'Tempo de Foco' : 'Tempo de Pausa'}
         </div>
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
-            className="h-14 w-14 rounded-full bg-white/5 border border-white/10 text-[#E6F1FF]/60 hover:bg-white/10"
+            className="h-14 w-14 rounded-full bg-white/5 border border-white/10 text-[#E6F1FF]/85 hover:bg-white/10"
             onClick={onExit}
           >
             <X className="h-6 w-6" />
@@ -235,7 +235,7 @@ export function GameEngineWithAutoSimulation({
             </Button>
           )}
         </div>
-        <p className="text-[10px] text-white/30 mt-2">Sair</p>
+        <p className="text-[10px] text-white/70 mt-2">Sair</p>
       </footer>
 
       <EventLogOverlay events={state.events} />
@@ -246,7 +246,7 @@ export function GameEngineWithAutoSimulation({
           size="sm"
           className={cn(
             'rounded-full text-xs h-8',
-            isSim ? 'bg-[#FFB347]/10 text-[#FFB347]' : 'bg-white/5 text-white/50',
+            isSim ? 'bg-[#FFB347]/10 text-[#FFB347]' : 'bg-white/5 text-white/75',
           )}
           onClick={() => controller.toggleSimulation()}
         >

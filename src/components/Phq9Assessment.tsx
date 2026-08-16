@@ -91,7 +91,7 @@ export function Phq9Assessment() {
           <p className="text-4xl font-bold" style={{ color: severity.color }}>
             {totalScore}
           </p>
-          <p className="text-sm text-white/50 mt-1">Pontuação total (0-27)</p>
+          <p className="text-sm text-white/75 mt-1">Pontuação total (0-27)</p>
           <p className="text-lg font-semibold mt-2" style={{ color: severity.color }}>
             {severity.label}
           </p>
@@ -117,7 +117,7 @@ export function Phq9Assessment() {
               className="flex items-start justify-between gap-3 p-2.5 rounded-lg border border-white/10"
               style={{ backgroundColor: 'rgba(17, 34, 64, 0.85)' }}
             >
-              <span className="text-xs text-white/60 flex-1">
+              <span className="text-xs text-white/85 flex-1">
                 <span className="text-[#00FFFF] font-medium">{i + 1}.</span> {q.text}
               </span>
               <span className="text-xs font-medium text-[#00FFFF] whitespace-nowrap">
@@ -163,7 +163,7 @@ export function Phq9Assessment() {
                   'px-3 py-2.5 rounded-lg text-xs font-medium transition-all border text-center',
                   answers[q.key] === opt.value
                     ? 'bg-[rgba(0,255,255,0.18)] border-[#00FFFF] text-[#00FFFF]'
-                    : 'border-white/10 text-white/60 hover:bg-[rgba(0,255,255,0.08)] hover:border-[#00FFFF]/30',
+                    : 'border-white/10 text-white/85 hover:bg-[rgba(0,255,255,0.08)] hover:border-[#00FFFF]/30',
                 )}
               >
                 {opt.label}

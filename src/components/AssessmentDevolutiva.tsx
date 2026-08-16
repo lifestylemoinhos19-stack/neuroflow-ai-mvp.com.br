@@ -138,7 +138,7 @@ export function AssessmentDevolutiva({
             variant="ghost"
             size="sm"
             onClick={onBack}
-            className="text-white/60 hover:text-[#00FFFF]"
+            className="text-white/85 hover:text-[#00FFFF]"
           >
             <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
           </Button>
@@ -174,31 +174,31 @@ export function AssessmentDevolutiva({
                 <p className="text-3xl font-bold text-[#00FFFF]">
                   {String(result.inattentionHigh)}
                 </p>
-                <p className="text-xs text-white/50">Itens altos — Desatenção</p>
+                <p className="text-xs text-white/75">Itens altos — Desatenção</p>
               </div>
               <div className="text-center p-3 rounded-xl bg-[#0A192F] border border-white/10">
                 <p className="text-3xl font-bold text-[#00FFFF]">
                   {String(result.hyperactivityHigh)}
                 </p>
-                <p className="text-xs text-white/50">Itens altos — Hiperatividade</p>
+                <p className="text-xs text-white/75">Itens altos — Hiperatividade</p>
               </div>
             </div>
           )}
           {scaleType === 'assq' && (
             <div className="text-center py-2">
               <p className="text-4xl font-bold text-[#00FFFF]">{String(result.total)}</p>
-              <p className="text-sm text-white/50 mt-1">Pontuação total (máx. 54)</p>
+              <p className="text-sm text-white/75 mt-1">Pontuação total (máx. 54)</p>
             </div>
           )}
           {scaleType === 'cbcl' && (
             <div className="grid grid-cols-2 gap-3">
               <div className="text-center p-3 rounded-xl bg-[#0A192F] border border-white/10">
                 <p className="text-3xl font-bold text-[#00FFFF]">{String(result.internalizing)}</p>
-                <p className="text-xs text-white/50">Internalizante</p>
+                <p className="text-xs text-white/75">Internalizante</p>
               </div>
               <div className="text-center p-3 rounded-xl bg-[#0A192F] border border-white/10">
                 <p className="text-3xl font-bold text-[#00FFFF]">{String(result.externalizing)}</p>
-                <p className="text-xs text-white/50">Externalizante</p>
+                <p className="text-xs text-white/75">Externalizante</p>
               </div>
             </div>
           )}
@@ -259,7 +259,7 @@ export function AssessmentDevolutiva({
           ) : (
             <>
               {loading ? (
-                <div className="flex items-center gap-2 text-white/60 text-sm">
+                <div className="flex items-center gap-2 text-white/85 text-sm">
                   <Loader2 className="h-4 w-4 animate-spin" /> Gerando interpretação
                   personalizada...
                 </div>
@@ -269,7 +269,7 @@ export function AssessmentDevolutiva({
                     <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
                       Rascunho
                     </span>
-                    <span className="text-xs text-white/40">
+                    <span className="text-xs text-white/70">
                       Conteúdo gerado pela IA — sujeito a revisão do administrador
                     </span>
                   </div>
@@ -278,7 +278,7 @@ export function AssessmentDevolutiva({
                   </p>
                   <div className="space-y-1 mt-2">
                     {interpretation.guidance.map((g, i) => (
-                      <p key={i} className="text-xs text-white/50 flex items-start gap-1">
+                      <p key={i} className="text-xs text-white/75 flex items-start gap-1">
                         <span className="text-[#00FFFF] mt-0.5">•</span> {g}
                       </p>
                     ))}
@@ -289,7 +289,7 @@ export function AssessmentDevolutiva({
                       <p className="text-sm text-white/70">{aiAction}</p>
                     </div>
                   )}
-                  <p className="text-xs text-white/40 italic mt-2">
+                  <p className="text-xs text-white/70 italic mt-2">
                     {interpretation.recommendations}
                   </p>
                   {interpretation.draftNote && (
@@ -311,7 +311,7 @@ export function AssessmentDevolutiva({
             <h3 className="text-lg font-bold text-white mb-1">
               Quer testar o Explorador da Calma?
             </h3>
-            <p className="text-sm text-white/60 mb-4">
+            <p className="text-sm text-white/85 mb-4">
               Uma experiência interativa de biofeedback para ajudar seu filho a desenvolver foco e
               regulação emocional.
             </p>
