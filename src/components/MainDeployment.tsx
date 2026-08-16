@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { CameraOnboarding } from '@/components/CameraOnboarding'
-import { GameEngine } from '@/components/GameEngine'
-import type { GameController } from '@/lib/game-controller'
+import { FocusExperience } from '@/components/FocusExperience'
 import { useAuth } from '@/contexts/auth-context'
 import { Rocket, BarChart3, RotateCcw } from 'lucide-react'
 import { FieldTestBatchPanel } from '@/components/FieldTestBatchPanel'
 import { FeedbackMonitorPanel } from '@/components/FeedbackMonitorPanel'
+import type { GameController } from '@/lib/game-controller'
+import type { FocusPersistence } from '@/hooks/use-focus-session-v2'
 
 type DeploymentState = 'idle' | 'onboarding' | 'focus' | 'ended'
 
@@ -31,9 +32,15 @@ interface MainDeploymentProps {
   autoStart?: boolean
 }
 
+/**
+ * MainDeployment — rota /deployment (autenticada).
+ *
+ * Mantém o fluxo de onboarding/calibração de câmera e, na fase de foco, usa o
+ * componente unificado FocusExperience (mesma sessão de foco do
+ * /focus-session). A persistência é sempre Supabase (usuário logado).
+ */
 export function MainDeployment({ sessionId, userId, autoStart = false }: MainDeploymentProps) {
   const [deployState, setDeployState] = useState<DeploymentState>('idle')
-  const [controller, setController] = useState<GameController | null>(null)
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null)
   const [startedAt, setStartedAt] = useState<string | null>(null)
   const [endedAt, setEndedAt] = useState<string | null>(null)
@@ -52,35 +59,26 @@ export function MainDeployment({ sessionId, userId, autoStart = false }: MainDep
     }
   }, [autoStart, deployState, handleStart])
 
-  const handleOnboardingComplete = useCallback((ctrl: GameController) => {
+  const handleOnboardingComplete = useCallback((_controller: GameController) => {
     const data: OnboardingData = {
-      bpm: ctrl.getState().bpm,
+      bpm: 72,
       calibratedAt: new Date().toISOString(),
     }
-    setController(ctrl)
     setOnboardingData(data)
     setDeployState('focus')
   }, [])
 
   const handleSessionEnd = useCallback(() => {
-    if (controller) {
-      controller.stop()
-      controller.dispose()
-    }
     setEndedAt(new Date().toISOString())
     setDeployState('ended')
-  }, [controller])
+  }, [])
 
   const handleReset = useCallback(() => {
-    if (controller) {
-      controller.dispose()
-    }
-    setController(null)
     setOnboardingData(null)
     setStartedAt(null)
     setEndedAt(null)
     setDeployState('idle')
-  }, [controller])
+  }, [])
 
   if (deployState === 'idle') {
     return (
@@ -98,10 +96,10 @@ export function MainDeployment({ sessionId, userId, autoStart = false }: MainDep
               <Rocket className="h-10 w-10 text-[#00FFFF]" />
             </div>
             <h1 className="text-2xl font-bold text-[#E6F1FF] mb-2">
-              NeuroFlow AI - Sessao de Foco
+              NeuroFlow AI - Sessão de Foco
             </h1>
             <p className="text-sm text-[#00FFFF]/85 mb-8">
-              Pronto para testes de campo e calibracao de dispositivos
+              Pronto para testes de campo e calibração de dispositivos
             </p>
             <Button
               onClick={handleStart}
@@ -131,8 +129,12 @@ export function MainDeployment({ sessionId, userId, autoStart = false }: MainDep
     return <CameraOnboarding onComplete={handleOnboardingComplete} />
   }
 
-  if (deployState === 'focus' && controller) {
-    return <GameEngine controller={controller} onExit={handleSessionEnd} />
+  if (deployState === 'focus') {
+    const persistence: FocusPersistence = {
+      mode: 'supabase',
+      userId: effectiveUserId,
+    }
+    return <FocusExperience persistence={persistence} isGuest={false} onExit={handleSessionEnd} />
   }
 
   if (deployState === 'ended') {
@@ -161,8 +163,8 @@ export function MainDeployment({ sessionId, userId, autoStart = false }: MainDep
             >
               <BarChart3 className="h-8 w-8 text-[#00FFFF]" />
             </div>
-            <h1 className="text-xl font-bold text-[#E6F1FF]">Session Ended</h1>
-            <p className="text-sm text-[#00FFFF]/85">Deployment Summary</p>
+            <h1 className="text-xl font-bold text-[#E6F1FF]">Sessão Encerrada</h1>
+            <p className="text-sm text-[#00FFFF]/85">Resumo do Deploy</p>
           </div>
           <pre
             className="bg-black/40 border border-[#00FFFF]/20 rounded-xl p-4 text-xs text-[#E6F1FF]/80 overflow-auto max-h-96"

@@ -1,44 +1,26 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/contexts/auth-context'
-import { MainDeployment } from '@/components/MainDeployment'
 import { FocusSessionErrorBoundary } from '@/components/FocusSessionErrorBoundary'
-import { PublicFocusExplorador } from '@/components/PublicFocusExplorador'
-
-const GUEST_FOCUS_KEY = 'neuroflow_guest_focus_sessions'
-
-export interface GuestFocusEntry {
-  id: string
-  started_at: string
-  completed_at: string | null
-  crystals: number
-  master_crystals: number
-  duration_sec: number
-  avg_bpm: number | null
-}
-
-export function readGuestFocusSessions(): GuestFocusEntry[] {
-  try {
-    const raw = localStorage.getItem(GUEST_FOCUS_KEY)
-    return raw ? (JSON.parse(raw) as GuestFocusEntry[]) : []
-  } catch {
-    return []
-  }
-}
-
-export function saveGuestFocusSession(entry: GuestFocusEntry) {
-  const list = readGuestFocusSessions()
-  list.unshift(entry)
-  localStorage.setItem(GUEST_FOCUS_KEY, JSON.stringify(list.slice(0, 50)))
-}
+import { FocusExperience } from '@/components/FocusExperience'
+import type { FocusPersistence } from '@/hooks/use-focus-session-v2'
+import { readGuestFocusSessions } from '@/hooks/use-focus-session-v2'
 
 /**
  * /focus-session — público (sem login).
- * - Logado: progresso salvo no Supabase (focus_sessions).
- * - Visitante (sem login): progresso salvo em localStorage (modo convidado).
+ *
+ * Sessão de Foco UNIFICADA: logado e visitante usam exatamente o mesmo
+ * componente (FocusExperience) com a mesma duração, fases e cristais.
+ * A única diferença é o armazenamento:
+ *  - Logado → Supabase (focus_sessions)
+ *  - Visitante → localStorage (modo convidado)
+ *
+ * Ao autenticar, sincroniza sessões de convidado pendentes para o Supabase.
  */
 export default function FocusSessionRoute() {
-  const { isAuthenticated, loading } = useAuth()
+  const { isAuthenticated, loading, user } = useAuth()
+  const navigate = useNavigate()
   const [guestId] = useState<string>(() => {
     const existing = localStorage.getItem('neuroflow_guest_focus_id')
     if (existing) return existing
@@ -52,25 +34,25 @@ export default function FocusSessionRoute() {
     if (!isAuthenticated) return
     const pending = readGuestFocusSessions()
     if (pending.length === 0) return
-    ;(async () => {
+    void (async () => {
       const {
-        data: { user },
+        data: { user: authUser },
       } = await supabase.auth.getUser()
-      if (!user) return
+      if (!authUser) return
       // Best-effort sync; falhas silenciosas (o visitante não vê).
       for (const entry of pending) {
         await supabase.from('focus_sessions').insert({
-          id: undefined,
-          user_id: user.id,
+          user_id: authUser.id,
           status: 'completed',
           started_at: entry.started_at,
           completed_at: entry.completed_at,
           crystals_earned: entry.crystals,
           master_crystals: entry.master_crystals,
           capture_method: 'guest_local',
+          settings: { duration: entry.duration_sec, mode: 'guest_sync', avg_bpm: entry.avg_bpm },
         })
       }
-      localStorage.removeItem(GUEST_FOCUS_KEY)
+      localStorage.removeItem('neuroflow_guest_focus_sessions')
     })()
   }, [isAuthenticated])
 
@@ -82,19 +64,15 @@ export default function FocusSessionRoute() {
     )
   }
 
-  // Logado: usa MainDeployment (salva no Supabase via useFocusSession).
-  if (isAuthenticated) {
-    return (
-      <FocusSessionErrorBoundary>
-        <MainDeployment />
-      </FocusSessionErrorBoundary>
-    )
-  }
+  const persistence: FocusPersistence = isAuthenticated
+    ? { mode: 'supabase', userId: user?.id ?? null }
+    : { mode: 'local', guestId }
 
-  // Visitante (sem login): sessão pública em localStorage.
+  const handleExit = () => navigate('/dashboard')
+
   return (
     <FocusSessionErrorBoundary>
-      <PublicFocusExplorador guestId={guestId} onSave={(entry) => saveGuestFocusSession(entry)} />
+      <FocusExperience persistence={persistence} isGuest={!isAuthenticated} onExit={handleExit} />
     </FocusSessionErrorBoundary>
   )
 }
