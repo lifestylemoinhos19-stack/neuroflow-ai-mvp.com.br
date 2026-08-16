@@ -1,5 +1,5 @@
 import '@/styles/neuro-animations.css'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Diamond,
@@ -7,7 +7,7 @@ import {
   Play,
   Sparkles,
   Activity,
-  Gamepad2,
+  Brain,
   Info,
   Trophy,
   RotateCcw,
@@ -107,7 +107,7 @@ function StartScreen({
             boxShadow: '0 0 30px rgba(0, 255, 255, 0.33)',
           }}
         >
-          <Gamepad2 className="h-10 w-10 text-[#00FFFF]" />
+          <Brain className="h-10 w-10 text-[#00FFFF]" />
         </div>
         <h1 className="text-2xl font-bold text-[#E6F1FF] mb-2">Explorador da Calma</h1>
         <p className="text-sm text-[#00FFFF]/85 mb-2">
@@ -158,7 +158,7 @@ function StartScreen({
           className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/90 rounded-full px-8 py-3 text-base font-semibold"
           style={{ boxShadow: '0 0 20px rgba(0, 255, 255, 0.33)' }}
         >
-          <Gamepad2 className="h-5 w-5 mr-2" />
+          <Brain className="h-5 w-5 mr-2" />
           Iniciar Sessão
         </Button>
 
@@ -190,6 +190,13 @@ function ActiveExperience({
   onRepeat: () => void
 }) {
   const session = useFocusSessionV2({ durationSec, persistence })
+
+  // Inicia a sessão imediatamente ao montar a experiência ativa,
+  // disparando os intervalos do timer (1s) e do BPM.
+  useEffect(() => {
+    session.start()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // ---- Tela de conclusão -------------------------------------------------
   if (session.screen === 'completed' && session.result) {
