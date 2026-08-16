@@ -63,7 +63,11 @@ export function useFocusSession(captureMethod: string = 'camera_rppg') {
   }, [externalBpm])
 
   useEffect(() => {
-    if (!user) return
+    if (!user) {
+      // Sem usuário (modo convidado público): não cria sessão no Supabase.
+      // O progresso do visitante é gerenciado por PublicFocusExplorador em localStorage.
+      return
+    }
     let mounted = true
     supabase
       .from('focus_sessions')

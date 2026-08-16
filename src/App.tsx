@@ -51,6 +51,30 @@ import FasPage from '@/pages/FasPage'
 import Gad7Page from '@/pages/Gad7Page'
 import Mini500 from '@/pages/Mini500'
 import AdminPainel from '@/pages/AdminPainel'
+import AssignScales from '@/pages/AssignScales'
+import type { ReactNode } from 'react'
+import { useAuth } from '@/contexts/auth-context'
+
+/**
+ * RoleGate restricts a route to the given roles. `role` comes from the Supabase
+ * profiles table via AuthContext (never localStorage). When `denyStaff` is set,
+ * staff is explicitly blocked even if present in `allow` (convenience flag).
+ */
+function RoleGate({
+  allow,
+  denyStaff = false,
+  children,
+}: {
+  allow: string[]
+  denyStaff?: boolean
+  children: ReactNode
+}) {
+  const { role, isStaff } = useAuth()
+  if (!role) return <Navigate to="/dashboard" replace />
+  if (denyStaff && isStaff) return <Navigate to="/dashboard" replace />
+  if (!allow.includes(role)) return <Navigate to="/dashboard" replace />
+  return <>{children}</>
+}
 
 function AppInner() {
   useGuestConversion()
@@ -142,12 +166,60 @@ function AppInner() {
             </AuthGuard>
           }
         >
-          <Route path="/anamnesis" element={<Anamnesis />} />
-          <Route path="/mini-interview" element={<MiniInterview />} />
-          <Route path="/mini" element={<Mini500 />} />
-          <Route path="/scales" element={<Scales />} />
-          <Route path="/modulos-clinicos" element={<ClinicalModulesHub />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          {/* /anamnesis: admin, doctor, staff (start only). Patient forbidden. */}
+          <Route
+            path="/anamnesis"
+            element={
+              <RoleGate allow={['admin', 'doctor', 'staff']}>
+                <Anamnesis />
+              </RoleGate>
+            }
+          />
+          {/* /mini-interview must be preserved intact — admin + doctor only. */}
+          <Route
+            path="/mini-interview"
+            element={
+              <RoleGate allow={['admin', 'doctor']}>
+                <MiniInterview />
+              </RoleGate>
+            }
+          />
+          {/* /mini: admin, doctor, staff (start). Patient forbidden. */}
+          <Route
+            path="/mini"
+            element={
+              <RoleGate allow={['admin', 'doctor', 'staff']}>
+                <Mini500 />
+              </RoleGate>
+            }
+          />
+          {/* /scales: admin, doctor, staff (select). Patient forbidden. */}
+          <Route
+            path="/scales"
+            element={
+              <RoleGate allow={['admin', 'doctor', 'staff']}>
+                <Scales />
+              </RoleGate>
+            }
+          />
+          {/* /modulos-clinicos: admin + doctor only. */}
+          <Route
+            path="/modulos-clinicos"
+            element={
+              <RoleGate allow={['admin', 'doctor']}>
+                <ClinicalModulesHub />
+              </RoleGate>
+            }
+          />
+          {/* /dashboard: admin, doctor, patient (simplified). Staff forbidden. */}
+          <Route
+            path="/dashboard"
+            element={
+              <RoleGate allow={['admin', 'doctor', 'hospede']} denyStaff>
+                <Dashboard />
+              </RoleGate>
+            }
+          />
           <Route path="/dashboard/evolution" element={<MiniEvolutionDashboard />} />
           <Route
             path="/dashboard/evolution/:patientId"
@@ -159,8 +231,33 @@ function AppInner() {
           />
           <Route path="/insights" element={<Insights />} />
           <Route path="/logs" element={<HealthLogs />} />
-          <Route path="/historico" element={<History />} />
-          <Route path="/documentos" element={<Documents />} />
+          {/* /historico: admin, doctor (all), patient (own only). Staff forbidden. */}
+          <Route
+            path="/historico"
+            element={
+              <RoleGate allow={['admin', 'doctor', 'hospede']} denyStaff>
+                <History />
+              </RoleGate>
+            }
+          />
+          {/* /documentos: admin, doctor (all), patient (own only). Staff forbidden. */}
+          <Route
+            path="/documentos"
+            element={
+              <RoleGate allow={['admin', 'doctor', 'hospede']} denyStaff>
+                <Documents />
+              </RoleGate>
+            }
+          />
+          {/* Staff-only: assign scales to a patient */}
+          <Route
+            path="/atribuir-escalas"
+            element={
+              <AuthGuard requireStaff>
+                <AssignScales />
+              </AuthGuard>
+            }
+          />
           <Route path="/evaluations/phq9" element={<Phq9Page />} />
           <Route path="/evaluations/gad7" element={<Gad7Page />} />
           <Route path="/evaluations/sds" element={<SdsPage />} />

@@ -21,6 +21,10 @@ import {
   Layers,
   FileCheck,
   UserCog,
+  Gamepad2,
+  ClipboardPlus,
+  PlayCircle,
+  type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
@@ -29,36 +33,73 @@ import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { useBranding } from '@/hooks/use-branding'
 import { SkipLogo } from '@/components/SkipLogo'
-import { CalmExplorerModal } from '@/components/CalmExplorerModal'
 
-const baseNavItems = [
-  { path: '/', label: 'Painel', icon: Activity },
+interface NavItem {
+  path: string
+  label: string
+  icon: LucideIcon
+}
+
+// Admin: full clinical + admin/audit + calm explorer
+const adminNavItems: NavItem[] = [
+  { path: '/dashboard', label: 'Dashboard Clínico', icon: LayoutDashboard },
   { path: '/anamnesis', label: 'Anamnese', icon: ClipboardList },
   { path: '/scales', label: 'Escalas', icon: ClipboardCheck },
-  { path: '/modulos-clinicos', label: 'Módulos Clínicos', icon: Layers },
   { path: '/mini', label: 'MINI 5.0.0', icon: FileCheck },
-  { path: '/ybocs-assessment', label: 'Y-BOCS', icon: ListChecks },
-  { path: '/avaliacao', label: 'Avaliação', icon: Stethoscope },
+  { path: '/modulos-clinicos', label: 'Módulos Clínicos', icon: Layers },
   { path: '/historico', label: 'Histórico', icon: LineChart },
   { path: '/documentos', label: 'Documentos', icon: FileText },
-  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/stress-test', label: 'Testes', icon: FlaskConical },
-  { path: '/ethics', label: 'Institucional', icon: ScrollText },
-  { path: '/security', label: 'Segurança', icon: Shield },
+  { path: '/admin/painel', label: 'Painel Admin', icon: UserCog },
+  { path: '/admin/ethical-audit', label: 'Auditoria', icon: FileSearch },
+  { path: '/focus-session', label: 'Explorador da Calma', icon: Gamepad2 },
+]
+
+// Doctor/Profissional: clinical tools (no admin/audit)
+const doctorNavItems: NavItem[] = [
+  { path: '/dashboard', label: 'Dashboard Clínico', icon: LayoutDashboard },
+  { path: '/anamnesis', label: 'Anamnese', icon: ClipboardList },
+  { path: '/scales', label: 'Escalas', icon: ClipboardCheck },
+  { path: '/mini', label: 'MINI 5.0.0', icon: FileCheck },
+  { path: '/modulos-clinicos', label: 'Módulos Clínicos', icon: Layers },
+  { path: '/historico', label: 'Histórico', icon: LineChart },
+  { path: '/documentos', label: 'Documentos', icon: FileText },
+  { path: '/focus-session', label: 'Explorador da Calma', icon: Gamepad2 },
+]
+
+// Staff (equipe técnica): only assign scales + start interview + calm explorer.
+// NO dashboard, histórico, documentos, resultados, laudos.
+const staffNavItems: NavItem[] = [
+  { path: '/atribuir-escalas', label: 'Atribuir Escalas', icon: ClipboardPlus },
+  { path: '/anamnesis', label: 'Iniciar Entrevista', icon: PlayCircle },
+  { path: '/scales', label: 'Selecionar Escalas', icon: ClipboardCheck },
+  { path: '/mini', label: 'Iniciar MINI', icon: FileCheck },
+  { path: '/focus-session', label: 'Explorador da Calma', icon: Gamepad2 },
+]
+
+// Patient (hospede): simplified dashboard + own interviews + calm explorer.
+// NO diagnostic tools (MINI, Módulos Clínicos, Anamnese, Escalas).
+const patientNavItems: NavItem[] = [
+  { path: '/dashboard', label: 'Meu Painel', icon: LayoutDashboard },
+  { path: '/historico', label: 'Minhas Entrevistas', icon: LineChart },
+  { path: '/documentos', label: 'Meus Documentos', icon: FileText },
+  { path: '/focus-session', label: 'Explorador da Calma', icon: Gamepad2 },
 ]
 
 export default function Layout() {
-  const { logout, user, isAdmin } = useAuth()
+  const { logout, user, isAdmin, isDoctor, isStaff, isPatient } = useAuth()
   const branding = useBranding()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const navItems = isAdmin
-    ? [
-        ...baseNavItems,
-        { path: '/admin/painel', label: 'Painel Admin', icon: UserCog },
-        { path: '/admin/ethical-audit', label: 'Auditoria', icon: FileSearch },
-      ]
-    : baseNavItems
+
+  const navItems: NavItem[] = isAdmin
+    ? adminNavItems
+    : isDoctor
+      ? doctorNavItems
+      : isStaff
+        ? staffNavItems
+        : isPatient
+          ? patientNavItems
+          : doctorNavItems
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -198,7 +239,6 @@ export default function Layout() {
           )
         })}
       </nav>
-      <CalmExplorerModal />
     </div>
   )
 }

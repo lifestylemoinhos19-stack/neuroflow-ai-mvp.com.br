@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, type ReactNode } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -21,7 +21,24 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, Users, FlaskConical, FileText, ShieldAlert, Plus, Pencil, Eye } from 'lucide-react'
+import {
+  Trash2,
+  Users,
+  FlaskConical,
+  FileText,
+  ShieldAlert,
+  Plus,
+  Pencil,
+  Eye,
+  UserCog,
+} from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useAuth } from '@/contexts/auth-context'
 import { toast } from 'sonner'
 import { getAdminPatients, deletePatientData, type AdminPatient } from '@/services/admin-painel'
@@ -32,10 +49,24 @@ import {
   type AdminTest,
 } from '@/services/admin-sessions'
 import { getAdminReports, deleteReport, type AdminReport } from '@/services/admin-reports'
+import {
+  getAdminUsers,
+  updateUserRole,
+  type AdminUserProfile,
+  type ProfileRole,
+} from '@/services/admin-users'
 import { PatientFormDialog } from '@/components/admin/patient-form-dialog'
 import { SessionFormDialog } from '@/components/admin/session-form-dialog'
 import { ReportFormDialog } from '@/components/admin/report-form-dialog'
 import { ReportViewDialog } from '@/components/admin/report-view-dialog'
+
+const ROLE_LABELS: Record<string, string> = {
+  admin: 'Admin',
+  doctor: 'Profissional',
+  staff: 'Equipe Técnica',
+  hospede: 'Paciente',
+}
+const ROLE_OPTIONS: ProfileRole[] = ['admin', 'doctor', 'staff', 'hospede']
 
 type DeleteTarget = { type: 'patient' | 'session' | 'report'; id: string; name: string } | null
 
@@ -76,7 +107,10 @@ export default function AdminPainel() {
   const [patients, setPatients] = useState<AdminPatient[]>([])
   const [tests, setTests] = useState<AdminTest[]>([])
   const [reports, setReports] = useState<AdminReport[]>([])
+  const [users, setUsers] = useState<AdminUserProfile[]>([])
   const [loading, setLoading] = useState(true)
+  const [roleUpdating, setRoleUpdating] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState('patients')
   const [patientDialog, setPatientDialog] = useState<{
     open: boolean
     patient: AdminPatient | null
@@ -95,12 +129,29 @@ export default function AdminPainel() {
 
   const loadData = useCallback(async () => {
     setLoading(true)
-    const [p, t, r] = await Promise.all([getAdminPatients(), getAdminTests(), getAdminReports()])
+    const [p, t, r, u] = await Promise.all([
+      getAdminPatients(),
+      getAdminTests(),
+      getAdminReports(),
+      getAdminUsers(),
+    ])
     setPatients(p)
     setTests(t)
     setReports(r)
+    setUsers(u)
     setLoading(false)
   }, [])
+
+  const handleRoleChange = async (profileId: string, newRole: ProfileRole) => {
+    setRoleUpdating(profileId)
+    const { error } = await updateUserRole(profileId, newRole)
+    setRoleUpdating(null)
+    if (error) toast.error(`Erro: ${error}`)
+    else {
+      toast.success(`Perfil alterado para ${ROLE_LABELS[newRole]}.`)
+      setUsers((prev) => prev.map((u) => (u.id === profileId ? { ...u, role: newRole } : u)))
+    }
+  }
 
   useEffect(() => {
     if (isAdmin) loadData()
@@ -151,8 +202,8 @@ export default function AdminPainel() {
         </p>
       </div>
 
-      <Tabs defaultValue="patients">
-        <TabsList className="grid w-full grid-cols-3 mb-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-4 mb-4">
           <TabsTrigger value="patients" className="flex items-center gap-2">
             <Users className="h-4 w-4" /> Pacientes ({patients.length})
           </TabsTrigger>
@@ -161,6 +212,9 @@ export default function AdminPainel() {
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex items-center gap-2">
             <FileText className="h-4 w-4" /> Laudos ({reports.length})
+          </TabsTrigger>
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <UserCog className="h-4 w-4" /> Usuários ({users.length})
           </TabsTrigger>
         </TabsList>
 
@@ -360,6 +414,71 @@ export default function AdminPainel() {
                                 </Button>
                               }
                             />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="users">
+          <Card className="border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-base font-bold text-white flex items-center gap-2">
+                <UserCog className="h-4 w-4" /> Usuários e Permissões
+              </CardTitle>
+              <CardDescription className="text-white/80">
+                Altere o perfil de acesso (role) de cada usuário. O role é sempre lido do Supabase,
+                nunca do localStorage.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {users.length === 0 ? (
+                <p className="text-center text-white/80 py-8">Nenhum usuário encontrado.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-white font-semibold">Nome</TableHead>
+                        <TableHead className="text-white font-semibold">ID</TableHead>
+                        <TableHead className="text-white font-semibold">Criado em</TableHead>
+                        <TableHead className="text-white font-semibold">Perfil (Role)</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.map((u) => (
+                        <TableRow key={u.id}>
+                          <TableCell className="text-sm font-bold text-white">
+                            {u.full_name || '—'}
+                          </TableCell>
+                          <TableCell className="text-xs text-white/60 font-mono">
+                            {u.id.slice(0, 8)}…
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {new Date(u.created_at).toLocaleDateString('pt-BR')}
+                          </TableCell>
+                          <TableCell>
+                            <Select
+                              value={u.role}
+                              onValueChange={(v) => handleRoleChange(u.id, v as ProfileRole)}
+                              disabled={roleUpdating === u.id}
+                            >
+                              <SelectTrigger className="w-44 bg-slate-900 border-slate-700 text-white">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {ROLE_OPTIONS.map((r) => (
+                                  <SelectItem key={r} value={r}>
+                                    {ROLE_LABELS[r]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </TableCell>
                         </TableRow>
                       ))}

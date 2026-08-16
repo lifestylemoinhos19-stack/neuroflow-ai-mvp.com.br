@@ -1422,6 +1422,60 @@ export type Database = {
         }
         Relationships: []
       }
+      scale_assignments: {
+        Row: {
+          id: string
+          patient_id: string
+          session_id: string | null
+          scale_type: string
+          status: string
+          assigned_by: string | null
+          assigned_at: string
+          completed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          patient_id: string
+          session_id?: string | null
+          scale_type: string
+          status?: string
+          assigned_by?: string | null
+          assigned_at?: string
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          patient_id?: string
+          session_id?: string | null
+          scale_type?: string
+          status?: string
+          assigned_by?: string | null
+          assigned_at?: string
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'scale_assignments_patient_id_fkey'
+            columns: ['patient_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'scale_assignments_session_id_fkey'
+            columns: ['session_id']
+            isOneToOne: false
+            referencedRelation: 'anamnesis_sessions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       system_settings: {
         Row: {
           id: string

@@ -12,6 +12,8 @@ interface AuthUser {
   name: string
 }
 
+export type UserRole = string
+
 interface AuthContextType {
   isAuthenticated: boolean
   isMfaVerified: boolean
@@ -23,6 +25,9 @@ interface AuthContextType {
   profileChecked: boolean
   isAdmin: boolean
   isDoctor: boolean
+  isStaff: boolean
+  isPatient: boolean
+  role: UserRole | null
   bleOnboardingCompleted: boolean
   pairedSensorId: string | null
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
@@ -75,16 +80,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
     setProfileChecked(false)
-    supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .maybeSingle()
-      .then(({ data }) => {
+    void (async () => {
+      try {
+        const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
         setProfile(data)
+      } catch {
+        setProfile(null)
+      } finally {
         setProfileChecked(true)
-      })
-      .catch(() => setProfileChecked(true))
+      }
+    })()
     getOnboardingState(user.id).then((data) => {
       setOnboarding(
         data
@@ -95,8 +100,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   const needsOnboarding = isAuthenticated && isMfaVerified && (!profile || !profile.privacy_consent)
+  const role: UserRole | null = profile?.role ?? null
   const isAdmin = !!profile && profile.role === 'admin'
   const isDoctor = !!profile && profile.role === 'doctor'
+  const isStaff = !!profile && profile.role === 'staff'
+  const isPatient = !!profile && profile.role === 'hospede'
   const bleOnboardingCompleted = onboarding
     ? !onboarding.is_first_access
     : !!profile?.has_completed_onboarding
@@ -273,6 +281,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profileChecked,
         isAdmin,
         isDoctor,
+        isStaff,
+        isPatient,
+        role,
         bleOnboardingCompleted,
         pairedSensorId: onboarding?.paired_sensor_id ?? null,
         signIn,
@@ -299,11 +310,13 @@ export function AuthGuard({
   children,
   requireMfa = true,
   requireAdmin = false,
+  requireStaff = false,
   requireClinical = false,
 }: {
   children: ReactNode
   requireMfa?: boolean
   requireAdmin?: boolean
+  requireStaff?: boolean
   requireClinical?: boolean
 }) {
   const {
@@ -315,6 +328,7 @@ export function AuthGuard({
     profileChecked,
     isAdmin,
     isDoctor,
+    isStaff,
     retryAuth,
   } = useAuth()
   const location = useLocation()
@@ -369,6 +383,11 @@ export function AuthGuard({
   }
 
   if (requireAdmin && !isAdmin) {
+    return <Navigate to="/dashboard" replace />
+  }
+
+  // requireStaff: staff OR admin (admin can do everything staff can)
+  if (requireStaff && !isStaff && !isAdmin) {
     return <Navigate to="/dashboard" replace />
   }
 
