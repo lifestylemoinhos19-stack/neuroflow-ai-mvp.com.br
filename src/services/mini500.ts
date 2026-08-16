@@ -112,8 +112,8 @@ export interface Mini500ReportData {
   patient: { fullName: string; birthDate: string | null } | null
   interviewerName: string
   protocol: string
-  moduleResults: import('@/lib/mini500-scoring').ModuleResult[]
-  interpretations: import('@/lib/mini500-interpretation').ModuleInterpretation[]
+  moduleResults: import('@/lib/mini500-scoring').Mini500ModuleResult[]
+  interpretations: import('@/lib/mini500-interpretation').Mini500ModuleInterpretation[]
   clinicalSummary: string
 }
 

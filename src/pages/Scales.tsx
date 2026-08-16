@@ -19,7 +19,7 @@ export default function Scales() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
-  const { cameraStatus, cameraError, requestCamera, retryCamera } = useOpticalCapture('rppg')
+  const { cameraStatus, cameraError, requestCamera, retry: retryCamera } = useOpticalCapture('rppg')
 
   const loadData = useCallback(async () => {
     setLoading(true)

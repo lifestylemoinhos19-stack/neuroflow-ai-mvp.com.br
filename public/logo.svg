@@ -36,6 +36,7 @@
 
   <!-- Neural Network Connections Background -->
   <g opacity="0.4" stroke="#00D2FF" stroke-width="1.5">
+    <!-- Outer background network lines -->
     <line x1="80" y1="120" x2="160" y2="180" />
     <line x1="160" y1="180" x2="100" y2="280" />
     <line x1="100" y1="280" x2="60" y2="380" />
@@ -49,6 +50,7 @@
     <line x1="80" y1="120" x2="200" y2="80" />
     <line x1="432" y1="120" x2="312" y2="80" />
 
+    <!-- Nodes -->
     <circle cx="80" cy="120" r="4" fill="#00F0FF" />
     <circle cx="160" cy="180" r="4" fill="#00F0FF" />
     <circle cx="100" cy="280" r="4" fill="#00F0FF" />
@@ -67,21 +69,40 @@
 
   <!-- Brain Vector Graphic (Luminous Neural Fold Art) -->
   <g filter="url(#neon)">
-    <path d="M 250,130 C 210,120 160,130 130,165 C 100,200 95,250 110,290 C 120,315 140,335 170,340 C 200,345 220,330 235,315 C 245,305 248,280 250,260 Z" fill="none" stroke="url(#brainGlow)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M 262,130 C 302,120 352,130 382,165 C 412,200 417,250 402,290 C 392,315 372,335 342,340 C 312,345 292,330 277,315 C 267,305 264,280 262,260 Z" fill="none" stroke="url(#brainGlow)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Main Brain Contour and Gyri Lines (Left & Right Hemispheres) -->
+    <!-- Left Cortex -->
+    <path d="M 250,130 
+             C 210,120 160,130 130,165 
+             C 100,200 95,250 110,290 
+             C 120,315 140,335 170,340 
+             C 200,345 220,330 235,315 
+             C 245,305 248,280 250,260 Z" 
+          fill="none" stroke="url(#brainGlow)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
 
+    <!-- Right Cortex -->
+    <path d="M 262,130 
+             C 302,120 352,130 382,165 
+             C 412,200 417,250 402,290 
+             C 392,315 372,335 342,340 
+             C 312,345 292,330 277,315 
+             C 267,305 264,280 262,260 Z" 
+          fill="none" stroke="url(#brainGlow)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Left Internal Folds / Sulci -->
     <path d="M 140,180 C 170,195 200,180 230,200" fill="none" stroke="#00F0FF" stroke-width="3" stroke-linecap="round"/>
     <path d="M 120,230 C 150,220 180,245 225,235" fill="none" stroke="#00F0FF" stroke-width="3" stroke-linecap="round"/>
     <path d="M 135,270 C 160,285 190,265 230,280" fill="none" stroke="#00F0FF" stroke-width="3" stroke-linecap="round"/>
     <path d="M 170,145 C 190,165 210,150 240,160" fill="none" stroke="#00F0FF" stroke-width="2.5" stroke-linecap="round"/>
     <path d="M 160,310 C 185,300 210,315 235,300" fill="none" stroke="#00F0FF" stroke-width="2.5" stroke-linecap="round"/>
 
+    <!-- Right Internal Folds / Sulci -->
     <path d="M 372,180 C 342,195 312,180 282,200" fill="none" stroke="#00F0FF" stroke-width="3" stroke-linecap="round"/>
     <path d="M 392,230 C 362,220 332,245 287,235" fill="none" stroke="#00F0FF" stroke-width="3" stroke-linecap="round"/>
     <path d="M 377,270 C 352,285 322,265 282,280" fill="none" stroke="#00F0FF" stroke-width="3" stroke-linecap="round"/>
     <path d="M 342,145 C 322,165 302,150 272,160" fill="none" stroke="#00F0FF" stroke-width="2.5" stroke-linecap="round"/>
     <path d="M 352,310 C 327,300 302,315 277,300" fill="none" stroke="#00F0FF" stroke-width="2.5" stroke-linecap="round"/>
 
+    <!-- Synaptic Nodes on Brain surface -->
     <circle cx="140" cy="180" r="4" fill="#FFFFFF"/>
     <circle cx="230" cy="200" r="4" fill="#FFFFFF"/>
     <circle cx="120" cy="230" r="4" fill="#FFFFFF"/>
@@ -96,8 +117,14 @@
     <circle cx="256" cy="260" r="5" fill="#80EEFF"/>
   </g>
 
-  <!-- Typography: NeuroFlow AI -->
+  <!-- Bold Central Typography: NeuroFlow AI -->
   <g filter="url(#textShadow)">
-    <text x="256" y="275" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="900" font-size="52" fill="#FFFFFF" text-anchor="middle" letter-spacing="-1">NeuroFlow AI</text>
+    <text x="256" y="275" 
+          font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" 
+          font-weight="900" 
+          font-size="52" 
+          fill="#FFFFFF" 
+          text-anchor="middle" 
+          letter-spacing="-1">NeuroFlow AI</text>
   </g>
 </svg>

@@ -137,7 +137,7 @@ export default function NeuroFlowLanding() {
           <div className="inline-flex items-center gap-2 bg-[#00FFFF]/10 px-4 py-2 rounded-full border border-[#00FFFF]/20 mb-8">
             <Sparkles className="h-4 w-4 text-[#00FFFF]" />
             <span className="text-[#00FFFF] text-sm font-medium tracking-wide">
-              NeuroFlow IA · Skip Platform
+              NeuroFlow AI Platform
             </span>
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#E6F1FF] tracking-tight mb-6">

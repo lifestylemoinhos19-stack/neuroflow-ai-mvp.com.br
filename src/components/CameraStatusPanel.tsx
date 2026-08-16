@@ -101,9 +101,6 @@ export function CameraStatusPanel({
           <RefreshCw className="h-4 w-4 mr-1.5" /> Tentar Novamente
         </Button>
       )}
-      {status === 'requesting' && (
-        <Loader2 className="h-5 w-5 text-[#00FFFF] animate-spin shrink-0" />
-      )}
     </div>
   )
 }

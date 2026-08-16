@@ -31,8 +31,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
-import { useBranding } from '@/hooks/use-branding'
-import { SkipLogo } from '@/components/SkipLogo'
 
 interface NavItem {
   path: string
@@ -87,7 +85,7 @@ const patientNavItems: NavItem[] = [
 
 export default function Layout() {
   const { logout, user, isAdmin, isDoctor, isStaff, isPatient } = useAuth()
-  const branding = useBranding()
+
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -106,7 +104,11 @@ export default function Layout() {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 border-r bg-white">
         <div className="h-16 flex items-center px-6 border-b border-slate-100">
-          <Brain className="h-6 w-6 text-primary mr-2" />
+          <img
+            src="/logo.svg"
+            alt="NeuroFlow AI"
+            className="h-8 w-8 mr-2.5 rounded-md object-contain"
+          />
           <span className="font-display font-bold text-lg text-slate-800">NeuroFlow AI</span>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
@@ -208,11 +210,6 @@ export default function Layout() {
               <p className="text-xs text-slate-400 text-center">
                 NeuroFlow AI — Em conformidade com a LGPD (Lei nº 13.709/2018)
               </p>
-              {branding.showSkipLogo && (
-                <div className="mt-3 flex justify-center">
-                  <SkipLogo />
-                </div>
-              )}
             </footer>
           </div>
         </main>

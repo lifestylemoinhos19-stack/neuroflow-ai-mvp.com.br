@@ -3,17 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="apple-touch-icon" href="/logo.svg" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#0A192F" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="NeuroFlow" />
-    <title>NeuroFlow AÍ: Inteligência de Suporte ao Neurodesenvolvimento</title>
+    <meta name="apple-mobile-web-app-title" content="NeuroFlow AI" />
+    <title>NeuroFlow AI: Inteligência de Suporte ao Neurodesenvolvimento</title>
     <meta
       name="description"
-      content="O NeuroFlow AÍ é uma solução avançada de suporte a decisão clinica que automatiza a triagem de TEA e TDAH."
+      content="O NeuroFlow AI é uma solução avançada de suporte a decisão clínica que automatiza a triagem de TEA e TDAH."
     />
-    <meta name="author" content="Skip (https://goskip.dev)" />
+    <meta name="author" content="NeuroFlow AI" />
     <meta property="og:image" content="/og-image.jpeg" />
     <meta name="keywords" content="TEA, TDAH, Neurodesenvolvimento, EMT, Neuromodulação " />
   </head>
@@ -27,7 +30,31 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('/sw.js').catch(function () {});
+          navigator.serviceWorker.register('/sw.js').then(function (registration) {
+            // Check for updates periodically or on reload
+            registration.addEventListener('updatefound', function () {
+              var installingWorker = registration.installing;
+              if (installingWorker) {
+                installingWorker.onstatechange = function () {
+                  if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    // Prompt user for update or post message
+                    if (window.confirm('Nova versão do NeuroFlow AI disponível! Deseja atualizar agora?')) {
+                      installingWorker.postMessage({ type: 'SKIP_WAITING' });
+                      window.location.reload();
+                    }
+                  }
+                };
+              }
+            });
+          }).catch(function () {});
+
+          var refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', function () {
+            if (!refreshing) {
+              refreshing = true;
+              window.location.reload();
+            }
+          });
         });
       }
     </script>

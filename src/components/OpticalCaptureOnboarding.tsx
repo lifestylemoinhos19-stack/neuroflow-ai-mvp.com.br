@@ -250,7 +250,6 @@ export function OpticalCaptureOnboarding({ initialMode, onComplete, onCancel, on
           />
 
           {permState === 'granted' &&
-            captureState !== 'completed' &&
             (isRppg ? (
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                 <div className="w-40 h-52 rounded-[50%] border-2 border-dashed border-[#00FFFF]/50 animate-pulse" />

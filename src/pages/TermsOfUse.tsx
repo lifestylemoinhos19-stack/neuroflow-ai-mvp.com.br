@@ -11,7 +11,12 @@ import {
 } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, FileText, Check } from 'lucide-react'
-import { getTermsOfUse, getEthicsCode, TermsOfUse, EthicsCode } from '@/services/ethics'
+import {
+  getTermsOfUse,
+  getEthicsCode,
+  type TermsOfUse as ITermsOfUse,
+  type EthicsCode as IEthicsCode,
+} from '@/services/ethics'
 
 const principleIcons = {
   1: '⚖️',
@@ -23,8 +28,8 @@ const principleIcons = {
 }
 
 export default function TermsOfUse() {
-  const [terms, setTerms] = useState<TermsOfUse | null>(null)
-  const [ethics, setEthics] = useState<EthicsCode | null>(null)
+  const [terms, setTerms] = useState<ITermsOfUse | null>(null)
+  const [ethics, setEthics] = useState<IEthicsCode | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

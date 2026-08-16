@@ -260,3 +260,9 @@ export function scoreAllModules(
 ): Mini500ModuleResult[] {
   return modules.map((m) => scoreModule(m, answers))
 }
+
+export function generateSummaryText(results: Mini500ModuleResult[]): string {
+  const positives = results.filter((r) => r.isPositive)
+  if (positives.length === 0) return 'Nenhum módulo apresentou resultado positivo.'
+  return `Módulos positivos/com risco: ${positives.map((p) => `${p.letter} (${p.title})`).join(', ')}.`
+}

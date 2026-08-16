@@ -17,8 +17,8 @@ export function PublicPageShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-[#0A192F] text-white flex flex-col">
       <header className="sticky top-0 z-50 border-b border-[#00FFFF]/10 bg-[#0A192F]/90 backdrop-blur-md">
         <div className="mx-auto max-w-5xl px-6 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <Brain className="h-6 w-6 text-[#00FFFF]" />
+          <Link to="/" className="flex items-center gap-2.5">
+            <img src="/logo.svg" alt="NeuroFlow AI" className="h-7 w-7 rounded object-contain" />
             <span className="font-display font-bold text-lg text-white">NeuroFlow AI</span>
           </Link>
           <div className="flex items-center gap-2">
