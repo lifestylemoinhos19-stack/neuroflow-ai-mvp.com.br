@@ -21,6 +21,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Loader2 } from 'lucide-react'
 import {
   Trash2,
   Users,
@@ -31,6 +33,7 @@ import {
   Pencil,
   Eye,
   UserCog,
+  AlertOctagon,
 } from 'lucide-react'
 import {
   Select,
@@ -55,6 +58,7 @@ import {
   type AdminUserProfile,
   type ProfileRole,
 } from '@/services/admin-users'
+import { deleteAllSessions, deleteMockSessions, deleteAllData } from '@/services/admin'
 import { PatientFormDialog } from '@/components/admin/patient-form-dialog'
 import { SessionFormDialog } from '@/components/admin/session-form-dialog'
 import { ReportFormDialog } from '@/components/admin/report-form-dialog'
@@ -69,6 +73,8 @@ const ROLE_LABELS: Record<string, string> = {
 const ROLE_OPTIONS: ProfileRole[] = ['admin', 'doctor', 'staff', 'hospede']
 
 type DeleteTarget = { type: 'patient' | 'session' | 'report'; id: string; name: string } | null
+
+type BulkAction = 'all-sessions' | 'mock-sessions' | 'all-data' | null
 
 function ActionButtons({
   onEdit,
@@ -126,6 +132,48 @@ export default function AdminPainel() {
   const [reportView, setReportView] = useState<AdminReport | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null)
   const [deleting, setDeleting] = useState(false)
+
+  // Zona de Perigo — exclusão em massa
+  const [bulkAction, setBulkAction] = useState<BulkAction>(null)
+  const [bulkConfirmText, setBulkConfirmText] = useState('')
+  const [bulkDeleting, setBulkDeleting] = useState(false)
+  const BULK_CONFIRM_WORD = 'DELETAR'
+  const bulkCanConfirm = bulkConfirmText === BULK_CONFIRM_WORD
+
+  const handleBulkDelete = async () => {
+    if (!bulkAction || !bulkCanConfirm) return
+    setBulkDeleting(true)
+    try {
+      if (bulkAction === 'all-sessions') {
+        const { error, count } = await deleteAllSessions()
+        if (error) toast.error(`Erro: ${error}`)
+        else toast.success(`${count} testagem(ns) excluída(s) com sucesso.`)
+      } else if (bulkAction === 'mock-sessions') {
+        const { error, count } = await deleteMockSessions()
+        if (error) toast.error(`Erro: ${error}`)
+        else toast.success(`${count} testagem(ns) mocada(s) excluída(s) com sucesso.`)
+      } else {
+        const { error, sessions, patients } = await deleteAllData()
+        if (error) toast.error(`Erro: ${error}`)
+        else
+          toast.success(
+            `Limpeza concluída: ${sessions} testagem(ns) e ${patients} paciente(s) removidos.`,
+          )
+      }
+      setBulkAction(null)
+      setBulkConfirmText('')
+      loadData()
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
+
+  const closeBulkDialog = (open: boolean) => {
+    if (!open && !bulkDeleting) {
+      setBulkAction(null)
+      setBulkConfirmText('')
+    }
+  }
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -537,6 +585,122 @@ export default function AdminPainel() {
               className="bg-red-600 hover:bg-red-700 text-white"
             >
               {deleting ? 'Excluindo...' : 'Excluir'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Zona de Perigo — exclusão em massa */}
+      <Card className="border-red-800/50 bg-red-950/30">
+        <CardHeader>
+          <CardTitle className="text-base font-bold text-red-300 flex items-center gap-2">
+            <AlertOctagon className="h-5 w-5" /> Zona de Perigo
+          </CardTitle>
+          <CardDescription className="text-red-200/80">
+            Ações irreversíveis. Ao confirmar, os registros serão permanentemente removidos do banco
+            de dados e não poderão ser recuperados.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-red-900/40 bg-red-950/40 p-4">
+            <div>
+              <p className="font-semibold text-white">Excluir TODAS as testagens</p>
+              <p className="text-sm text-red-200/80">
+                Remove todas as sessões de anamnese, respostas, laudos/feedback e e-mails
+                associados.
+              </p>
+            </div>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700 text-white shrink-0"
+              onClick={() => setBulkAction('all-sessions')}
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Excluir Todas
+            </Button>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-red-900/40 bg-red-950/40 p-4">
+            <div>
+              <p className="font-semibold text-white">Excluir apenas testagens mocadas</p>
+              <p className="text-sm text-red-200/80">
+                Remove somente as sessões marcadas como origem "mock" (testes do aplicativo),
+                preservando testagens reais.
+              </p>
+            </div>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700 text-white shrink-0"
+              onClick={() => setBulkAction('mock-sessions')}
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Excluir Mocadas
+            </Button>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-red-900/40 bg-red-950/40 p-4">
+            <div>
+              <p className="font-semibold text-white">Limpar TODOS os dados</p>
+              <p className="text-sm text-red-200/80">
+                Remove pacientes, sessões, respostas, feedback, laudos e e-mails. Limpeza completa
+                do banco de dados clínico.
+              </p>
+            </div>
+            <Button
+              variant="destructive"
+              className="bg-red-700 hover:bg-red-800 text-white shrink-0"
+              onClick={() => setBulkAction('all-data')}
+            >
+              <AlertOctagon className="h-4 w-4 mr-1" /> Limpar Tudo
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={!!bulkAction} onOpenChange={closeBulkDialog}>
+        <AlertDialogContent className="border-red-800/60">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-300 flex items-center gap-2">
+              <AlertOctagon className="h-5 w-5" /> Confirmação de Exclusão em Massa
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-red-200/90">
+              Esta ação é irreversível. Todos os registros serão permanentemente removidos.
+              {bulkAction === 'all-sessions' &&
+                ' Todas as testagens, respostas, laudos e e-mails serão apagados.'}
+              {bulkAction === 'mock-sessions' &&
+                ' Apenas as testagens mocadas (origem mock) serão apagadas.'}
+              {bulkAction === 'all-data' &&
+                ' TODOS os pacientes, testagens, laudos e e-mails serão apagados.'}
+              <br />
+              Para confirmar, digite <strong className="text-white">DELETAR</strong> no campo
+              abaixo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-1">
+            <Input
+              autoFocus
+              autoComplete="off"
+              value={bulkConfirmText}
+              onChange={(e) => setBulkConfirmText(e.target.value)}
+              placeholder="Digite DELETAR"
+              className="bg-slate-900 border-red-800/60 text-white placeholder:text-slate-500"
+              disabled={bulkDeleting}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleting} className="border-slate-700 text-slate-200">
+              Cancelar
+            </AlertDialogCancel>
+            <Button
+              onClick={handleBulkDelete}
+              disabled={!bulkCanConfirm || bulkDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {bulkDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Excluindo...
+                </>
+              ) : (
+                'Confirmar Exclusão'
+              )}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
