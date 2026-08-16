@@ -47,48 +47,77 @@ export default function MFA() {
   }, [code])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#0A192F] px-4">
       <div className="w-full max-w-md animate-fade-in-up">
-        <Button variant="ghost" size="sm" onClick={() => logout()} className="mb-4 text-slate-500">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => logout()}
+          className="mb-4 text-slate-400 hover:text-white"
+        >
           <ArrowLeft className="h-4 w-4 mr-2" /> Voltar ao Login
         </Button>
-        <Card className="shadow-subtle border-slate-100">
+        <Card className="shadow-subtle border-white/10 bg-white/5">
           <CardHeader className="space-y-2 text-center pb-6">
             <div className="flex justify-center mb-2">
-              <div className="h-12 w-12 bg-emerald-100 rounded-full flex items-center justify-center relative">
-                <ShieldCheck className="h-6 w-6 text-emerald-600" />
-                <span className="absolute -inset-1 rounded-full border-2 border-emerald-500/20 animate-pulse-ring" />
+              <div className="h-12 w-12 bg-[#00FFFF]/10 rounded-full flex items-center justify-center relative">
+                <ShieldCheck className="h-6 w-6 text-[#00FFFF]" />
+                <span className="absolute -inset-1 rounded-full border-2 border-[#00FFFF]/20 animate-pulse-ring" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-display font-bold">
+            <CardTitle className="text-2xl font-display font-bold text-white">
               Verificação em 2 Etapas
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-slate-400">
               Digite o código de 6 dígitos do seu autenticador. (Dica: 123456)
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center space-y-6">
-            <InputOTP maxLength={6} value={code} onChange={setCode} disabled={isLoading}>
-              <InputOTPGroup>
-                <InputOTPSlot index={0} />
-                <InputOTPSlot index={1} />
-                <InputOTPSlot index={2} />
+            <InputOTP
+              maxLength={6}
+              value={code}
+              onChange={setCode}
+              disabled={isLoading}
+              containerClassName="gap-2"
+            >
+              <InputOTPGroup className="gap-1.5">
+                <InputOTPSlot
+                  index={0}
+                  className="bg-white/10 border-[#00FFFF]/40 text-white placeholder:text-white/40 ring-[#00FFFF] focus-visible:ring-[#00FFFF]"
+                />
+                <InputOTPSlot
+                  index={1}
+                  className="bg-white/10 border-[#00FFFF]/40 text-white placeholder:text-white/40 ring-[#00FFFF] focus-visible:ring-[#00FFFF]"
+                />
+                <InputOTPSlot
+                  index={2}
+                  className="bg-white/10 border-[#00FFFF]/40 text-white placeholder:text-white/40 ring-[#00FFFF] focus-visible:ring-[#00FFFF]"
+                />
               </InputOTPGroup>
-              <InputOTPSeparator />
-              <InputOTPGroup>
-                <InputOTPSlot index={3} />
-                <InputOTPSlot index={4} />
-                <InputOTPSlot index={5} />
+              <InputOTPSeparator className="text-[#00FFFF]/60" />
+              <InputOTPGroup className="gap-1.5">
+                <InputOTPSlot
+                  index={3}
+                  className="bg-white/10 border-[#00FFFF]/40 text-white placeholder:text-white/40 ring-[#00FFFF] focus-visible:ring-[#00FFFF]"
+                />
+                <InputOTPSlot
+                  index={4}
+                  className="bg-white/10 border-[#00FFFF]/40 text-white placeholder:text-white/40 ring-[#00FFFF] focus-visible:ring-[#00FFFF]"
+                />
+                <InputOTPSlot
+                  index={5}
+                  className="bg-white/10 border-[#00FFFF]/40 text-white placeholder:text-white/40 ring-[#00FFFF] focus-visible:ring-[#00FFFF]"
+                />
               </InputOTPGroup>
             </InputOTP>
-            <div className="text-sm text-slate-500">
-              O código expira em <span className="font-medium text-slate-800">{timeLeft}s</span>
+            <div className="text-sm text-slate-400">
+              O código expira em <span className="font-medium text-white">{timeLeft}s</span>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col">
             <Button
               variant="outline"
-              className="w-full"
+              className="w-full border-white/20 text-white hover:bg-white/10 hover:text-white"
               disabled={timeLeft > 0 || isLoading}
               onClick={() => setTimeLeft(60)}
             >
