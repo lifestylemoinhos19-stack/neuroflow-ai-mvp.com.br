@@ -28,28 +28,38 @@
     <!-- @skip-protected: Do not remove. App entrypoint. -->
     <script type="module" src="/src/main.tsx"></script>
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function () {
-          navigator.serviceWorker.register('/sw.js').then(function (registration) {
-            // Check for updates periodically or on reload
-            registration.addEventListener('updatefound', function () {
-              var installingWorker = registration.installing;
-              if (installingWorker) {
-                installingWorker.onstatechange = function () {
-                  if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    // Prompt user for update or post message
-                    if (window.confirm('Nova versão do NeuroFlow AI disponível! Deseja atualizar agora?')) {
-                      installingWorker.postMessage({ type: 'SKIP_WAITING' });
-                      window.location.reload();
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then(function (registration) {
+              // Check for updates periodically or on reload
+              registration.addEventListener("updatefound", function () {
+                var installingWorker = registration.installing;
+                if (installingWorker) {
+                  installingWorker.onstatechange = function () {
+                    if (
+                      installingWorker.state === "installed" &&
+                      navigator.serviceWorker.controller
+                    ) {
+                      // Prompt user for update or post message
+                      if (
+                        window.confirm(
+                          "Nova versão do NeuroFlow AI disponível! Deseja atualizar agora?",
+                        )
+                      ) {
+                        installingWorker.postMessage({ type: "SKIP_WAITING" });
+                        window.location.reload();
+                      }
                     }
-                  }
-                };
-              }
-            });
-          }).catch(function () {});
+                  };
+                }
+              });
+            })
+            .catch(function () {});
 
           var refreshing = false;
-          navigator.serviceWorker.addEventListener('controllerchange', function () {
+          navigator.serviceWorker.addEventListener("controllerchange", function () {
             if (!refreshing) {
               refreshing = true;
               window.location.reload();
