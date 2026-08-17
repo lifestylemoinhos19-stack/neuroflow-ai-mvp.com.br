@@ -130,7 +130,7 @@ async function logGenderBiasResult(
         male_latency_ms: maleDurationMs,
         female_latency_ms: femaleDurationMs,
         timestamp: new Date().toISOString(),
-      },
+      } as unknown as Record<string, import('@/lib/supabase/types').Json>,
     })
 
     return true

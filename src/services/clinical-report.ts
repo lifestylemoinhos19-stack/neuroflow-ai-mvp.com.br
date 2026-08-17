@@ -47,7 +47,7 @@ export async function saveInterpretationToSession(
     session_id: sessionId,
     question_key: 'educational_interpretation',
     question_label: 'Interpretação Educacional',
-    response_value: interpretation,
+    response_value: interpretation as unknown as import('@/lib/supabase/types').Json,
   })
 
   if (error) {

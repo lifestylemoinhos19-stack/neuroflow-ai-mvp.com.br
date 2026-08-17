@@ -35,7 +35,7 @@ export async function updateUserRole(
 ): Promise<{ error: string | null }> {
   const { error } = await supabase
     .from('profiles')
-    .update({ role: role as string, updated_at: new Date().toISOString() })
+    .update({ role: role as unknown as string, updated_at: new Date().toISOString() })
     .eq('id', profileId)
   return { error: error?.message ?? null }
 }

@@ -71,7 +71,10 @@ export async function completeMini500Session(
       status: 'completed',
       completed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      metadata: { ...existing, ...(metadata || {}) },
+      metadata: { ...existing, ...(metadata || {}) } as unknown as Record<
+        string,
+        import('@/lib/supabase/types').Json
+      >,
     })
     .eq('id', sessionId)
   if (error) {

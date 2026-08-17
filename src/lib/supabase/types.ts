@@ -1163,8 +1163,9 @@ export type Database = {
           assigned_by: string | null
           completed_at: string | null
           created_at: string
+          guest_id: string | null
           id: string
-          patient_id: string
+          patient_id: string | null
           scale_type: string
           session_id: string | null
           status: string
@@ -1175,8 +1176,9 @@ export type Database = {
           assigned_by?: string | null
           completed_at?: string | null
           created_at?: string
+          guest_id?: string | null
           id?: string
-          patient_id: string
+          patient_id?: string | null
           scale_type: string
           session_id?: string | null
           status?: string
@@ -1187,14 +1189,22 @@ export type Database = {
           assigned_by?: string | null
           completed_at?: string | null
           created_at?: string
+          guest_id?: string | null
           id?: string
-          patient_id?: string
+          patient_id?: string | null
           scale_type?: string
           session_id?: string | null
           status?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: 'scale_assignments_guest_id_fkey'
+            columns: ['guest_id']
+            isOneToOne: false
+            referencedRelation: 'guests'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'scale_assignments_patient_id_fkey'
             columns: ['patient_id']
@@ -1747,6 +1757,52 @@ export type Database = {
       }
       get_user_guest_id: { Args: never; Returns: string }
       get_user_role: { Args: never; Returns: string }
+      identify_guest_public: {
+        Args: {
+          p_first_name: string
+          p_last_name: string
+          p_birth_date: string
+          p_document: string
+          p_profession: string
+          p_address: string
+          p_responsible_name: string
+        }
+        Returns: {
+          out_id: string
+          out_first_name: string
+          out_last_name: string
+          out_birth_date: string
+          out_document: string
+          out_profession: string
+          out_address: string
+          out_responsible_name: string
+        }[]
+      }
+      get_guest_assignments: {
+        Args: { p_guest_id: string }
+        Returns: {
+          id: string
+          scale_type: string
+          status: string
+          assigned_at: string
+          completed_at: string | null
+        }[]
+      }
+      complete_assignment: { Args: { p_assignment_id: string }; Returns: boolean }
+      get_guest_full: {
+        Args: { p_guest_id: string }
+        Returns: {
+          id: string
+          first_name: string
+          last_name: string
+          birth_date: string | null
+          document: string
+          email: string
+          profession: string
+          address: string
+          responsible_name: string
+        }[]
+      }
       is_encrypted: { Args: { p_text: string }; Returns: boolean }
     }
     Enums: {

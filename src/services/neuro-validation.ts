@@ -86,5 +86,5 @@ export async function getValidationHistory(): Promise<AuditLogEntry[]> {
 
   if (error || !data) return []
 
-  return data as AuditLogEntry[]
+  return data as unknown as AuditLogEntry[]
 }

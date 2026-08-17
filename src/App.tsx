@@ -30,6 +30,7 @@ import TermsOfUse from '@/pages/TermsOfUse'
 import ValidateDocument from '@/pages/ValidateDocument'
 import NotFound from '@/pages/NotFound'
 import Welcome from '@/pages/Welcome'
+import MinhasEscalas from '@/pages/MinhasEscalas'
 import NeuroFlowLanding from '@/pages/NeuroFlowLanding'
 import CaptureChoice from '@/pages/CaptureChoice'
 import FocusSessionRoute from '@/pages/FocusSessionRoute'
@@ -99,6 +100,7 @@ function AppInner() {
         <Route path="/avaliacao" element={<PublicAssessment />} />
         <Route path="/avaliacao/:scale" element={<PublicAssessment />} />
         <Route path="/welcome" element={<Welcome />} />
+        <Route path="/minhas-escalas" element={<MinhasEscalas />} />
         <Route path="/neuroflow-ia" element={<NeuroFlowLanding />} />
         <Route path="/capture-choice" element={<CaptureChoice />} />
         <Route

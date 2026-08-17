@@ -1,94 +1,58 @@
-import { useNavigate, Link } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
-import { Brain, ArrowRight, Shield, Heart, Zap, LogIn } from 'lucide-react'
-import { useAuth } from '@/contexts/auth-context'
+import { User, Stethoscope, Brain, ArrowRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
-const features = [
-  { icon: Zap, text: 'Biofeedback em tempo real' },
-  { icon: Shield, text: '100% privado e seguro' },
-  { icon: Heart, text: 'Sem cadastro necessário' },
+const cards = [
+  {
+    icon: User,
+    title: 'Sou paciente ou responsável',
+    description: 'Responder às avaliações que meu médico selecionou',
+    link: '/minhas-escalas',
+  },
+  {
+    icon: Stethoscope,
+    title: 'Sou profissional de saúde',
+    description: 'Acessar painel clínico e resultados',
+    link: '/login',
+  },
+  {
+    icon: Brain,
+    title: 'Quero apenas relaxar',
+    description: 'Sessão de foco guiada — sem cadastro',
+    link: '/focus-session',
+  },
 ]
 
 export default function Welcome() {
-  const navigate = useNavigate()
-  const { isAuthenticated, isAdmin } = useAuth()
-
   return (
     <div className="min-h-screen bg-[#0A192F] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute top-1/4 left-0 w-96 h-96 bg-[#00FFFF]/5 rounded-full blur-3xl" />
       <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-[#00FFFF]/5 rounded-full blur-3xl" />
 
-      <div className="relative z-10 flex flex-col items-center">
-        <div className="relative mb-8 animate-fade-in-down">
-          <div className="absolute inset-0 bg-[#00FFFF]/20 rounded-full blur-2xl" />
-          <div className="relative h-32 w-32 rounded-full bg-gradient-to-br from-[#00FFFF]/20 to-[#00FFFF]/5 border border-[#00FFFF]/30 flex items-center justify-center animate-float">
-            <Brain className="h-16 w-16 text-[#00FFFF]" />
-          </div>
-        </div>
-
-        <div className="text-center animate-fade-in-up">
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
-            Neuro<span className="text-[#00FFFF]">Flow</span> AI
+      <div className="relative z-10 flex flex-col items-center w-full max-w-4xl">
+        <div className="text-center mb-10 animate-fade-in-up">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+            Bem-vindo ao Neuro<span className="text-[#00FFFF]">Flow</span> AI
           </h1>
-          <p className="text-white/85 mt-3 text-sm sm:text-base max-w-md mx-auto">
-            Vamos conhecer seu filho?
-          </p>
+          <p className="text-white/85 mt-3 text-base sm:text-lg">Como podemos ajudar você hoje?</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-10 max-w-xl w-full animate-fade-in-up">
-          {features.map((f, i) => (
-            <div
-              key={i}
-              className="rounded-xl border border-[#00FFFF]/10 bg-white/5 p-4 text-center"
-            >
-              <f.icon className="h-5 w-5 text-[#00FFFF] mx-auto mb-2" />
-              <p className="text-xs text-white/70">{f.text}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-10 flex flex-col items-center gap-4 animate-fade-in-up">
-          <Button
-            onClick={() => navigate('/avaliacao')}
-            size="lg"
-            className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-semibold rounded-full px-8 shadow-lg shadow-[#00FFFF]/20"
-          >
-            Começar Agora <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-          {!isAuthenticated && (
-            <Button
-              onClick={() => navigate('/login')}
-              variant="outline"
-              size="lg"
-              className="border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/10 hover:text-[#00FFFF] font-semibold rounded-full px-8"
-            >
-              Acessar Plataforma <LogIn className="h-4 w-4 ml-2" />
-            </Button>
-          )}
-          {isAuthenticated && (
-            <>
-              <Link
-                to="/evaluations/sds"
-                className="text-sm text-white/75 hover:text-[#00FFFF] transition-colors"
-              >
-                Avaliação SDS →
-              </Link>
-              <Link
-                to="/dashboard"
-                className="text-sm text-white/75 hover:text-[#00FFFF] transition-colors"
-              >
-                Ir para o painel →
-              </Link>
-            </>
-          )}
-          {isAdmin && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full animate-fade-in-up">
+          {cards.map((card) => (
             <Link
-              to="/documentos"
-              className="text-sm text-[#00FFFF]/85 hover:text-[#00FFFF] transition-colors flex items-center gap-1"
+              key={card.title}
+              to={card.link}
+              className="group rounded-2xl border border-[#00FFFF]/20 bg-white/5 p-6 hover:border-[#00FFFF]/40 transition-all duration-200 flex flex-col items-center text-center"
             >
-              <Shield className="h-3 w-3" /> Gerenciar Documentos →
+              <div className="h-14 w-14 rounded-xl bg-[#00FFFF]/10 border border-[#00FFFF]/20 flex items-center justify-center mb-4 group-hover:bg-[#00FFFF]/20 transition-colors">
+                <card.icon className="h-7 w-7 text-[#00FFFF]" />
+              </div>
+              <h2 className="text-base font-semibold text-white mb-2">{card.title}</h2>
+              <p className="text-sm text-white/70 leading-relaxed mb-4">{card.description}</p>
+              <div className="flex items-center gap-1 text-xs text-[#00FFFF] font-medium mt-auto">
+                Acessar <ArrowRight className="h-3.5 w-3.5" />
+              </div>
             </Link>
-          )}
+          ))}
         </div>
       </div>
     </div>

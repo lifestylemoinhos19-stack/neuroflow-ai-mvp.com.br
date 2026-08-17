@@ -80,7 +80,7 @@ export async function completeMiniSession(
       status: 'completed',
       completed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      metadata: mergedMetadata,
+      metadata: mergedMetadata as unknown as Record<string, import('@/lib/supabase/types').Json>,
     })
     .eq('id', sessionId)
 

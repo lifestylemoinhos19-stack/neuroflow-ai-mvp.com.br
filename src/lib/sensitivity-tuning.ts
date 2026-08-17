@@ -70,7 +70,7 @@ export async function captureFieldTestMetrics(
     rmse: metrics.rmse,
     samples: metrics.samples,
     duration_ms: metrics.durationMs,
-    metadata: metadata || {},
+    metadata: (metadata || {}) as unknown as Record<string, import('@/lib/supabase/types').Json>,
   })
   if (error) return { error: error.message }
   return { error: null }

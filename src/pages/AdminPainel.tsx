@@ -35,7 +35,9 @@ import {
   UserCog,
   AlertOctagon,
   QrCode,
+  FileDown,
 } from 'lucide-react'
+import { generateLaudoPDF } from '@/lib/laudo-pdf'
 import CalmExplorerQRCard from '@/components/CalmExplorerQRCard'
 import {
   Select,
@@ -141,6 +143,30 @@ export default function AdminPainel() {
   const [bulkDeleting, setBulkDeleting] = useState(false)
   const BULK_CONFIRM_WORD = 'DELETAR'
   const bulkCanConfirm = bulkConfirmText === BULK_CONFIRM_WORD
+
+  // PDF laudo generation
+  const [laudoGenerating, setLaudoGenerating] = useState<string | null>(null)
+
+  const handleGenerateLaudo = async (t: AdminTest) => {
+    setLaudoGenerating(t.id)
+    try {
+      await generateLaudoPDF({
+        testId: t.id,
+        type: t.type,
+        patientName: t.patient_name,
+        startedAt: t.started_at,
+        status: t.status,
+        score: t.score,
+        guestId: t.guest_id,
+      })
+      toast.success('Laudo PDF gerado com sucesso.')
+    } catch (e) {
+      toast.error('Erro ao gerar laudo PDF.')
+      console.error(e)
+    } finally {
+      setLaudoGenerating(null)
+    }
+  }
 
   const handleBulkDelete = async () => {
     if (!bulkAction || !bulkCanConfirm) return
@@ -395,6 +421,24 @@ export default function AdminPainel() {
                               onEdit={() => setSessionDialog({ open: true, session: t })}
                               onDelete={() =>
                                 setDeleteTarget({ type: 'session', id: t.id, name: t.type })
+                              }
+                              extra={
+                                t.status === 'completed' ? (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950"
+                                    onClick={() => handleGenerateLaudo(t)}
+                                    disabled={laudoGenerating === t.id}
+                                    title="Gerar Laudo PDF"
+                                  >
+                                    {laudoGenerating === t.id ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <FileDown className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                ) : undefined
                               }
                             />
                           </TableCell>

@@ -56,6 +56,6 @@ export async function logAuditAction(
     action,
     entity_type: entityType,
     entity_id: entityId,
-    details,
+    details: details as unknown as Record<string, import('@/lib/supabase/types').Json>,
   })
 }

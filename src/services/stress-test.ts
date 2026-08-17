@@ -166,7 +166,7 @@ export async function logStressTestResult(
         validation_status: passed ? 'Passed' : 'Failed',
         failure_reasons: failures.length > 0 ? failures : null,
         timestamp: new Date().toISOString(),
-      },
+      } as unknown as Record<string, import('@/lib/supabase/types').Json>,
     })
 
     await supabase.from('stress_test_logs').insert({

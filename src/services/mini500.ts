@@ -70,7 +70,10 @@ export async function completeMini500Session(
       status: 'completed',
       completed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      metadata: { ...existing, ...(meta || {}) },
+      metadata: { ...existing, ...(meta || {}) } as unknown as Record<
+        string,
+        import('@/lib/supabase/types').Json
+      >,
     })
     .eq('id', sessionId)
   if (error) {
@@ -113,7 +116,7 @@ export interface Mini500ReportData {
   interviewerName: string
   protocol: string
   moduleResults: import('@/lib/mini500-scoring').Mini500ModuleResult[]
-  interpretations: import('@/lib/mini500-interpretation').Mini500ModuleInterpretation[]
+  interpretations: import('@/lib/mini500-interpretation').ClinicalInterpretation[]
   clinicalSummary: string
 }
 

@@ -31,7 +31,8 @@ import CalmExplorerQRCard from '@/components/CalmExplorerQRCard'
 
 interface ScaleAssignment {
   id: string
-  patient_id: string
+  patient_id: string | null
+  guest_id?: string | null
   scale_type: string
   status: string
   assigned_at: string
@@ -67,12 +68,21 @@ export default function AssignScales() {
   const fetchAssignments = async (): Promise<ScaleAssignment[]> => {
     const { data, error } = await supabase
       .from('scale_assignments')
-      .select('id, patient_id, scale_type, status, assigned_at')
+      .select('id, patient_id, guest_id, scale_type, status, assigned_at')
       .order('assigned_at', { ascending: false })
       .limit(100)
     if (error || !data) return []
 
-    const patientIds = new Set(data.map((a) => a.patient_id))
+    const patientIds = new Set(
+      (data as { patient_id?: string | null }[])
+        .map((a) => a.patient_id)
+        .filter((v): v is string => !!v),
+    )
+    const guestIds = new Set(
+      (data as { guest_id?: string | null }[])
+        .map((a) => a.guest_id)
+        .filter((v): v is string => !!v),
+    )
     const patientMap: Record<string, string> = {}
     if (patientIds.size) {
       // Buscar nomes via profiles (patient_id é o profile id do paciente)
@@ -84,12 +94,26 @@ export default function AssignScales() {
         patientMap[p.id] = p.full_name || 'Paciente'
       })
     }
+    if (guestIds.size) {
+      // Buscar nomes via guests (guest_id) — patients assigned without an auth profile
+      const { data: guests } = await supabase
+        .from('guests')
+        .select('id, first_name, last_name')
+        .in('id', [...guestIds])
+      ;(guests || []).forEach((g) => {
+        patientMap[g.id] = `${g.first_name} ${g.last_name}`.trim() || 'Paciente'
+      })
+    }
     return data.map((a) => ({
-      ...a,
-      patient_name: patientMap[a.patient_id] || 'Paciente',
+      id: a.id,
+      patient_id: a.patient_id,
+      guest_id: a.guest_id ?? null,
+      scale_type: a.scale_type,
+      status: a.status,
+      assigned_at: a.assigned_at,
+      patient_name: patientMap[a.patient_id || ''] || patientMap[a.guest_id || ''] || 'Paciente',
     }))
   }
-
   const openAssignDialog = (patient: AdminPatient) => {
     setAssignDialog({ open: true, patient })
     setSelectedScales([])
@@ -113,19 +137,12 @@ export default function AssignScales() {
       .eq('guest_id', patient.id)
       .maybeSingle()
 
-    if (!profile?.id) {
-      toast({
-        variant: 'destructive',
-        title: 'Paciente sem perfil',
-        description:
-          'O paciente selecionado ainda não possui um perfil vinculado (user_id). Ele precisa fazer login ao menos uma vez antes de receber escalas.',
-      })
-      setSaving(false)
-      return
-    }
-
+    // Prefer linking to the auth profile when it exists; otherwise fall back to
+    // the guest_id so the public patient flow (/minhas-escalas) can still see
+    // the assigned scales without the patient ever logging in.
     const rows = selectedScales.map((scale_type) => ({
-      patient_id: profile.id,
+      patient_id: profile?.id ?? null,
+      guest_id: patient.id,
       scale_type,
       status: 'pending',
       assigned_by: user?.id ?? null,
@@ -193,7 +210,7 @@ export default function AssignScales() {
                 <TableBody>
                   {patients.map((p) => {
                     const pending = assignments.filter(
-                      (a) => a.patient_name?.includes(p.first_name) && a.status === 'pending',
+                      (a) => (a.patient_id || a.guest_id) === p.id && a.status === 'pending',
                     ).length
                     return (
                       <TableRow key={p.id}>

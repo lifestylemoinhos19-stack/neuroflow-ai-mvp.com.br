@@ -84,7 +84,8 @@ export async function getMiniSessions(patientId: string): Promise<MiniSessionRes
 
     let moduleResults: ModuleResult[] = []
     try {
-      const scored = scoreAllModules(answers as any)
+      // scoreAllModules expects (modules, answers); pass the full module list.
+      const scored = scoreAllModules(miniModules as any, answers as any)
       moduleResults = (scored as any[]).map((r) => ({
         moduleKey: String(r.moduleKey || r.key || ''),
         moduleLabel: String(r.moduleLabel || r.label || getModuleLabel(r.moduleKey || r.key)),
