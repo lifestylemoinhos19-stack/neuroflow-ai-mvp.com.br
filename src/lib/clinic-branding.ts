@@ -41,9 +41,7 @@ export function getBrandFooterHtml(): string {
 
 export function getValidationUrl(sessionId: string): string {
   const origin =
-    typeof window !== 'undefined'
-      ? window.location.origin
-      : 'https://neuroflow-ai-mvp-61ac1.goskip.app'
+    typeof window !== 'undefined' ? window.location.origin : 'https://neuroflow-ai-mvp.com.br'
   return `${origin}/validar/${sessionId}`
 }
 

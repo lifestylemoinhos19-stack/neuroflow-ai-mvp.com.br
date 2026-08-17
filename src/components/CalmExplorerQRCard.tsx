@@ -9,7 +9,7 @@ import { toast } from 'sonner'
  * URL pública do Explorador da Calma (Focus Session).
  * Aponta para a rota /focus-session (FocusSessionRoute) no app NeuroFlow AI.
  */
-export const CALM_EXPLORER_URL = 'https://neuroflow-ai-mvp-61ac1.goskip.app/focus-session'
+export const CALM_EXPLORER_URL = 'https://neuroflow-ai-mvp.com.br/focus-session'
 
 const CALM_EXPLORER_TAGLINE =
   'Escaneie para acessar o Explorador da Calma — uma pausa guiada para sua mente.'
