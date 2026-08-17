@@ -632,6 +632,7 @@ export type Database = {
       }
       guests: {
         Row: {
+          address: string | null
           birth_date: string | null
           created_at: string
           document: string | null
@@ -643,9 +644,12 @@ export type Database = {
           phone: string | null
           preferences: string | null
           preferred_suite_id: string | null
+          profession: string | null
+          responsible_name: string | null
           updated_at: string
         }
         Insert: {
+          address?: string | null
           birth_date?: string | null
           created_at?: string
           document?: string | null
@@ -657,9 +661,12 @@ export type Database = {
           phone?: string | null
           preferences?: string | null
           preferred_suite_id?: string | null
+          profession?: string | null
+          responsible_name?: string | null
           updated_at?: string
         }
         Update: {
+          address?: string | null
           birth_date?: string | null
           created_at?: string
           document?: string | null
@@ -671,6 +678,8 @@ export type Database = {
           phone?: string | null
           preferences?: string | null
           preferred_suite_id?: string | null
+          profession?: string | null
+          responsible_name?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1721,6 +1730,10 @@ export type Database = {
     }
     Functions: {
       cleanup_unauthorized_data: { Args: never; Returns: Json }
+      complete_assignment: {
+        Args: { p_assignment_id: string }
+        Returns: boolean
+      }
       decrypt_pii: { Args: { p_cipher: string }; Returns: string }
       encrypt_pii: { Args: { p_text: string }; Returns: string }
       get_clinical_prevalence_stats: {
@@ -1732,6 +1745,30 @@ export type Database = {
         }[]
       }
       get_encryption_key: { Args: never; Returns: string }
+      get_guest_assignments: {
+        Args: { p_guest_id: string }
+        Returns: {
+          assigned_at: string
+          completed_at: string
+          id: string
+          scale_type: string
+          status: string
+        }[]
+      }
+      get_guest_full: {
+        Args: { p_guest_id: string }
+        Returns: {
+          address: string
+          birth_date: string
+          document: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          profession: string
+          responsible_name: string
+        }[]
+      }
       get_session_responses_decrypted: {
         Args: { p_session_id: string }
         Returns: {
@@ -1759,48 +1796,23 @@ export type Database = {
       get_user_role: { Args: never; Returns: string }
       identify_guest_public: {
         Args: {
-          p_first_name: string
-          p_last_name: string
+          p_address: string
           p_birth_date: string
           p_document: string
+          p_first_name: string
+          p_last_name: string
           p_profession: string
-          p_address: string
           p_responsible_name: string
         }
         Returns: {
-          out_id: string
-          out_first_name: string
-          out_last_name: string
+          out_address: string
           out_birth_date: string
           out_document: string
+          out_first_name: string
+          out_id: string
+          out_last_name: string
           out_profession: string
-          out_address: string
           out_responsible_name: string
-        }[]
-      }
-      get_guest_assignments: {
-        Args: { p_guest_id: string }
-        Returns: {
-          id: string
-          scale_type: string
-          status: string
-          assigned_at: string
-          completed_at: string | null
-        }[]
-      }
-      complete_assignment: { Args: { p_assignment_id: string }; Returns: boolean }
-      get_guest_full: {
-        Args: { p_guest_id: string }
-        Returns: {
-          id: string
-          first_name: string
-          last_name: string
-          birth_date: string | null
-          document: string
-          email: string
-          profession: string
-          address: string
-          responsible_name: string
         }[]
       }
       is_encrypted: { Args: { p_text: string }; Returns: boolean }

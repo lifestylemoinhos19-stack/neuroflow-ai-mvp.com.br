@@ -144,7 +144,7 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(16)
   doc.setTextColor(10, 25, 47)
-  doc.text('NeuroFlow AI', marginX + 18, y + 7)
+  doc.text('Casa Branca Saúde', marginX + 18, y + 7)
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(10)
   doc.setTextColor(100, 116, 139)
@@ -252,7 +252,7 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(10)
   doc.setTextColor(51, 65, 85)
-  doc.text('Dra. Rose Mary — CRM/XX', marginX + 40, y + 5)
+  doc.text('Dra. Rose Mary Alves — CRM RS 19625', marginX + 40, y + 5)
 
   // --- Footer ---
   const footerY = pageHeight - 20
@@ -262,7 +262,7 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   doc.setFontSize(8)
   doc.setTextColor(100, 116, 139)
   const footerLines = doc.splitTextToSize(
-    'Documento gerado pelo NeuroFlow AI — Em conformidade com a LGPD',
+    'Documento gerado pelo Casa Branca Saúde — Em conformidade com a LGPD',
     pageWidth - marginX * 2,
   )
   doc.text(footerLines, marginX, footerY + 5)
