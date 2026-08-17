@@ -21,7 +21,6 @@ import {
   Layers,
   FileCheck,
   UserCog,
-  Gamepad2,
   ClipboardPlus,
   PlayCircle,
   type LucideIcon,
@@ -49,7 +48,7 @@ const adminNavItems: NavItem[] = [
   { path: '/documentos', label: 'Documentos', icon: FileText },
   { path: '/admin/painel', label: 'Painel Admin', icon: UserCog },
   { path: '/admin/ethical-audit', label: 'Auditoria', icon: FileSearch },
-  { path: '/focus-session', label: 'Explorador da Calma', icon: Gamepad2 },
+  { path: '/focus-session', label: 'Explorador da Calma', icon: Brain },
 ]
 
 // Doctor/Profissional: clinical tools (no admin/audit)
@@ -61,7 +60,7 @@ const doctorNavItems: NavItem[] = [
   { path: '/modulos-clinicos', label: 'Módulos Clínicos', icon: Layers },
   { path: '/historico', label: 'Histórico', icon: LineChart },
   { path: '/documentos', label: 'Documentos', icon: FileText },
-  { path: '/focus-session', label: 'Explorador da Calma', icon: Gamepad2 },
+  { path: '/focus-session', label: 'Explorador da Calma', icon: Brain },
 ]
 
 // Staff (equipe técnica): only assign scales + start interview + calm explorer.
@@ -71,7 +70,7 @@ const staffNavItems: NavItem[] = [
   { path: '/anamnesis', label: 'Iniciar Entrevista', icon: PlayCircle },
   { path: '/scales', label: 'Selecionar Escalas', icon: ClipboardCheck },
   { path: '/mini', label: 'Iniciar MINI', icon: FileCheck },
-  { path: '/focus-session', label: 'Explorador da Calma', icon: Gamepad2 },
+  { path: '/focus-session', label: 'Explorador da Calma', icon: Brain },
 ]
 
 // Patient (hospede): simplified dashboard + own interviews + calm explorer.
@@ -80,7 +79,7 @@ const patientNavItems: NavItem[] = [
   { path: '/dashboard', label: 'Meu Painel', icon: LayoutDashboard },
   { path: '/historico', label: 'Minhas Entrevistas', icon: LineChart },
   { path: '/documentos', label: 'Meus Documentos', icon: FileText },
-  { path: '/focus-session', label: 'Explorador da Calma', icon: Gamepad2 },
+  { path: '/focus-session', label: 'Explorador da Calma', icon: Brain },
 ]
 
 export default function Layout() {
