@@ -34,7 +34,9 @@ import {
   Eye,
   UserCog,
   AlertOctagon,
+  QrCode,
 } from 'lucide-react'
+import CalmExplorerQRCard from '@/components/CalmExplorerQRCard'
 import {
   Select,
   SelectContent,
@@ -251,7 +253,7 @@ export default function AdminPainel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4 mb-4">
+        <TabsList className="grid w-full grid-cols-5 mb-4">
           <TabsTrigger value="patients" className="flex items-center gap-2">
             <Users className="h-4 w-4" /> Pacientes ({patients.length})
           </TabsTrigger>
@@ -263,6 +265,9 @@ export default function AdminPainel() {
           </TabsTrigger>
           <TabsTrigger value="users" className="flex items-center gap-2">
             <UserCog className="h-4 w-4" /> Usuários ({users.length})
+          </TabsTrigger>
+          <TabsTrigger value="qr" className="flex items-center gap-2">
+            <QrCode className="h-4 w-4" /> QR Code
           </TabsTrigger>
         </TabsList>
 
@@ -536,6 +541,16 @@ export default function AdminPainel() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="qr">
+          <div className="flex justify-center">
+            <CalmExplorerQRCard
+              size={300}
+              title="QR Code do Explorador da Calma"
+              description="Gere, imprima ou copie o link do Explorador da Calma para entregar no consultório. Aponta para a rota /focus-session."
+            />
+          </div>
         </TabsContent>
       </Tabs>
 

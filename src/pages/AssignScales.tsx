@@ -27,6 +27,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/hooks/use-toast'
 import { SCALE_TYPES, translateStatus } from '@/services/admin-sessions'
 import { getAdminPatients, type AdminPatient } from '@/services/admin-painel'
+import CalmExplorerQRCard from '@/components/CalmExplorerQRCard'
 
 interface ScaleAssignment {
   id: string
@@ -224,6 +225,8 @@ export default function AssignScales() {
           )}
         </CardContent>
       </Card>
+
+      <CalmExplorerQRCard size={200} compact title="Explorador da Calma — QR Code" />
 
       <Card className="border-slate-800">
         <CardHeader>
