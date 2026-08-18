@@ -191,6 +191,7 @@ export async function findGuestByCpf(
         out_profession: string | null
         out_address: string | null
         out_responsible_name: string | null
+        out_tcle_accepted: boolean
       }[]
     | null
   if (!rows || rows.length === 0) return { data: null, error: null }

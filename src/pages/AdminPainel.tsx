@@ -318,6 +318,7 @@ export default function AdminPainel() {
                         <TableHead className="text-white font-semibold">Nome</TableHead>
                         <TableHead className="text-white font-semibold">E-mail</TableHead>
                         <TableHead className="text-white font-semibold">Telefone</TableHead>
+                        <TableHead className="text-white font-semibold">CPF</TableHead>
                         <TableHead className="text-white font-semibold">Nascimento</TableHead>
                         <TableHead className="text-white font-semibold text-center">
                           Testes
@@ -333,6 +334,9 @@ export default function AdminPainel() {
                           </TableCell>
                           <TableCell className="text-sm text-white/80">{p.email || '-'}</TableCell>
                           <TableCell className="text-sm text-white/80">{p.phone || '-'}</TableCell>
+                          <TableCell className="text-sm text-white/80 font-mono">
+                            {p.document || '-'}
+                          </TableCell>
                           <TableCell className="text-sm text-white/80">
                             {p.birth_date
                               ? new Date(p.birth_date).toLocaleDateString('pt-BR')

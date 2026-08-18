@@ -6,6 +6,7 @@ export interface AdminPatient {
   last_name: string
   email: string | null
   phone: string | null
+  document: string | null
   birth_date: string | null
   evaluation_count: number
 }
@@ -16,6 +17,7 @@ interface GuestListRow {
   last_name: string | null
   email: string | null
   phone: string | null
+  document: string | null
   birth_date: string | null
   created_at: string
 }
@@ -25,6 +27,7 @@ export interface PatientFormData {
   last_name: string
   email?: string
   phone?: string
+  document?: string
   birth_date?: string
 }
 
@@ -68,10 +71,16 @@ export async function getAdminPatients(): Promise<AdminPatient[]> {
       last_name: row.last_name ?? '',
       email: row.email ?? null,
       phone: row.phone ?? null,
+      document: row.document ?? null,
       birth_date: row.birth_date ?? null,
       evaluation_count,
     } as AdminPatient
   })
+}
+
+function normalizeDocument(doc?: string): string | null {
+  const digits = (doc || '').replace(/\D/g, '')
+  return digits || null
 }
 
 export async function createPatient(data: PatientFormData): Promise<{ error: string | null }> {
@@ -80,6 +89,7 @@ export async function createPatient(data: PatientFormData): Promise<{ error: str
     last_name: data.last_name,
     email: data.email || null,
     phone: data.phone || null,
+    document: normalizeDocument(data.document),
     birth_date: data.birth_date || null,
   })
   return { error: error?.message ?? null }
@@ -96,6 +106,7 @@ export async function updatePatient(
       last_name: data.last_name,
       email: data.email || null,
       phone: data.phone || null,
+      document: normalizeDocument(data.document),
       birth_date: data.birth_date || null,
       updated_at: new Date().toISOString(),
     })

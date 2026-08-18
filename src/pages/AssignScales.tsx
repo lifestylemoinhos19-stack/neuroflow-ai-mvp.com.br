@@ -21,14 +21,16 @@ import {
 } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import { ClipboardPlus, Loader2, Users, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { ClipboardPlus, Loader2, Users, ArrowRight, CheckCircle2, FileText } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/hooks/use-toast'
 import { translateStatus } from '@/services/admin-sessions'
 import { getAdminPatients, type AdminPatient } from '@/services/admin-painel'
+import { formatCPF } from '@/services/guest-patient'
 import CalmExplorerQRCard from '@/components/CalmExplorerQRCard'
 import { SCALE_GROUPS, findScaleOption } from '@/lib/scale-groups'
+import { Input } from '@/components/ui/input'
 
 interface ScaleAssignment {
   id: string
@@ -51,6 +53,8 @@ export default function AssignScales() {
   )
   const [selectedScales, setSelectedScales] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
+  const [cpfInput, setCpfInput] = useState('')
+  const [cpfSaving, setCpfSaving] = useState(false)
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -121,6 +125,36 @@ export default function AssignScales() {
   const openAssignDialog = (patient: AdminPatient) => {
     setAssignDialog({ open: true, patient })
     setSelectedScales([])
+    setCpfInput(patient.document ? formatCPF(patient.document) : '')
+  }
+
+  const handleSaveCpf = async () => {
+    const patient = assignDialog.patient
+    if (!patient) return
+    const digits = cpfInput.replace(/\D/g, '')
+    if (digits.length !== 11 && digits.length !== 0) {
+      toast({
+        variant: 'destructive',
+        title: 'CPF inválido',
+        description: 'Digite um CPF com 11 dígitos ou deixe em branco.',
+      })
+      return
+    }
+    setCpfSaving(true)
+    const { error } = await supabase.rpc('upsert_guest_document_admin', {
+      p_guest_id: patient.id,
+      p_document: digits || null,
+    })
+    setCpfSaving(false)
+    if (error) {
+      toast({ variant: 'destructive', title: 'Erro ao salvar CPF', description: error.message })
+      return
+    }
+    toast({
+      title: 'CPF atualizado',
+      description: 'O paciente já pode se identificar com este CPF.',
+    })
+    loadData()
   }
 
   const toggleScale = (scale: string) => {
@@ -133,6 +167,16 @@ export default function AssignScales() {
     if (!assignDialog.patient || selectedScales.length === 0) return
     setSaving(true)
     const patient = assignDialog.patient
+
+    // Se o admin digitou um CPF novo no dialog, persistimos antes de atribuir,
+    // para garantir que o guest esteja com o CPF no momento da atribuição.
+    const cpfDigits = cpfInput.replace(/\D/g, '')
+    if (cpfDigits.length === 11 && cpfDigits !== (patient.document || '').replace(/\D/g, '')) {
+      await supabase.rpc('upsert_guest_document_admin', {
+        p_guest_id: patient.id,
+        p_document: cpfDigits,
+      })
+    }
 
     // Buscar o profile.id do paciente vinculado ao guest_id.
     const { data: profile } = await supabase
@@ -204,6 +248,7 @@ export default function AssignScales() {
                   <TableRow>
                     <TableHead className="text-white font-semibold">Nome</TableHead>
                     <TableHead className="text-white font-semibold">E-mail</TableHead>
+                    <TableHead className="text-white font-semibold">CPF</TableHead>
                     <TableHead className="text-white font-semibold">Nascimento</TableHead>
                     <TableHead className="text-white font-semibold text-center">
                       Escalas Pendentes
@@ -221,7 +266,9 @@ export default function AssignScales() {
                         <TableCell className="text-sm font-bold text-white">
                           {p.first_name} {p.last_name}
                         </TableCell>
-                        <TableCell className="text-sm text-white/80">{p.email || '-'}</TableCell>
+                        <TableCell className="text-sm text-white/80 font-mono">
+                          {p.document ? formatCPF(p.document) : '-'}
+                        </TableCell>
                         <TableCell className="text-sm text-white/80">
                           {p.birth_date ? new Date(p.birth_date).toLocaleDateString('pt-BR') : '-'}
                         </TableCell>
@@ -308,6 +355,41 @@ export default function AssignScales() {
               Selecione as escalas que o paciente deve responder.
             </DialogDescription>
           </DialogHeader>
+
+          <div className="rounded-lg border border-[#00FFFF]/20 bg-[#00FFFF]/5 p-3 space-y-2">
+            <Label htmlFor="assignCpf" className="text-white text-sm flex items-center gap-1.5">
+              <FileText className="h-3.5 w-3.5 text-[#00FFFF]" /> CPF do paciente
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="assignCpf"
+                value={cpfInput}
+                onChange={(e) => setCpfInput(formatCPF(e.target.value))}
+                placeholder="___.___.___-__"
+                inputMode="numeric"
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/40 font-mono"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleSaveCpf}
+                disabled={cpfSaving}
+                className="border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/10"
+              >
+                {cpfSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar CPF'}
+              </Button>
+            </div>
+            <p className="text-[11px] text-white/60">
+              O paciente usa este CPF em /minhas-escalas para acessar as escalas atribuídas.
+              {!assignDialog.patient?.document && (
+                <span className="text-amber-300">
+                  {' '}
+                  Nenhum CPF cadastrado — o paciente ainda não consegue se identificar.
+                </span>
+              )}
+            </p>
+          </div>
+
           <div className="space-y-4 py-2 max-h-96 overflow-y-auto pr-1">
             {Object.entries(SCALE_GROUPS).map(([pathology, scales]) => (
               <div key={pathology} className="space-y-1.5">

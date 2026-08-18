@@ -9,13 +9,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2 } from 'lucide-react'
+import { Loader2, FileText } from 'lucide-react'
 import {
   type PatientFormData,
   createPatient,
   updatePatient,
   type AdminPatient,
 } from '@/services/admin-painel'
+import { formatCPF } from '@/services/guest-patient'
 
 interface PatientFormDialogProps {
   open: boolean
@@ -35,6 +36,7 @@ export function PatientFormDialog({
     last_name: '',
     email: '',
     phone: '',
+    document: '',
     birth_date: '',
   })
   const [saving, setSaving] = useState(false)
@@ -50,9 +52,17 @@ export function PatientFormDialog({
               last_name: patient.last_name,
               email: patient.email || '',
               phone: patient.phone || '',
+              document: patient.document || '',
               birth_date: patient.birth_date || '',
             }
-          : { first_name: '', last_name: '', email: '', phone: '', birth_date: '' },
+          : {
+              first_name: '',
+              last_name: '',
+              email: '',
+              phone: '',
+              document: '',
+              birth_date: '',
+            },
       )
     }
   }, [open, patient])
@@ -109,11 +119,19 @@ export function PatientFormDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-sm text-slate-100">Telefone</Label>
+              <Label className="text-sm text-slate-100 flex items-center gap-1.5">
+                <FileText className="h-3.5 w-3.5 text-[#00FFFF]" /> CPF
+              </Label>
               <Input
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                value={form.document}
+                onChange={(e) => setForm({ ...form, document: formatCPF(e.target.value) })}
+                placeholder="___.___.___-__"
+                inputMode="numeric"
+                className="font-mono"
               />
+              <p className="text-[11px] text-slate-400">
+                Para o paciente acessar suas escalas em /minhas-escalas
+              </p>
             </div>
             <div className="space-y-1">
               <Label className="text-sm text-slate-100">Nascimento</Label>
@@ -123,6 +141,13 @@ export function PatientFormDialog({
                 onChange={(e) => setForm({ ...form, birth_date: e.target.value })}
               />
             </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-sm text-slate-100">Telefone</Label>
+            <Input
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            />
           </div>
           {error && <p className="text-sm text-red-400">{error}</p>}
         </div>
