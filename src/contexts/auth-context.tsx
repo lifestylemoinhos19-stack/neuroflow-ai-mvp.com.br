@@ -127,9 +127,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       applySession(s)
     })
 
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      applySession(s)
-    })
+    supabase.auth
+      .getSession()
+      .then(({ data: { session: s }, error }) => {
+        if (error) {
+          console.error('[NeuroFlow] Falha ao obter sessão (getSession):', error)
+        }
+        applySession(s)
+      })
+      .catch((err) => {
+        console.error('[NeuroFlow] Erro silencioso ao obter sessão (mobile):', err)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
 
     return () => subscription.unsubscribe()
   }, [])
@@ -139,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAuthTimeout(false)
       return
     }
-    const timer = setTimeout(() => setAuthTimeout(true), 10000)
+    const timer = setTimeout(() => setAuthTimeout(true), 5000)
     return () => clearTimeout(timer)
   }, [loading])
 

@@ -646,6 +646,8 @@ export type Database = {
           preferred_suite_id: string | null
           profession: string | null
           responsible_name: string | null
+          tcle_accepted: boolean | null
+          tcle_accepted_at: string | null
           updated_at: string
         }
         Insert: {
@@ -663,6 +665,8 @@ export type Database = {
           preferred_suite_id?: string | null
           profession?: string | null
           responsible_name?: string | null
+          tcle_accepted?: boolean | null
+          tcle_accepted_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -680,6 +684,8 @@ export type Database = {
           preferred_suite_id?: string | null
           profession?: string | null
           responsible_name?: string | null
+          tcle_accepted?: boolean | null
+          tcle_accepted_at?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1816,6 +1822,37 @@ export type Database = {
         }[]
       }
       is_encrypted: { Args: { p_text: string }; Returns: boolean }
+      accept_guest_tcle: { Args: { p_guest_id: string }; Returns: boolean }
+      get_guest_tcle_status: {
+        Args: { p_guest_id: string }
+        Returns: { tcle_accepted: boolean; tcle_accepted_at: string | null }[]
+      }
+      find_guest_by_document: {
+        Args: { p_document: string }
+        Returns: {
+          out_id: string
+          out_first_name: string
+          out_last_name: string
+          out_birth_date: string | null
+          out_document: string
+          out_profession: string | null
+          out_address: string | null
+          out_responsible_name: string | null
+          out_tcle_accepted: boolean
+        }[]
+      }
+      list_guests_admin: {
+        Args: Record<string, never>
+        Returns: {
+          id: string
+          first_name: string
+          last_name: string
+          email: string | null
+          phone: string | null
+          birth_date: string | null
+          created_at: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

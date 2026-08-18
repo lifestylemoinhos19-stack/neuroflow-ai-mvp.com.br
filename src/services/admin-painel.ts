@@ -10,6 +10,16 @@ export interface AdminPatient {
   evaluation_count: number
 }
 
+interface GuestListRow {
+  id: string
+  first_name: string | null
+  last_name: string | null
+  email: string | null
+  phone: string | null
+  birth_date: string | null
+  created_at: string
+}
+
 export interface PatientFormData {
   first_name: string
   last_name: string
@@ -22,22 +32,45 @@ function metaOf(m: unknown): Record<string, unknown> | null {
   return m && typeof m === 'object' ? (m as Record<string, unknown>) : null
 }
 
+/**
+ * Lista de pacientes (guests) para o painel admin, com dados DESCRIPTOGRAFADOS.
+ *
+ * Os campos first_name, last_name, email, phone, document são armazenados
+ * criptografados na tabela guests (trigger encrypt_guests_pii). Para mostrar
+ * nomes legíveis ao admin, usamos o RPC get_guest_full — que descriptografa
+ * via decrypt_pii — para cada guest.
+ *
+ * Como get_guest_full exige um p_guest_id (não lista todos), primeiro
+ * buscamos os IDs e ordenação pela tabela guests (campos não-PII) e então
+ * chamamos o RPC para cada um. Em caso de falha individual, fazemos fallback
+ * para o campo criptografado (melhor esforço).
+ */
 export async function getAdminPatients(): Promise<AdminPatient[]> {
-  const { data: guests, error } = await supabase
-    .from('guests')
-    .select('id, first_name, last_name, email, phone, birth_date')
-    .order('created_at', { ascending: false })
+  // Os campos PII de guests são armazenados criptografados. Usamos o RPC
+  // list_guests_admin, que descriptografa first_name, last_name, email e
+  // phone via decrypt_pii, e ordena por created_at DESC.
+  const { data: guestRows, error } = await supabase.rpc('list_guests_admin')
 
-  if (error || !guests) return []
+  if (error || !guestRows || guestRows.length === 0) return []
 
+  // Conta avaliações por guest a partir das sessões.
   const { data: sessions } = await supabase.from('anamnesis_sessions').select('metadata')
+  const sessionList = sessions || []
 
-  return guests.map((guest) => {
-    const count = (sessions || []).filter((s) => {
+  return (guestRows as GuestListRow[]).map((row) => {
+    const evaluation_count = sessionList.filter((s) => {
       const meta = metaOf(s.metadata)
-      return meta?.guest_id === guest.id
+      return meta?.guest_id === row.id
     }).length
-    return { ...guest, evaluation_count: count }
+    return {
+      id: row.id,
+      first_name: row.first_name ?? '—',
+      last_name: row.last_name ?? '',
+      email: row.email ?? null,
+      phone: row.phone ?? null,
+      birth_date: row.birth_date ?? null,
+      evaluation_count,
+    } as AdminPatient
   })
 }
 

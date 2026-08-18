@@ -25,9 +25,10 @@ import { ClipboardPlus, Loader2, Users, ArrowRight, CheckCircle2 } from 'lucide-
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/hooks/use-toast'
-import { SCALE_TYPES, translateStatus } from '@/services/admin-sessions'
+import { translateStatus } from '@/services/admin-sessions'
 import { getAdminPatients, type AdminPatient } from '@/services/admin-painel'
 import CalmExplorerQRCard from '@/components/CalmExplorerQRCard'
+import { SCALE_GROUPS, findScaleOption } from '@/lib/scale-groups'
 
 interface ScaleAssignment {
   id: string
@@ -38,8 +39,6 @@ interface ScaleAssignment {
   assigned_at: string
   patient_name?: string
 }
-
-const SCALE_OPTIONS = SCALE_TYPES
 
 export default function AssignScales() {
   const { user } = useAuth()
@@ -271,7 +270,9 @@ export default function AssignScales() {
                       <TableCell className="text-sm font-bold text-white">
                         {a.patient_name}
                       </TableCell>
-                      <TableCell className="text-sm text-white/80">{a.scale_type}</TableCell>
+                      <TableCell className="text-sm text-white/80">
+                        {findScaleOption(a.scale_type)?.label ?? a.scale_type}
+                      </TableCell>
                       <TableCell className="text-sm text-white/80">
                         {new Date(a.assigned_at).toLocaleDateString('pt-BR')}
                       </TableCell>
@@ -302,18 +303,34 @@ export default function AssignScales() {
               Selecione as escalas que o paciente deve responder.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 py-2 max-h-80 overflow-y-auto">
-            {SCALE_OPTIONS.map((scale) => (
-              <label
-                key={scale}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer"
-              >
-                <Checkbox
-                  checked={selectedScales.includes(scale)}
-                  onCheckedChange={() => toggleScale(scale)}
-                />
-                <span className="text-sm text-white">{scale}</span>
-              </label>
+          <div className="space-y-4 py-2 max-h-96 overflow-y-auto pr-1">
+            {Object.entries(SCALE_GROUPS).map(([pathology, scales]) => (
+              <div key={pathology} className="space-y-1.5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#00FFFF]/80 px-1">
+                  {pathology}
+                </p>
+                {scales.map((scale) => (
+                  <label
+                    key={scale.label}
+                    className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-[#00FFFF]/20 transition-colors"
+                  >
+                    <Checkbox
+                      checked={selectedScales.includes(scale.label)}
+                      onCheckedChange={() => toggleScale(scale.label)}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-white">{scale.label}</span>
+                        <span className="text-[10px] text-white/50 bg-white/5 px-1.5 py-0.5 rounded">
+                          {scale.time}
+                        </span>
+                      </div>
+                      <p className="text-xs text-white/70 mt-0.5">{scale.name}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
             ))}
           </div>
           <DialogFooter>

@@ -143,6 +143,75 @@ export async function getGuestFull(
 }
 
 /**
+ * Marca o TCLE (Termo de Consentimento Livre e Esclarecido) como aceito
+ * para um guest. Callable por anon (paciente público).
+ */
+export async function acceptGuestTcle(guestId: string): Promise<{ error: string | null }> {
+  const { error } = await supabase.rpc('accept_guest_tcle', {
+    p_guest_id: guestId,
+  })
+  return { error: error?.message ?? null }
+}
+
+/**
+ * Verifica se um guest já aceitou o TCLE.
+ */
+export async function getGuestTcleStatus(
+  guestId: string,
+): Promise<{ accepted: boolean; error: string | null }> {
+  const { data, error } = await supabase.rpc('get_guest_tcle_status', {
+    p_guest_id: guestId,
+  })
+  if (error) return { accepted: false, error: error.message }
+  const rows = data as { tcle_accepted: boolean }[] | null
+  if (!rows || rows.length === 0) return { accepted: false, error: null }
+  return { accepted: !!rows[0].tcle_accepted, error: null }
+}
+
+/**
+ * Procura um guest pelo CPF (document) para o fluxo de "acesso simplificado".
+ * Usa o RPC find_guest_by_document, que descriptografa o campo document
+ * server-side e NÃO cria um novo guest (apenas retorna o existente).
+ */
+export async function findGuestByCpf(
+  document: string,
+): Promise<{ data: IdentifiedGuest | null; error: string | null }> {
+  const { data, error } = await supabase.rpc('find_guest_by_document', {
+    p_document: document,
+  })
+
+  if (error) return { data: null, error: error.message }
+  const rows = data as
+    | {
+        out_id: string
+        out_first_name: string
+        out_last_name: string
+        out_birth_date: string | null
+        out_document: string
+        out_profession: string | null
+        out_address: string | null
+        out_responsible_name: string | null
+      }[]
+    | null
+  if (!rows || rows.length === 0) return { data: null, error: null }
+
+  const row = rows[0]
+  return {
+    data: {
+      id: row.out_id,
+      first_name: row.out_first_name,
+      last_name: row.out_last_name,
+      birth_date: row.out_birth_date,
+      document: row.out_document,
+      profession: row.out_profession,
+      address: row.out_address,
+      responsible_name: row.out_responsible_name,
+    },
+    error: null,
+  }
+}
+
+/**
  * Calculate age from a birth date string. Returns null if invalid.
  */
 export function calculateAge(birthDate: string): number | null {
