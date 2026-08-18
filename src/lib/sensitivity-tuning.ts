@@ -93,7 +93,11 @@ export async function saveTunedRanges(
     rmse: 0,
     samples: 0,
     duration_ms: 0,
-    metadata: { tunedRanges: ranges, profile, type: 'sensitivity_tuning' },
+    metadata: {
+      tunedRanges: ranges as unknown as import('@/lib/supabase/types').Json,
+      profile,
+      type: 'sensitivity_tuning',
+    },
   })
   if (error) return { error: error.message }
   return { error: null }

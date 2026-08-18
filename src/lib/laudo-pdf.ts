@@ -132,28 +132,32 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
 
   // --- Header: logo + title ---
   try {
-    const logoUrl = `${window.location.origin}/logo.svg`
-    const logoData = await fetchSvgAsPngData(logoUrl, 40, 40)
+    // Import logo asset from local project src/assets/logo-3-e1088.png
+    const logoModule = await import('@/assets/logo-3-e1088.png')
+    const logoUrl = logoModule.default
+    const logoData = await fetchImageAsPngData(logoUrl)
     if (logoData) {
-      doc.addImage(logoData, 'PNG', marginX, y, 14, 14)
+      // Draw 20mm x 20mm logo at header
+      doc.addImage(logoData.dataUrl, logoData.format, marginX, y, 20, 20)
     }
   } catch {
-    /* logo optional */
+    /* logo fallback */
   }
 
+  const titleX = marginX + 24
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(16)
   doc.setTextColor(10, 25, 47)
-  doc.text('Casa Branca Saúde', marginX + 18, y + 7)
+  doc.text('Casa Branca Saúde', titleX, y + 8)
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(10)
   doc.setTextColor(100, 116, 139)
-  doc.text('Laudo de Avaliação Neuropsicológica', marginX + 18, y + 13)
+  doc.text('Laudo de Avaliação Neuropsicológica', titleX, y + 15)
 
   doc.setDrawColor(0, 200, 200)
   doc.setLineWidth(0.5)
-  doc.line(marginX, y + 18, pageWidth - marginX, y + 18)
-  y += 26
+  doc.line(marginX, y + 24, pageWidth - marginX, y + 24)
+  y += 32
 
   // --- Patient data ---
   doc.setFont('helvetica', 'bold')
@@ -248,13 +252,13 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   y += 14
   doc.setDrawColor(100, 116, 139)
   doc.setLineWidth(0.3)
-  doc.line(marginX + 40, y, marginX + 120, y)
-  doc.setFont('helvetica', 'normal')
+  doc.line(marginX + 30, y, marginX + 130, y)
+  doc.setFont('helvetica', 'bold')
   doc.setFontSize(10)
   doc.setTextColor(51, 65, 85)
-  doc.text('Dra. Rose Mary Alves — CRM RS 19625', marginX + 40, y + 5)
+  doc.text('Dra. Rose Mary Alves — CRM RS 19625', marginX + 30, y + 5)
 
-  // --- Footer ---
+  // --- Footer (LGPD Compliance) ---
   const footerY = pageHeight - 20
   doc.setDrawColor(0, 200, 200)
   doc.setLineWidth(0.5)
@@ -262,53 +266,40 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   doc.setFontSize(8)
   doc.setTextColor(100, 116, 139)
   const footerLines = doc.splitTextToSize(
-    'Documento gerado pelo Casa Branca Saúde — Em conformidade com a LGPD',
+    'Documento gerado pelo Casa Branca Saúde — Em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018). Dados protegidos e confidenciais.',
     pageWidth - marginX * 2,
   )
   doc.text(footerLines, marginX, footerY + 5)
-  doc.text(`Data de emissão: ${new Date().toLocaleString('pt-BR')}`, marginX, footerY + 10)
+  doc.text(`Data de emissão: ${new Date().toLocaleString('pt-BR')}`, marginX, footerY + 11)
 
   const safeName = (input.patientName || 'paciente').replace(/[^a-zA-Z0-9]/g, '_')
   doc.save(`laudo_${safeName}_${input.type}.pdf`)
 }
 
 /**
- * Fetch an SVG logo and convert it to PNG data usable by jsPDF.addImage.
- * Returns a base64 data URL (PNG) or null on failure.
+ * Helper function to load an image URL (PNG/JPEG/SVG) and convert it into canvas data for jsPDF.
  */
-async function fetchSvgAsPngData(
+async function fetchImageAsPngData(
   url: string,
-  width: number,
-  height: number,
-): Promise<string | null> {
+): Promise<{ dataUrl: string; format: 'PNG' | 'JPEG' } | null> {
   try {
-    const res = await fetch(url)
-    if (!res.ok) return null
-    const svgText = await res.text()
-    const blob = new Blob([svgText], { type: 'image/svg+xml' })
-    const dataUrl = await new Promise<string | null>((resolve) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = () => resolve(null)
-      reader.readAsDataURL(blob)
-    })
-    if (!dataUrl) return null
-
-    return await new Promise<string | null>((resolve) => {
+    return await new Promise((resolve) => {
       const img = new Image()
+      img.crossOrigin = 'anonymous'
       img.onload = () => {
         const canvas = document.createElement('canvas')
-        canvas.width = width * 2
-        canvas.height = height * 2
+        canvas.width = img.naturalWidth || img.width || 300
+        canvas.height = img.naturalHeight || img.height || 300
         const ctx = canvas.getContext('2d')
         if (!ctx) return resolve(null)
-        ctx.fillStyle = '#ffffff'
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-        resolve(canvas.toDataURL('image/png'))
+        ctx.drawImage(img, 0, 0)
+        resolve({
+          dataUrl: canvas.toDataURL('image/png'),
+          format: 'PNG',
+        })
       }
       img.onerror = () => resolve(null)
-      img.src = dataUrl
+      img.src = url
     })
   } catch {
     return null

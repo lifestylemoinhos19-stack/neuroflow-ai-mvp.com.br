@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client'
+import type { Database } from '@/lib/supabase/types'
 
 export type ProfileRole = 'admin' | 'doctor' | 'staff' | 'hospede'
 
@@ -33,9 +34,9 @@ export async function updateUserRole(
   profileId: string,
   role: ProfileRole,
 ): Promise<{ error: string | null }> {
-  const { error } = await supabase
-    .from('profiles')
-    .update({ role: role as unknown as string, updated_at: new Date().toISOString() })
+  const updatePayload = { role: role as string, updated_at: new Date().toISOString() }
+  const { error } = await (supabase.from('profiles') as any)
+    .update(updatePayload)
     .eq('id', profileId)
   return { error: error?.message ?? null }
 }

@@ -46,8 +46,8 @@ const LABELS: Record<string, string> = {
 }
 
 function getModuleLabel(key: string): string {
-  const found = miniModules?.find((m: any) => m.key === key)
-  return found?.label || LABELS[key] || key
+  const found = (miniModules as any[])?.find((m: any) => m.key === key || m.id === key)
+  return found?.title || found?.label || LABELS[key] || key
 }
 
 function getAllModuleKeys(): string[] {
