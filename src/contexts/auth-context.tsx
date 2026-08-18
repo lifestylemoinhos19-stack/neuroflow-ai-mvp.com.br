@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { Navigate, useLocation } from 'react-router-dom'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
-import { Loader2, AlertCircle, RefreshCw } from 'lucide-react'
+import { Loader2, AlertCircle, RefreshCw, Brain } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getOnboardingState, markOnboardingComplete } from '@/services/user-onboarding'
 
@@ -388,12 +388,21 @@ export function AuthGuard({
 
   if (loading || (isAuthenticated && isMfaVerified && !profileChecked)) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-950">
-        <div className="relative mb-6">
-          <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-2xl" />
-          <Loader2 className="relative h-10 w-10 animate-spin text-cyan-400" />
+      <div
+        className="min-h-screen flex flex-col items-center justify-center text-white p-6"
+        style={{ backgroundColor: '#0A192F' }}
+      >
+        <div className="flex flex-col items-center">
+          <div className="relative mb-6">
+            <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-2xl" />
+            <Brain className="relative h-12 w-12 text-cyan-400" />
+          </div>
+          <h1 className="text-xl font-semibold mb-4 tracking-tight">NeuroFlow AI</h1>
+          <div className="flex items-center gap-2 text-sm text-white/75">
+            <Loader2 className="h-4 w-4 animate-spin text-cyan-400" />
+            <span>NeuroFlow AI — Carregando...</span>
+          </div>
         </div>
-        <p className="text-sm text-white/75">Carregando...</p>
       </div>
     )
   }

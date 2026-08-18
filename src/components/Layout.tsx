@@ -48,6 +48,7 @@ const adminNavItems: NavItem[] = [
   { path: '/documentos', label: 'Documentos', icon: FileText },
   { path: '/admin/painel', label: 'Painel Admin', icon: UserCog },
   { path: '/admin/ethical-audit', label: 'Auditoria', icon: FileSearch },
+  { path: '/atribuir-escalas', label: 'Atribuir Escalas', icon: ClipboardPlus },
   { path: '/focus-session', label: 'Explorador da Calma', icon: Brain },
 ]
 
