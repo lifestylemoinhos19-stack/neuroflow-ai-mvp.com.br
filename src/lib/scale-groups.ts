@@ -37,6 +37,22 @@ export const SCALE_GROUPS: Record<string, ScaleOption[]> = {
   Demência: [
     { id: 'ftdrs', label: 'FTDRS', name: 'Escala de Avaliação de Demência', time: '15-20 min' },
   ],
+  'Entrevista Diagnóstica': [
+    {
+      id: 'mini',
+      label: 'MINI 5.0.0',
+      name: 'Entrevista Neuropsiquiátrica Internacional (MINI 5.0.0)',
+      time: '15-20 min',
+    },
+  ],
+  Anamnese: [
+    {
+      id: 'anamnesis',
+      label: 'Anamnese',
+      name: 'Entrevista Clínica Inicial (Anamnese)',
+      time: '10-20 min',
+    },
+  ],
 }
 
 /**

@@ -7,7 +7,11 @@ import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { anamnesisQuestions } from '@/lib/anamnesis-questions'
-import { createAnamnesisSession, completeAnamnesisSession } from '@/services/anamnesis'
+import {
+  createAnamnesisSession,
+  createGuestAnamnesisSession,
+  completeAnamnesisSession,
+} from '@/services/anamnesis'
 import { saveSingleResponse, logAuditAction } from '@/services/scales'
 import { useToast } from '@/hooks/use-toast'
 import { TmsSafetyAlert } from '@/components/TmsSafetyAlert'
@@ -22,9 +26,16 @@ const chatQuestions = anamnesisQuestions.filter(
   (q) => q.type === 'free-text' || q.type === 'multiple-choice',
 )
 
-export default function Anamnesis() {
+interface AnamnesisProps {
+  /** When provided, the component runs in public guest mode (no auth required):
+   *  the session is created via createGuestAnamnesisSession and linked to this guest_id. */
+  guestId?: string
+}
+
+export default function Anamnesis({ guestId }: AnamnesisProps = {}) {
   const navigate = useNavigate()
   const { toast } = useToast()
+  const isGuestMode = !!guestId
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [inputValue, setInputValue] = useState('')
@@ -40,10 +51,16 @@ export default function Anamnesis() {
 
   useEffect(() => {
     if (!hasAcknowledged) return
-    createAnamnesisSession().then((session) => {
+    const createSession = isGuestMode
+      ? () => createGuestAnamnesisSession(guestId!)
+      : () => createAnamnesisSession()
+    createSession().then((session) => {
       if (session) {
         setSessionId(session.id)
-        logAuditAction('session_start', 'anamnesis_sessions', session.id)
+        // logAuditAction requires an authed user; skip in guest mode.
+        if (!isGuestMode) {
+          logAuditAction('session_start', 'anamnesis_sessions', session.id)
+        }
         setMessages([
           {
             role: 'bot',
@@ -56,7 +73,7 @@ export default function Anamnesis() {
         }, 800)
       }
     })
-  }, [hasAcknowledged])
+  }, [hasAcknowledged, isGuestMode, guestId])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -89,7 +106,9 @@ export default function Anamnesis() {
       } else {
         setIsTyping(true)
         await completeAnamnesisSession(sessionId)
-        logAuditAction('session_complete', 'anamnesis_sessions', sessionId)
+        if (!isGuestMode) {
+          logAuditAction('session_complete', 'anamnesis_sessions', sessionId)
+        }
         setTimeout(() => {
           setIsTyping(false)
           setIsComplete(true)
@@ -130,16 +149,24 @@ export default function Anamnesis() {
               Suas respostas foram salvas. Continue com as escalas clínicas especializadas.
             </p>
             <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="rounded-full"
-                onClick={() => navigate('/scales')}
-              >
-                Ir para Escalas
-              </Button>
-              <Button className="rounded-full" onClick={() => navigate('/dashboard')}>
-                Ver Dashboard
-              </Button>
+              {isGuestMode ? (
+                <Button className="rounded-full" onClick={() => navigate('/minhas-escalas')}>
+                  Voltar para minhas avaliações
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    className="rounded-full"
+                    onClick={() => navigate('/scales')}
+                  >
+                    Ir para Escalas
+                  </Button>
+                  <Button className="rounded-full" onClick={() => navigate('/dashboard')}>
+                    Ver Dashboard
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </Card>

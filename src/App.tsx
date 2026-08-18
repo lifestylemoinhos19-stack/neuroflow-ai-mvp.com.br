@@ -40,6 +40,7 @@ import { AdminToolbar } from '@/components/AdminToolbar'
 import SessionSummary from '@/pages/SessionSummary'
 import OpticalOnboarding from '@/pages/OpticalOnboarding'
 import PublicAssessment from '@/pages/PublicAssessment'
+import PublicAnamnesis from '@/pages/PublicAnamnesis'
 import History from '@/pages/History'
 import Documents from '@/pages/Documents'
 import Phq9Page from '@/pages/Phq9Page'
@@ -99,6 +100,8 @@ function AppInner() {
         <Route path="/about" element={<Ethics />} />
         <Route path="/avaliacao" element={<PublicAssessment />} />
         <Route path="/avaliacao/:scale" element={<PublicAssessment />} />
+        {/* /avaliacao/anamnese: public patient anamnesis (no auth, guest_id via query). */}
+        <Route path="/avaliacao/anamnese" element={<PublicAnamnesis />} />
         <Route path="/welcome" element={<Welcome />} />
         <Route path="/minhas-escalas" element={<MinhasEscalas />} />
         <Route path="/neuroflow-ia" element={<NeuroFlowLanding />} />

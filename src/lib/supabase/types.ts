@@ -1735,6 +1735,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_guest_tcle: { Args: { p_guest_id: string }; Returns: boolean }
       cleanup_unauthorized_data: { Args: never; Returns: Json }
       complete_assignment: {
         Args: { p_assignment_id: string }
@@ -1742,6 +1743,20 @@ export type Database = {
       }
       decrypt_pii: { Args: { p_cipher: string }; Returns: string }
       encrypt_pii: { Args: { p_text: string }; Returns: string }
+      find_guest_by_document: {
+        Args: { p_document: string }
+        Returns: {
+          out_address: string
+          out_birth_date: string
+          out_document: string
+          out_first_name: string
+          out_id: string
+          out_last_name: string
+          out_profession: string
+          out_responsible_name: string
+          out_tcle_accepted: boolean
+        }[]
+      }
       get_clinical_prevalence_stats: {
         Args: never
         Returns: {
@@ -1773,6 +1788,13 @@ export type Database = {
           last_name: string
           profession: string
           responsible_name: string
+        }[]
+      }
+      get_guest_tcle_status: {
+        Args: { p_guest_id: string }
+        Returns: {
+          tcle_accepted: boolean
+          tcle_accepted_at: string
         }[]
       }
       get_session_responses_decrypted: {
@@ -1822,35 +1844,16 @@ export type Database = {
         }[]
       }
       is_encrypted: { Args: { p_text: string }; Returns: boolean }
-      accept_guest_tcle: { Args: { p_guest_id: string }; Returns: boolean }
-      get_guest_tcle_status: {
-        Args: { p_guest_id: string }
-        Returns: { tcle_accepted: boolean; tcle_accepted_at: string | null }[]
-      }
-      find_guest_by_document: {
-        Args: { p_document: string }
-        Returns: {
-          out_id: string
-          out_first_name: string
-          out_last_name: string
-          out_birth_date: string | null
-          out_document: string
-          out_profession: string | null
-          out_address: string | null
-          out_responsible_name: string | null
-          out_tcle_accepted: boolean
-        }[]
-      }
       list_guests_admin: {
-        Args: Record<string, never>
+        Args: never
         Returns: {
-          id: string
-          first_name: string
-          last_name: string
-          email: string | null
-          phone: string | null
-          birth_date: string | null
+          birth_date: string
           created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          phone: string
         }[]
       }
     }

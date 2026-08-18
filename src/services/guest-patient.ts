@@ -261,6 +261,8 @@ export const SCALE_DISPLAY_NAMES: Record<string, string> = {
   'Y-BOCS': 'Y-BOCS (TOC)',
   FAS: 'FAS (Fluência Verbal)',
   FTDRS: 'FTDRS (Demência Frontotemporal)',
+  'MINI 5.0.0': 'MINI 5.0.0 (Entrevista Neuropsiquiátrica Internacional)',
+  ANAMNESE: 'Anamnese (Entrevista Clínica Inicial)',
 }
 
 export function getScaleDisplayName(scaleType: string): string {
@@ -279,6 +281,10 @@ export function getScaleRoute(scaleType: string): string {
       return '/avaliacao/assq'
     case 'CBCL':
       return '/avaliacao/cbcl'
+    case 'MINI 5.0.0':
+      return '/mini'
+    case 'ANAMNESE':
+      return '/avaliacao/anamnese'
     default:
       return '/avaliacao'
   }

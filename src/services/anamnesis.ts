@@ -39,6 +39,40 @@ export async function createAnamnesisSession(): Promise<AnamnesisSession | null>
   return data as AnamnesisSession
 }
 
+/**
+ * Create an anamnesis session for an anonymous guest (public patient flow).
+ * No auth required — the session is linked to the guest via a guest_token
+ * stored in the `guest_token` column. Responses are saved against this session.
+ */
+export async function createGuestAnamnesisSession(
+  guestId: string,
+): Promise<AnamnesisSession | null> {
+  // guest_token acts as the public handle that lets anon read its own
+  // session/responses via RLS (anamnesis_sessions_select_anon).
+  const guestToken =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `${guestId}-${Date.now()}-${Math.random().toString(36).slice(2)}`
+
+  const { data, error } = await supabase
+    .from('anamnesis_sessions')
+    .insert({
+      status: 'in_progress',
+      started_at: new Date().toISOString(),
+      guest_token: guestToken,
+      metadata: { guest_id: guestId, source: 'public_anamnesis' },
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating guest anamnesis session:', error)
+    return null
+  }
+
+  return data as AnamnesisSession
+}
+
 export async function saveAnamnesisResponses(
   sessionId: string,
   responses: AnamnesisResponseInput[],
