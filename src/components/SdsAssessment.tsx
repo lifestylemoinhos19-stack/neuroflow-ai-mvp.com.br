@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Loader2, Eye } from 'lucide-react'
+import { Loader2, Eye, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -12,6 +12,7 @@ import {
 } from '@/services/anamnesis'
 import { sdsQuestions, sdsSections, getSdsTotalScore, getSherraTotalScore } from '@/lib/sds-data'
 import { useGuestScale } from '@/contexts/guest-scale-context'
+import { returnToMinhasEscalas } from '@/lib/assessment-redirect'
 
 const REQUIRED_KEYS = ['sds_q1', 'sds_q2', 'sds_q3']
 
@@ -130,7 +131,7 @@ export function SdsAssessment() {
 
   if (showResult) {
     return (
-      <div ref={topRef}>
+      <div ref={topRef} className="space-y-3">
         <SdsResult
           answers={answers}
           totalSds={totalSds}
@@ -138,6 +139,12 @@ export function SdsAssessment() {
           daysLost={daysLost}
           onReset={handleReset}
         />
+        <Button
+          onClick={() => returnToMinhasEscalas(guestId)}
+          className="w-full bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-semibold"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para Minhas Escalas
+        </Button>
       </div>
     )
   }

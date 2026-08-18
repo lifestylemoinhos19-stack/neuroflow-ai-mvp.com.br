@@ -19,6 +19,24 @@ export interface GuestAssignment {
   completed_at: string | null
 }
 
+export interface GuestAssessmentResponse {
+  question_key: string
+  question_label: string | null
+  response_value: string
+}
+
+export interface GuestAssessmentResult {
+  assignment_id: string | null
+  scale_type: string
+  status: string
+  assigned_at: string | null
+  completed_at: string | null
+  session_id: string | null
+  total_score: number | null
+  severity: string | null
+  responses: GuestAssessmentResponse[]
+}
+
 export interface GuestFull {
   id: string
   first_name: string
@@ -208,6 +226,37 @@ export async function findGuestByCpf(
       address: row.out_address,
       responsible_name: row.out_responsible_name,
     },
+    error: null,
+  }
+}
+
+/**
+ * Busca as respostas/pontuações das avaliações concluídas de um paciente
+ * (guest), sem exigir login. Usado pela tela "Ver respostas" em
+ * /minhas-escalas. Retorna tanto assignments vinculados a sessões quanto
+ * sessões órfãs (criadas pelos componentes de escala via guest_token).
+ */
+export async function getGuestAssessmentResults(
+  guestId: string,
+): Promise<{ data: GuestAssessmentResult[]; error: string | null }> {
+  const { data, error } = await supabase.rpc('get_guest_assessment_results', {
+    p_guest_id: guestId,
+  })
+  if (error) return { data: [], error: error.message }
+  const rows = (data || []) as Record<string, unknown>[]
+  return {
+    data: rows.map((r) => ({
+      assignment_id: (r.assignment_id as string | null) ?? null,
+      scale_type: (r.scale_type as string) ?? '',
+      status: (r.status as string) ?? '',
+      assigned_at: (r.assigned_at as string | null) ?? null,
+      completed_at: (r.completed_at as string | null) ?? null,
+      session_id: (r.session_id as string | null) ?? null,
+      total_score:
+        r.total_score !== null && r.total_score !== undefined ? Number(r.total_score) : null,
+      severity: (r.severity as string | null) ?? null,
+      responses: (r.responses as GuestAssessmentResponse[]) ?? [],
+    })),
     error: null,
   }
 }

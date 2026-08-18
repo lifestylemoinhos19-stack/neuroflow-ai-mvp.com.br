@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Loader2, RotateCcw, Play, Timer, FileText } from 'lucide-react'
+import { Loader2, RotateCcw, Play, Timer, FileText, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -12,6 +12,7 @@ import {
   calculateFasResult,
 } from '@/lib/fas-data'
 import { useGuestScale } from '@/contexts/guest-scale-context'
+import { returnToMinhasEscalas } from '@/lib/assessment-redirect'
 
 const CARD_BG = { backgroundColor: 'rgba(17, 34, 64, 0.85)' }
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Loader2, RotateCcw, Eye, FileText } from 'lucide-react'
+import { Loader2, RotateCcw, Eye, FileText, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -11,6 +11,7 @@ import {
 } from '@/services/anamnesis'
 import type { ExtraScale } from '@/lib/extra-scales-data'
 import { useGuestScale } from '@/contexts/guest-scale-context'
+import { returnToMinhasEscalas } from '@/lib/assessment-redirect'
 
 const CARD_BG = { backgroundColor: 'rgba(17, 34, 64, 0.85)' }
 

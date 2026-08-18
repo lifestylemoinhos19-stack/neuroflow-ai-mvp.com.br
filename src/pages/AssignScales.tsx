@@ -266,6 +266,7 @@ export default function AssignScales() {
                         <TableCell className="text-sm font-bold text-white">
                           {p.first_name} {p.last_name}
                         </TableCell>
+                        <TableCell className="text-sm text-white/80">{p.email || '-'}</TableCell>
                         <TableCell className="text-sm text-white/80 font-mono">
                           {p.document ? formatCPF(p.document) : '-'}
                         </TableCell>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Loader2, CheckCircle2, RotateCcw, Brain } from 'lucide-react'
+import { Loader2, CheckCircle2, RotateCcw, Brain, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -21,6 +21,7 @@ import {
   saveAnamnesisResponses,
   completeAnamnesisSession,
 } from '@/services/anamnesis'
+import { returnToMinhasEscalas } from '@/lib/assessment-redirect'
 
 const severityStyles: Record<Gad7Severity, { badge: string; bar: string }> = {
   minimal: { badge: 'bg-emerald-500/20 text-emerald-300', bar: 'bg-emerald-400' },
@@ -156,6 +157,17 @@ export function Gad7Assessment() {
             {CLINIC_BRANDING.name} — Esta ferramenta é apenas para triagem e não substitui avaliação
             clínica.
           </p>
+          {!guestId && (
+            <Button
+              onClick={() => returnToMinhasEscalas(guestId)}
+              className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-semibold"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para Minhas Escalas
+            </Button>
+          )}
+          {guestId && (
+            <p className="text-xs text-white/60 text-center">Voltando para suas escalas...</p>
+          )}
           <Button
             onClick={handleRestart}
             variant="outline"
