@@ -40,6 +40,28 @@ export async function createAnamnesisSession(): Promise<AnamnesisSession | null>
 }
 
 /**
+ * Cria uma sessão de anamnese para o fluxo público, priorizando o usuário
+ * autenticado quando existir e, caso contrário, criando uma sessão anon
+ * vinculada ao guest via guest_token. Isto permite que os componentes de
+ * escala (Phq9Assessment, MocaAssessment, etc.) funcionem tanto no fluxo
+ * autenticado (/evaluations/*) quanto no fluxo público de paciente
+ * (/avaliacao/* com guest_id via query param).
+ */
+export async function createAnamnesisSessionForGuest(
+  guestId?: string | null,
+): Promise<AnamnesisSession | null> {
+  // Se há usuário autenticado, reutiliza o fluxo padrão.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (user) return createAnamnesisSession()
+
+  // Sem auth: exige guest_id para criar a sessão anon.
+  if (!guestId) return null
+  return createGuestAnamnesisSession(guestId)
+}
+
+/**
  * Create an anamnesis session for an anonymous guest (public patient flow).
  * No auth required — the session is linked to the guest via a guest_token
  * stored in the `guest_token` column. Responses are saved against this session.

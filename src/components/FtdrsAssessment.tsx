@@ -15,10 +15,12 @@ import {
   FTDRS_DRAFT_KEY,
   FTDRS_DISCLAIMER,
 } from '@/lib/ftdrs-data'
+import { useGuestScale } from '@/contexts/guest-scale-context'
 
 const CARD_BG = { backgroundColor: 'rgba(17, 34, 64, 0.85)' }
 
 export function FtdrsAssessment() {
+  const guestId = useGuestScale()
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [showResult, setShowResult] = useState(false)
   const [saving, setSaving] = useState(false)

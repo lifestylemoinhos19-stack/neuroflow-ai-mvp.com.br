@@ -15,6 +15,12 @@ import {
 } from '@/lib/phq9-gad7-data'
 import { CLINIC_BRANDING } from '@/lib/clinic-branding'
 import { cn } from '@/lib/utils'
+import { useGuestScale } from '@/contexts/guest-scale-context'
+import {
+  createAnamnesisSessionForGuest,
+  saveAnamnesisResponses,
+  completeAnamnesisSession,
+} from '@/services/anamnesis'
 
 const severityStyles: Record<Gad7Severity, { badge: string; bar: string }> = {
   minimal: { badge: 'bg-emerald-500/20 text-emerald-300', bar: 'bg-emerald-400' },
@@ -25,6 +31,7 @@ const severityStyles: Record<Gad7Severity, { badge: string; bar: string }> = {
 
 export function Gad7Assessment() {
   const location = useLocation()
+  const guestId = useGuestScale()
   const passedSessionId = (location.state as { sessionId?: string } | null)?.sessionId
   const [answers, setAnswers] = useState<Record<number, number>>({})
   const [submitting, setSubmitting] = useState(false)
@@ -39,6 +46,11 @@ export function Gad7Assessment() {
 
   const ensureSession = async (): Promise<string | null> => {
     if (passedSessionId) return passedSessionId
+    // Fluxo público (guest): cria uma sessão anon vinculada ao guest_id.
+    if (guestId) {
+      const session = await createAnamnesisSessionForGuest(guestId)
+      return session?.id ?? null
+    }
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -88,13 +100,19 @@ export function Gad7Assessment() {
       const {
         data: { user },
       } = await supabase.auth.getUser()
-      await supabase.from('clinical_feedback').insert({
-        session_id: sessionId,
-        gad7_score: totalScore,
-        doctor_id: user?.id ?? null,
-        system_suggestion: gad7SeverityLabels[getGad7Severity(totalScore)],
-        global_severity: getGad7Severity(totalScore),
-      })
+      // clinical_feedback é gravada apenas quando há médico/usuário autenticado;
+      // no fluxo público (guest), as respostas já estão persistidas na sessão.
+      if (user) {
+        await supabase.from('clinical_feedback').insert({
+          session_id: sessionId,
+          gad7_score: totalScore,
+          doctor_id: user.id,
+          system_suggestion: gad7SeverityLabels[getGad7Severity(totalScore)],
+          global_severity: getGad7Severity(totalScore),
+        })
+      } else {
+        await completeAnamnesisSession(sessionId)
+      }
 
       setResult({ score: totalScore, severity: getGad7Severity(totalScore) })
     } catch {

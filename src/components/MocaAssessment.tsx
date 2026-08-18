@@ -14,6 +14,7 @@ import {
   MOCA_DRAFT_KEY,
   MOCA_DISCLAIMER,
 } from '@/lib/moca-data'
+import { useGuestScale } from '@/contexts/guest-scale-context'
 
 const CARD_BG = { backgroundColor: 'rgba(17, 34, 64, 0.85)' }
 
@@ -47,6 +48,7 @@ function ScoreInput({
 }
 
 export function MocaAssessment() {
+  const guestId = useGuestScale()
   const [scores, setScores] = useState<Record<string, number>>({})
   const [showResult, setShowResult] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -85,7 +87,7 @@ export function MocaAssessment() {
       question_label: item.text,
       response_value: scores[item.key] ?? 0,
     }))
-    const ok = await saveDementiaAssessment('moca', responses, totalScore)
+    const ok = await saveDementiaAssessment('moca', responses, totalScore, guestId)
     setSaving(false)
     if (ok) {
       localStorage.removeItem(MOCA_DRAFT_KEY)

@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase/client'
 import {
   createAnamnesisSession,
+  createAnamnesisSessionForGuest,
   saveAnamnesisResponses,
   completeAnamnesisSession,
   type AnamnesisResponseInput,
@@ -12,8 +13,11 @@ export async function saveDementiaAssessment(
   scaleType: DementiaScaleType,
   responses: AnamnesisResponseInput[],
   score: number,
+  guestId?: string | null,
 ): Promise<boolean> {
-  const session = await createAnamnesisSession()
+  // Prioriza o fluxo autenticado; quando não há usuário logado, cria uma
+  // sessão anon vinculada ao guest_id (fluxo público /avaliacao/*).
+  const session = await createAnamnesisSessionForGuest(guestId)
   if (!session) return false
 
   const saved = await saveAnamnesisResponses(session.id, responses)

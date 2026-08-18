@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { AssessmentProgress } from '@/components/AssessmentProgress'
-import { saveAssessmentToSupabase } from '@/services/assessment'
+import { saveAssessmentToSupabaseForGuest } from '@/services/assessment'
 import {
   phq9Questions,
   phq9Options,
@@ -14,8 +14,10 @@ import {
   PHQ9_DISCLAIMER,
   PHQ9_DRAFT_KEY,
 } from '@/lib/phq9-data'
+import { useGuestScale } from '@/contexts/guest-scale-context'
 
 export function Phq9Assessment() {
+  const guestId = useGuestScale()
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [showResult, setShowResult] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -58,10 +60,15 @@ export function Phq9Assessment() {
       question_label: q.text,
       response_value: answers[q.key] ?? 0,
     }))
-    const ok = await saveAssessmentToSupabase('phq9', responses, {
-      totalScore,
-      severity: severity.label,
-    })
+    const ok = await saveAssessmentToSupabaseForGuest(
+      'phq9',
+      responses,
+      {
+        totalScore,
+        severity: severity.label,
+      },
+      guestId,
+    )
     setSaving(false)
     if (ok) {
       localStorage.removeItem(PHQ9_DRAFT_KEY)

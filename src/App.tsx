@@ -41,6 +41,7 @@ import SessionSummary from '@/pages/SessionSummary'
 import OpticalOnboarding from '@/pages/OpticalOnboarding'
 import PublicAssessment from '@/pages/PublicAssessment'
 import PublicAnamnesis from '@/pages/PublicAnamnesis'
+import PublicScaleAssessment from '@/pages/PublicScaleAssessment'
 import History from '@/pages/History'
 import Documents from '@/pages/Documents'
 import Phq9Page from '@/pages/Phq9Page'
@@ -99,9 +100,29 @@ function AppInner() {
         <Route path="/ethics" element={<Ethics />} />
         <Route path="/about" element={<Ethics />} />
         <Route path="/avaliacao" element={<PublicAssessment />} />
-        <Route path="/avaliacao/:scale" element={<PublicAssessment />} />
-        {/* /avaliacao/anamnese: public patient anamnesis (no auth, guest_id via query). */}
+        {/*
+          Rotas públicas dedicadas para cada escala (sem AuthGuard).
+          O paciente chega aqui a partir de /minhas-escalas com guest_id via
+          query param. Cada rota renderiza o componente da escala dentro do
+          GuestScaleProvider, permitindo salvar respostas sem login.
+          Estão registradas ANTES de /avaliacao/:scale para terem prioridade
+          de correspondência (rotas estáticas antes de dinâmicas no React Router).
+          /avaliacao/snapiv, /avaliacao/assq e /avaliacao/cbcl continuam
+          funcionando via PublicAssessment (abaixo) com a rota dinâmica.
+        */}
         <Route path="/avaliacao/anamnese" element={<PublicAnamnesis />} />
+        <Route path="/avaliacao/phq9" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/gad7" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/hama" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/hamd" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/asrs18" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/moca" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/meem" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/ybocs" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/fas" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/ftdrs" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/sds" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/:scale" element={<PublicAssessment />} />
         <Route path="/welcome" element={<Welcome />} />
         <Route path="/minhas-escalas" element={<MinhasEscalas />} />
         <Route path="/neuroflow-ia" element={<NeuroFlowLanding />} />

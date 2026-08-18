@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { AssessmentProgress } from '@/components/AssessmentProgress'
-import { saveAssessmentToSupabase } from '@/services/assessment'
+import { saveAssessmentToSupabaseForGuest } from '@/services/assessment'
 import {
   ybocsQuestions,
   ybocsOptions,
@@ -17,10 +17,12 @@ import {
   YBOCS_DRAFT_KEY,
   YBOCS_DISCLAIMER,
 } from '@/lib/ybocs-data'
+import { useGuestScale } from '@/contexts/guest-scale-context'
 
 const CARD_BG = { backgroundColor: 'rgba(17, 34, 64, 0.85)' }
 
 export function YbocsAssessment() {
+  const guestId = useGuestScale()
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [showResult, setShowResult] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -61,12 +63,17 @@ export function YbocsAssessment() {
       question_label: q.text,
       response_value: answers[q.key] ?? 0,
     }))
-    const ok = await saveAssessmentToSupabase('ybocs', responses, {
-      totalScore,
-      obsessionsSubtotal,
-      compulsionsSubtotal,
-      severity: severity.label,
-    })
+    const ok = await saveAssessmentToSupabaseForGuest(
+      'ybocs',
+      responses,
+      {
+        totalScore,
+        obsessionsSubtotal,
+        compulsionsSubtotal,
+        severity: severity.label,
+      },
+      guestId,
+    )
     setSaving(false)
     if (ok) {
       localStorage.removeItem(YBOCS_DRAFT_KEY)

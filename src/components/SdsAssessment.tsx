@@ -6,11 +6,12 @@ import { cn } from '@/lib/utils'
 import { AssessmentProgress } from '@/components/AssessmentProgress'
 import { SdsResult } from '@/components/SdsResult'
 import {
-  createAnamnesisSession,
+  createAnamnesisSessionForGuest,
   saveAnamnesisResponses,
   completeAnamnesisSession,
 } from '@/services/anamnesis'
 import { sdsQuestions, sdsSections, getSdsTotalScore, getSherraTotalScore } from '@/lib/sds-data'
+import { useGuestScale } from '@/contexts/guest-scale-context'
 
 const REQUIRED_KEYS = ['sds_q1', 'sds_q2', 'sds_q3']
 
@@ -51,6 +52,7 @@ function ScaleGrid({
 }
 
 export function SdsAssessment() {
+  const guestId = useGuestScale()
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [showResult, setShowResult] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -61,7 +63,7 @@ export function SdsAssessment() {
   useEffect(() => {
     let mounted = true
     const initSession = async () => {
-      const session = await createAnamnesisSession()
+      const session = await createAnamnesisSessionForGuest(guestId)
       if (mounted && session) setSessionId(session.id)
       if (mounted) setSessionLoading(false)
     }
@@ -113,7 +115,7 @@ export function SdsAssessment() {
     setShowResult(false)
     setSessionLoading(true)
     setSessionId(null)
-    const session = await createAnamnesisSession()
+    const session = await createAnamnesisSessionForGuest(guestId)
     if (session) setSessionId(session.id)
     setSessionLoading(false)
   }

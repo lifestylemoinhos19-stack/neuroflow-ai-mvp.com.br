@@ -11,12 +11,14 @@ import {
   FAS_DISCLAIMER,
   calculateFasResult,
 } from '@/lib/fas-data'
+import { useGuestScale } from '@/contexts/guest-scale-context'
 
 const CARD_BG = { backgroundColor: 'rgba(17, 34, 64, 0.85)' }
 
 type Phase = 'intro' | 'F' | 'A' | 'S' | 'result'
 
 export function FasAssessment() {
+  const guestId = useGuestScale()
   const [phase, setPhase] = useState<Phase>('intro')
   const [timeLeft, setTimeLeft] = useState(FAS_TIME_PER_LETTER)
   const [words, setWords] = useState<Record<string, string>>({ F: '', A: '', S: '' })
@@ -68,7 +70,7 @@ export function FasAssessment() {
       question_label: `Palavras geradas - Letra ${r.letter}`,
       response_value: JSON.stringify(r.words),
     }))
-    const ok = await saveDementiaAssessment('fas', responses, result.totalUnique)
+    const ok = await saveDementiaAssessment('fas', responses, result.totalUnique, guestId)
     setSaving(false)
     if (ok) {
       toast.success('Teste FAS salvo com sucesso!', {

@@ -94,12 +94,17 @@ export default function AssignScales() {
       })
     }
     if (guestIds.size) {
-      // Buscar nomes via guests (guest_id) — patients assigned without an auth profile
-      const { data: guests } = await supabase
-        .from('guests')
-        .select('id, first_name, last_name')
-        .in('id', [...guestIds])
-      ;(guests || []).forEach((g) => {
+      // Buscar nomes via RPC get_guest_full, que descriptografa os campos PII
+      // (first_name/last_name) server-side. A tabela guests armazena esses
+      // campos criptografados pelo trigger encrypt_guests_pii, então uma
+      // consulta direta retornaria strings binárias ilegíveis para o admin.
+      const results = await Promise.all(
+        [...guestIds].map(async (gid) => {
+          const { data } = await supabase.rpc('get_guest_full', { p_guest_id: gid })
+          return data?.[0] ?? null
+        }),
+      )
+      results.filter(Boolean).forEach((g: any) => {
         patientMap[g.id] = `${g.first_name} ${g.last_name}`.trim() || 'Paciente'
       })
     }

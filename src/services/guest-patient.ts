@@ -281,6 +281,28 @@ export function getScaleRoute(scaleType: string): string {
       return '/avaliacao/assq'
     case 'CBCL':
       return '/avaliacao/cbcl'
+    case 'PHQ-9':
+      return '/avaliacao/phq9'
+    case 'GAD-7':
+      return '/avaliacao/gad7'
+    case 'HAM-A':
+      return '/avaliacao/hama'
+    case 'HAM-D':
+      return '/avaliacao/hamd'
+    case 'ASRS-18':
+      return '/avaliacao/asrs18'
+    case 'MOCA':
+      return '/avaliacao/moca'
+    case 'MEEM':
+      return '/avaliacao/meem'
+    case 'Y-BOCS':
+      return '/avaliacao/ybocs'
+    case 'FAS':
+      return '/avaliacao/fas'
+    case 'FTDRS':
+      return '/avaliacao/ftdrs'
+    case 'SDS':
+      return '/avaliacao/sds'
     case 'MINI 5.0.0':
       return '/mini'
     case 'ANAMNESE':

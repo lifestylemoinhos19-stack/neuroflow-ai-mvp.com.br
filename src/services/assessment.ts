@@ -52,6 +52,70 @@ export async function saveAssessmentToSupabase(
   return true
 }
 
+/**
+ * Variante do saveAssessmentToSupabase que funciona no fluxo público de
+ * paciente (sem login): quando não há usuário autenticado, cria uma sessão
+ * anon vinculada ao guest_id via guest_token. Usada pelos componentes de
+ * escala (Phq9Assessment, YbocsAssessment, SdsAssessment, etc.) quando
+ * renderizados dentro de /avaliacao/* (modo guest).
+ */
+export async function saveAssessmentToSupabaseForGuest(
+  scaleType: 'snap-iv' | 'assq' | 'cbcl' | 'phq9' | 'sds' | 'ybocs',
+  responses: AssessmentResponse[],
+  summary: Record<string, unknown>,
+  guestId?: string | null,
+): Promise<boolean> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Usuário autenticado — delega para o fluxo padrão.
+  if (user) return saveAssessmentToSupabase(scaleType, responses, summary)
+
+  // Sem auth: exige guest_id para criar a sessão anon.
+  if (!guestId) return false
+
+  const guestToken =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `${guestId}-${Date.now()}-${Math.random().toString(36).slice(2)}`
+
+  const { data: session, error: sessionError } = await supabase
+    .from('anamnesis_sessions')
+    .insert({
+      status: 'completed',
+      started_at: new Date(Date.now() - 60000).toISOString(),
+      completed_at: new Date().toISOString(),
+      guest_token: guestToken,
+      metadata: { scaleType, guest_id: guestId, ...summary },
+    })
+    .select()
+    .single()
+
+  if (sessionError || !session) {
+    console.error('Error creating guest assessment session:', sessionError)
+    return false
+  }
+
+  const rows = responses.map((r) => ({
+    session_id: session.id,
+    question_key: r.question_key,
+    question_label: r.question_label,
+    response_value: r.response_value,
+  }))
+
+  const { error: respError } = await supabase
+    .from('anamnesis_responses')
+    .upsert(rows, { onConflict: 'session_id,question_key' })
+
+  if (respError) {
+    console.error('Error saving guest assessment responses:', respError)
+    return false
+  }
+
+  return true
+}
+
 export async function savePublicAssessmentToSupabase(
   scaleType: 'snap-iv' | 'assq' | 'cbcl',
   responses: AssessmentResponse[],
