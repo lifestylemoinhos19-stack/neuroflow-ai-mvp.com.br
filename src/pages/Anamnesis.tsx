@@ -205,17 +205,17 @@ export default function Anamnesis({ guestId }: AnamnesisProps = {}) {
     <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-12rem)]">
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-1">
-          <Brain className="h-5 w-5 text-primary" />
-          <h1 className="text-xl sm:text-2xl font-display font-bold text-slate-900">
+          <Brain className="h-5 w-5 text-[#00FFFF]" />
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-slate-100">
             Entrevista Adaptativa
           </h1>
         </div>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-300 font-medium">
           Pergunta {Math.min(currentIndex + 1, chatQuestions.length)} de {chatQuestions.length}
         </p>
-        <div className="mt-2 p-2 rounded-lg bg-blue-50 border border-blue-200 flex items-start gap-2">
-          <Scale className="h-3.5 w-3.5 text-blue-600 shrink-0 mt-0.5" />
-          <p className="text-[11px] text-blue-700 leading-snug">{TELEMEDICINE_DISCLAIMER.text}</p>
+        <div className="mt-2 p-2.5 rounded-lg bg-slate-800/80 border border-slate-700 flex items-start gap-2">
+          <Scale className="h-4 w-4 text-[#00FFFF] shrink-0 mt-0.5" />
+          <p className="text-xs text-slate-200 leading-snug">{TELEMEDICINE_DISCLAIMER.text}</p>
         </div>
       </div>
 
@@ -242,18 +242,20 @@ export default function Anamnesis({ guestId }: AnamnesisProps = {}) {
             </div>
             <div
               className={cn(
-                'rounded-2xl px-4 py-2.5 max-w-[75%]',
+                'rounded-2xl px-4 py-3 max-w-[85%] sm:max-w-[78%] shadow-sm',
                 msg.role === 'bot'
-                  ? 'bg-white border border-slate-100 text-slate-700 rounded-tl-sm'
-                  : 'bg-primary text-primary-foreground rounded-tr-sm',
+                  ? 'bg-slate-800/95 border border-slate-700 text-slate-100 rounded-tl-sm'
+                  : 'bg-primary text-primary-foreground font-medium rounded-tr-sm',
               )}
             >
               {msg.role === 'bot' && (
-                <span className="text-[10px] font-bold text-primary flex items-center gap-1 mb-0.5">
-                  <Brain className="h-3 w-3" /> NeuroFlow AI
+                <span className="text-xs font-bold text-[#00FFFF] flex items-center gap-1 mb-1">
+                  <Brain className="h-3.5 w-3.5" /> NeuroFlow AI
                 </span>
               )}
-              <p className="text-sm leading-relaxed">{msg.content}</p>
+              <p className="text-sm sm:text-base leading-relaxed text-slate-100 font-medium">
+                {msg.content}
+              </p>
             </div>
           </div>
         ))}
@@ -262,18 +264,18 @@ export default function Anamnesis({ guestId }: AnamnesisProps = {}) {
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <Brain className="h-4 w-4 text-primary" />
             </div>
-            <div className="bg-white border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2">
-              <span className="text-[10px] font-bold text-primary whitespace-nowrap">
+            <div className="bg-slate-800/95 border border-slate-700 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2">
+              <span className="text-xs font-bold text-[#00FFFF] whitespace-nowrap">
                 NeuroFlow AI
               </span>
               {[0, 150, 300].map((d) => (
                 <span
                   key={d}
-                  className="h-2 w-2 rounded-full bg-slate-300 animate-bounce"
+                  className="h-2 w-2 rounded-full bg-[#00FFFF] animate-bounce"
                   style={{ animationDelay: `${d}ms` }}
                 />
               ))}
-              <span className="text-xs text-slate-400 ml-1">IA processando...</span>
+              <span className="text-xs text-slate-300 ml-1">IA processando...</span>
             </div>
           </div>
         )}
@@ -281,7 +283,7 @@ export default function Anamnesis({ guestId }: AnamnesisProps = {}) {
       </div>
 
       {!isComplete && currentQuestion && (
-        <div className="border-t border-slate-100 pt-4 space-y-2">
+        <div className="border-t border-slate-800 pt-4 space-y-2.5">
           {currentQuestion.type === 'multiple-choice' && currentQuestion.choices ? (
             <div className="flex flex-wrap gap-2">
               {currentQuestion.choices.map((choice) => (
@@ -290,7 +292,7 @@ export default function Anamnesis({ guestId }: AnamnesisProps = {}) {
                   variant="outline"
                   onClick={() => handleSend(choice)}
                   disabled={isSaving || isTyping}
-                  className="rounded-full text-sm h-auto py-2.5 px-4 hover:bg-primary/5 hover:border-primary/30"
+                  className="rounded-full text-sm h-auto py-2.5 px-4 bg-slate-800/90 text-slate-100 border-slate-700 hover:border-[#00FFFF] hover:bg-[#00FFFF]/10 hover:text-white transition-all"
                 >
                   {choice}
                 </Button>
@@ -307,9 +309,9 @@ export default function Anamnesis({ guestId }: AnamnesisProps = {}) {
                       size="sm"
                       onClick={() => handleSend(reply)}
                       disabled={isSaving || isTyping}
-                      className="rounded-full text-xs h-auto py-2 px-3 bg-slate-50 hover:bg-primary/5 hover:border-primary/30"
+                      className="rounded-full text-xs sm:text-sm h-auto py-2 px-3.5 bg-slate-800/90 text-slate-100 border-slate-700 hover:bg-[#00FFFF]/10 hover:border-[#00FFFF]/50 hover:text-white"
                     >
-                      <Sparkles className="h-3 w-3 mr-1 text-primary/50" />
+                      <Sparkles className="h-3.5 w-3.5 mr-1 text-[#00FFFF]" />
                       {reply}
                     </Button>
                   ))}
@@ -322,17 +324,17 @@ export default function Anamnesis({ guestId }: AnamnesisProps = {}) {
                   onKeyDown={handleKeyDown}
                   placeholder="Digite sua resposta..."
                   disabled={isSaving || isTyping}
-                  className="rounded-full bg-slate-50"
+                  className="rounded-full bg-slate-900 border-slate-700 text-slate-100 placeholder:text-slate-400 focus-visible:ring-primary focus-visible:border-primary text-sm sm:text-base px-4 py-2.5"
                 />
                 <Button
                   onClick={() => handleSend(inputValue)}
                   disabled={!inputValue.trim() || isSaving || isTyping}
-                  className="rounded-full h-10 w-10 p-0 shrink-0"
+                  className="rounded-full h-10 w-10 p-0 shrink-0 bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-bold"
                 >
                   {isSaving ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin text-[#0A192F]" />
                   ) : (
-                    <Send className="h-4 w-4" />
+                    <Send className="h-4 w-4 text-[#0A192F]" />
                   )}
                 </Button>
               </div>

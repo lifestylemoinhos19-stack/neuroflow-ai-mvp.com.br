@@ -137,14 +137,14 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
     const logoUrl = logoModule.default
     const logoData = await fetchImageAsPngData(logoUrl)
     if (logoData) {
-      // Draw 20mm x 20mm logo at header
-      doc.addImage(logoData.dataUrl, logoData.format, marginX, y, 20, 20)
+      // Draw 28mm x 28mm logo at header
+      doc.addImage(logoData.dataUrl, logoData.format, marginX, y, 28, 28)
     }
   } catch {
     /* logo fallback */
   }
 
-  const titleX = marginX + 24
+  const titleX = marginX + 32
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(16)
   doc.setTextColor(10, 25, 47)
@@ -156,8 +156,8 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
 
   doc.setDrawColor(0, 200, 200)
   doc.setLineWidth(0.5)
-  doc.line(marginX, y + 24, pageWidth - marginX, y + 24)
-  y += 32
+  doc.line(marginX, y + 30, pageWidth - marginX, y + 30)
+  y += 38
 
   // --- Patient data ---
   doc.setFont('helvetica', 'bold')

@@ -14,7 +14,7 @@ export function MultipleChoiceInput({ question, value, onChange }: MultipleChoic
     <RadioGroup
       value={value}
       onValueChange={onChange}
-      className="space-y-2"
+      className="space-y-2.5"
       aria-label={question.label}
     >
       {question.choices?.map((choice, idx) => {
@@ -25,15 +25,19 @@ export function MultipleChoiceInput({ question, value, onChange }: MultipleChoic
             className={cn(
               'flex items-center space-x-3 rounded-xl border p-4 transition-all cursor-pointer',
               isSelected
-                ? 'border-primary bg-primary/5 shadow-subtle'
-                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
+                ? 'border-[#00FFFF] bg-[#00FFFF]/10 shadow-md text-white font-semibold'
+                : 'border-slate-700 bg-slate-900/90 text-slate-100 hover:border-slate-500 hover:bg-slate-800',
             )}
             onClick={() => onChange(choice)}
           >
-            <RadioGroupItem value={choice} id={`${question.key}-${idx}`} className="shrink-0" />
+            <RadioGroupItem
+              value={choice}
+              id={`${question.key}-${idx}`}
+              className="shrink-0 border-slate-400 text-[#00FFFF]"
+            />
             <Label
               htmlFor={`${question.key}-${idx}`}
-              className="flex-1 cursor-pointer text-sm font-medium text-slate-700"
+              className="flex-1 cursor-pointer text-sm sm:text-base font-medium text-slate-100"
             >
               {choice}
             </Label>

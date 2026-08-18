@@ -1,11 +1,13 @@
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
 
+import casaBrancaLogo from '@/assets/logo-3-e1088.png'
+
 export const CLINIC_BRANDING = {
   name: 'Casa Branca Saúde',
   tagline: 'Saúde Mental & Bem-estar',
   address: 'Ramiro Barcelos, 839, Moinhos de Vento, POA/RS',
   whatsapp: '51 3282-6929',
-  logoUrl: `${SUPABASE_URL}/storage/v1/object/public/clinic-assets/casa-branca-logo.png`,
+  logoUrl: casaBrancaLogo,
   colors: {
     primary: '#0f4c81',
     secondary: '#1a73e8',
@@ -78,7 +80,7 @@ ${qrHtml}<div class="signature-block">
 export function getBrandCss(): string {
   const c = CLINIC_BRANDING.colors
   return `.brand-header{display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:3px solid ${c.primary};margin-bottom:24px}
-.brand-header .logo-wrap{width:56px;height:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.brand-header .logo-wrap{width:110px;height:70px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .brand-header .logo-wrap img{max-width:100%;max-height:100%;object-fit:contain}
 .brand-header .clinic-meta{display:flex;flex-direction:column}
 .brand-header .clinic-name{font-size:20px;font-weight:700;color:${c.primary}}

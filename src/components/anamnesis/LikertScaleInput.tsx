@@ -21,7 +21,7 @@ export function LikertScaleInput({ question, value, onChange }: LikertScaleInput
 
   return (
     <div className="space-y-6" role="radiogroup" aria-label={question.label}>
-      <div className="flex justify-between text-xs font-medium text-slate-500 px-1">
+      <div className="flex justify-between text-xs font-semibold text-slate-300 px-1">
         <span className="text-left max-w-[120px]">{question.likertMinLabel || 'Mínimo'}</span>
         <span className="text-right max-w-[120px]">{question.likertMaxLabel || 'Máximo'}</span>
       </div>
@@ -40,8 +40,8 @@ export function LikertScaleInput({ question, value, onChange }: LikertScaleInput
                 className={cn(
                   'h-12 w-full rounded-xl border-2 font-display font-bold text-lg transition-all',
                   isSelected
-                    ? 'border-primary bg-primary text-primary-foreground shadow-subtle scale-105'
-                    : 'border-slate-200 bg-white text-slate-600 hover:border-primary/50 hover:bg-primary/5',
+                    ? 'border-[#00FFFF] bg-[#00FFFF] text-[#0A192F] shadow-lg scale-105 font-black'
+                    : 'border-slate-700 bg-slate-900 text-slate-100 hover:border-[#00FFFF]/50 hover:bg-slate-800 hover:text-white',
                 )}
               >
                 {point}
@@ -52,7 +52,7 @@ export function LikertScaleInput({ question, value, onChange }: LikertScaleInput
       </div>
       {value !== null && (
         <p
-          className="text-center text-sm font-medium text-primary animate-fade-in-up"
+          className="text-center text-sm font-bold text-[#00FFFF] animate-fade-in-up"
           aria-live="polite"
         >
           Selecionado: {getLabel(value) || value}
