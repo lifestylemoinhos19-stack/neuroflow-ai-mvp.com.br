@@ -3,6 +3,12 @@ import { Mini500ModuleResult } from '@/lib/mini500-scoring'
 import { ClinicalInterpretation } from '@/lib/mini500-interpretation'
 import { Mini500PatientInfo } from '@/services/mini500-service'
 import { CLINIC_BRANDING, CLINICIAN_CREDENTIALS, getValidationUrl } from '@/lib/clinic-branding'
+import {
+  generateNeuropsychReport,
+  type MiniModuleSummary,
+  type NeuropsychContext,
+  NEUROPSYCH_DISCLAIMER,
+} from '@/lib/neuropsych-evaluation'
 
 export interface Mini500ExportData {
   patientInfo: Mini500PatientInfo
@@ -15,10 +21,6 @@ export interface Mini500ExportData {
 /**
  * Carrega uma imagem (URL remota ou asset importado) e devolve um data URL PNG
  * pronto para `doc.addImage`. Retorna `null` em caso de falha (logo/QR opcional).
- *
- * Diferente da versão anterior (que usava `window.open` + `document.write` em
- * `about:blank`), aqui carregamos a imagem no documento atual, onde URLs
- * relativas/locais funcionam normalmente.
  */
 async function fetchImageAsPngData(
   url: string,
@@ -44,17 +46,91 @@ async function fetchImageAsPngData(
   }
 }
 
-/**
- * Gera um QR Code apontando para a URL de validação do protocolo e devolve um
- * data URL PNG (usando a mesma API pública já adotada em clinic-branding). Em
- * caso de falha de rede retorna `null` e o laudo segue sem o QR.
- */
+/** QR Code apontando para a URL de validação do protocolo. */
 async function fetchQrCodePng(sessionId: string): Promise<string | null> {
   const url = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=2&data=${encodeURIComponent(
     getValidationUrl(sessionId),
   )}`
   const data = await fetchImageAsPngData(url)
   return data?.dataUrl ?? null
+}
+
+/** Converte hex (#7B5B3A) para [r, g, b]. */
+function hexToRgb(hex: string): [number, number, number] {
+  const h = hex.replace('#', '')
+  const n = parseInt(
+    h.length === 3
+      ? h
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : h,
+    16,
+  )
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
+
+/** Calcula iniciais a partir do nome completo do paciente. */
+function computeInitials(name?: string | null): string {
+  if (!name) return '—'
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '—'
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase() + '.'
+  return `${parts[0].charAt(0).toUpperCase()}.${parts[parts.length - 1].charAt(0).toUpperCase()}.`
+}
+
+/** Monta o contexto para a engine de avaliação neuropsiquiátrica. */
+function buildNeuropsychContext(data: Mini500ExportData): NeuropsychContext {
+  const miniResults: MiniModuleSummary[] = data.results
+    .filter((r) => r.isPositive)
+    .map((r) => ({
+      letter: r.letter,
+      title: r.title,
+      status: r.label,
+      details: r.details,
+    }))
+
+  const positiveCount = miniResults.length
+  const queixa =
+    data.summary ||
+    `Avaliação MINI 5.0.0 aplicada. ${
+      positiveCount > 0
+        ? `${positiveCount} módulo(s) com resultado positivo ou de risco.`
+        : 'Nenhum módulo positivo identificado.'
+    }`
+
+  const historia = [
+    `Protocolo: ${data.patientInfo.protocol || '—'}`,
+    `Entrevistador: ${data.patientInfo.interviewerName || '—'}`,
+    `Data da entrevista: ${data.patientInfo.interviewDate || '—'}`,
+    `Início: ${data.patientInfo.startTime || '—'} | Fim: ${data.patientInfo.endTime || '—'}`,
+    data.summary ? `Resumo clínico: ${data.summary}` : null,
+    ...data.interpretations.map(
+      (i) => `[${i.moduleLetter}] ${i.title} (${i.status}): ${i.interpretation}`,
+    ),
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  return {
+    patient: {
+      iniciais: computeInitials(data.patientInfo.name),
+      fullName: data.patientInfo.name,
+      sexo: '—',
+      escolaridade: '—',
+    },
+    professional: {
+      nome: CLINICIAN_CREDENTIALS.name,
+      registro: `${CLINICIAN_CREDENTIALS.crm} · ${CLINICIAN_CREDENTIALS.rqe}`,
+      especialidade: 'Psiquiatria',
+    },
+    assessmentDate: data.patientInfo.interviewDate || null,
+    scaleType: 'MINI 5.0.0',
+    queixaPrincipal: queixa,
+    historiaEvolucao: historia,
+    miniResults,
+    savedInterpretation: data.summary || null,
+  }
 }
 
 export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
@@ -64,6 +140,11 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
   const marginX = 18
   let y = 18
   const c = CLINIC_BRANDING.colors
+  const primary = hexToRgb(c.primary)
+  const secondary = hexToRgb(c.secondary)
+  const medium = hexToRgb(c.medium)
+  const dark = hexToRgb(c.dark)
+  const accent = hexToRgb(c.accent)
 
   // --- Header: logo + nome da clínica ---
   try {
@@ -77,18 +158,14 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
 
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(16)
-  doc.setTextColor(0x7b, 0x5b, 0x3a)
+  doc.setTextColor(primary[0], primary[1], primary[2])
   doc.text(CLINIC_BRANDING.name, marginX + 28, y + 6)
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(10)
-  doc.setTextColor(0x6d, 0x5d, 0x4b)
-  doc.text(
-    'Relatório MINI 5.0.0 — Mini International Neuropsychiatric Interview',
-    marginX + 28,
-    y + 12,
-  )
+  doc.setTextColor(medium[0], medium[1], medium[2])
+  doc.text('Laudo de Avaliação Neuropsiquiátrica — MINI 5.0.0', marginX + 28, y + 12)
 
-  doc.setDrawColor(0xc4, 0xa3, 0x5a)
+  doc.setDrawColor(secondary[0], secondary[1], secondary[2])
   doc.setLineWidth(0.5)
   doc.line(marginX, y + 18, pageWidth - marginX, y + 18)
   y += 24
@@ -99,19 +176,19 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
       y = 18
     }
   }
-  const writeHeading = (text: string) => {
+  const writeSectionHeader = (index: number, text: string) => {
     ensureSpace(10)
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(12)
-    doc.setTextColor(0x7b, 0x5b, 0x3a)
-    doc.text(text, marginX, y)
-    doc.setDrawColor(0xc4, 0xa3, 0x5a)
+    doc.setTextColor(primary[0], primary[1], primary[2])
+    doc.text(`${index}. ${text}`, marginX, y)
+    doc.setDrawColor(secondary[0], secondary[1], secondary[2])
     doc.setLineWidth(0.3)
     doc.line(marginX, y + 2, pageWidth - marginX, y + 2)
     y += 7
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(10)
-    doc.setTextColor(0x3e, 0x27, 0x23)
+    doc.setTextColor(dark[0], dark[1], dark[2])
   }
   const writeParagraph = (text: string, gap = 4) => {
     const lines = doc.splitTextToSize(text, pageWidth - marginX * 2)
@@ -127,46 +204,76 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
     doc.text(lines, indent, y)
     y += lines.length * 5 + 1
   }
-
-  // --- Identificação ---
-  writeHeading('Identificação')
-  const idRows: [string, string][] = [
-    ['Nome:', data.patientInfo.name || '—'],
-    ['Protocolo:', data.patientInfo.protocol || '—'],
-    ['Entrevistador:', data.patientInfo.interviewerName || '—'],
-    ['Data da entrevista:', data.patientInfo.interviewDate || '—'],
-    ['Início:', data.patientInfo.startTime || '—'],
-    ['Fim:', data.patientInfo.endTime || '—'],
-  ]
-  idRows.forEach(([label, value]) => {
+  const writeLabel = (label: string, value: string) => {
     ensureSpace(6)
     doc.setFont('helvetica', 'bold')
     doc.text(label, marginX, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(value, marginX + 38, y)
+    doc.text(value, marginX + 42, y)
     y += 6
-  })
-  y += 3
+  }
+  const writeVisualSeparator = (label: string) => {
+    ensureSpace(10)
+    doc.setFillColor(accent[0], accent[1], accent[2])
+    doc.setDrawColor(secondary[0], secondary[1], secondary[2])
+    doc.roundedRect(marginX, y, pageWidth - marginX * 2, 8, 1, 1, 'S')
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(8)
+    doc.setTextColor(primary[0], primary[1], primary[2])
+    doc.text(label, marginX + 3, y + 5.5)
+    y += 12
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(10)
+    doc.setTextColor(dark[0], dark[1], dark[2])
+  }
 
-  // --- Alertas críticos ---
+  const neuropsych = generateNeuropsychReport(buildNeuropsychContext(data))
+
+  // --- Disclaimer no INÍCIO ---
+  ensureSpace(16)
+  doc.setFillColor(accent[0], accent[1], accent[2])
+  doc.setDrawColor(secondary[0], secondary[1], secondary[2])
+  doc.roundedRect(marginX, y, pageWidth - marginX * 2, 14, 2, 2, 'S')
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(primary[0], primary[1], primary[2])
+  const introLines = doc.splitTextToSize(NEUROPSYCH_DISCLAIMER, pageWidth - marginX * 2 - 6)
+  doc.text(introLines, marginX + 3, y + 5)
+  y += 18
+
+  // --- Alertas críticos do MINI (renderizados antes das seções) ---
   if (data.alerts.length > 0) {
-    writeHeading(`Alertas Críticos (${data.alerts.length})`)
+    writeVisualSeparator('ALERTAS CRÍTICOS IDENTIFICADOS')
     for (const a of data.alerts) writeBullet(a)
     y += 2
   }
 
-  // --- Diagnósticos positivos ---
-  const positive = data.results.filter((r) => r.isPositive)
-  if (positive.length > 0) {
-    writeHeading(`Diagnósticos Positivos (${positive.length})`)
-    for (const r of positive) {
-      writeBullet(`${r.letter} — ${r.title}: ${r.label} (${r.details}).`)
-    }
+  // --- DADOS FORNECIDOS ---
+  writeVisualSeparator('DADOS FORNECIDOS PELO PROFISSIONAL')
+
+  // Seção 1: IDENTIFICAÇÃO
+  const sec1 = neuropsych.sections[0]
+  writeSectionHeader(sec1.index, sec1.title)
+  writeLabel('Paciente (iniciais):', computeInitials(data.patientInfo.name))
+  writeLabel('Protocolo:', data.patientInfo.protocol || '—')
+  writeLabel('Entrevistador:', data.patientInfo.interviewerName || '—')
+  writeLabel('Data da avaliação:', data.patientInfo.interviewDate || '—')
+  writeLabel(
+    'Profissional responsável:',
+    `${CLINICIAN_CREDENTIALS.name} — ${CLINICIAN_CREDENTIALS.crm} · ${CLINICIAN_CREDENTIALS.rqe}`,
+  )
+  y += 2
+
+  // Seções 2-4
+  for (let i = 1; i < 4; i++) {
+    const section = neuropsych.sections[i]
+    writeSectionHeader(section.index, section.title)
+    for (const line of section.lines) writeParagraph(line)
     y += 2
   }
 
-  // --- Resultados detalhados (tabela) ---
-  writeHeading('Resultados Detalhados (Módulos A–P)')
+  // Seção 5: tabela de módulos do MINI (instrumentos aplicados)
+  writeSectionHeader(5, 'INSTRUMENTOS APLICADOS (MÓDULOS MINI)')
   const colX = [marginX, marginX + 12, marginX + 28, marginX + 90, pageWidth - marginX]
   const rowH = 6
   const drawTableRow = (cells: string[], bold = false) => {
@@ -189,38 +296,62 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
   }
   y += 4
 
-  // --- Interpretação clínica ---
-  if (data.interpretations.length > 0) {
-    writeHeading('Interpretação Clínica')
-    for (const i of data.interpretations) {
-      writeParagraph(`${i.moduleLetter} — ${i.title} (${i.status})`)
-      writeParagraph(i.interpretation, 2)
-      writeParagraph(`Conduta: ${i.referral}`, 4)
-      y += 1
+  // --- INTERPRETAÇÃO ASSISTIDA ---
+  writeVisualSeparator('INTERPRETAÇÃO ASSISTIDA (NÃO CONSTITUI DIAGNÓSTICO)')
+
+  // Seções 6 e 7
+  for (let i = 5; i < 7; i++) {
+    const section = neuropsych.sections[i]
+    writeSectionHeader(section.index, section.title)
+    if (section.index === 7) {
+      for (const line of section.lines) writeBullet(line)
+    } else {
+      for (const line of section.lines) writeParagraph(line)
     }
+    y += 2
   }
 
-  // --- Resumo clínico ---
-  if (data.summary) {
-    writeHeading('Resumo Clínico')
-    writeParagraph(data.summary)
+  // --- LACUNAS E ENCAMINHAMENTOS ---
+  writeVisualSeparator('LACUNAS, ITENS A CONFIRMAR E ENCAMINHAMENTOS')
+
+  // Seções 8 e 9
+  for (let i = 7; i < 9; i++) {
+    const section = neuropsych.sections[i]
+    writeSectionHeader(section.index, section.title)
+    for (const line of section.lines) writeBullet(line)
+    y += 2
   }
 
-  // --- Aviso ---
-  ensureSpace(12)
-  y += 2
-  doc.setFillColor(0xfa, 0xf5, 0xeb)
-  doc.setDrawColor(0xc4, 0xa3, 0x5a)
-  doc.roundedRect(marginX, y, pageWidth - marginX * 2, 12, 2, 2, 'S')
+  // --- Alerta de risco iminente (se houver) ---
+  if (neuropsych.riscoIminente) {
+    ensureSpace(16)
+    doc.setFillColor(0xfd, 0xe6, 0xe6)
+    doc.setDrawColor(0xdc, 0x26, 0x26)
+    doc.roundedRect(marginX, y, pageWidth - marginX * 2, 14, 2, 2, 'S')
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(8)
+    doc.setTextColor(0xb9, 0x1c, 0x1c)
+    const alertLines = doc.splitTextToSize(neuropsych.riscoIminente, pageWidth - marginX * 2 - 6)
+    doc.text(alertLines, marginX + 3, y + 5)
+    y += 18
+  }
+
+  // --- Seção 10: LIMITAÇÕES ---
+  const sec10 = neuropsych.sections[9]
+  writeSectionHeader(sec10.index, sec10.title)
+  ensureSpace(16)
+  doc.setFillColor(accent[0], accent[1], accent[2])
+  doc.setDrawColor(secondary[0], secondary[1], secondary[2])
+  doc.roundedRect(marginX, y, pageWidth - marginX * 2, 14, 2, 2, 'S')
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
-  doc.setTextColor(0x7b, 0x5b, 0x3a)
-  const warnLines = doc.splitTextToSize(
-    'AVISO: Este instrumento é uma ferramenta de triagem e não substitui a avaliação clínica profissional. O diagnóstico definitivo requer avaliação presencial especializada.',
+  doc.setTextColor(primary[0], primary[1], primary[2])
+  const finalDisclaimerLines = doc.splitTextToSize(
+    NEUROPSYCH_DISCLAIMER,
     pageWidth - marginX * 2 - 6,
   )
-  doc.text(warnLines, marginX + 3, y + 5)
-  y += 16
+  doc.text(finalDisclaimerLines, marginX + 3, y + 5)
+  y += 18
 
   // --- Assinatura + QR Code ---
   ensureSpace(40)
@@ -233,91 +364,98 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
       doc.addImage(qrPng, 'PNG', marginX, y, 28, 28)
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(7)
-      doc.setTextColor(0x6d, 0x5d, 0x4b)
+      doc.setTextColor(medium[0], medium[1], medium[2])
       doc.text(doc.splitTextToSize('Escaneie para verificar autenticidade', 28), marginX, y + 31)
     } catch {
       /* qr fallback */
     }
   }
-  doc.setDrawColor(0x6d, 0x5d, 0x4b)
+  doc.setDrawColor(medium[0], medium[1], medium[2])
   doc.setLineWidth(0.3)
   doc.line(sigBlockX, y + 18, sigBlockX + 90, y + 18)
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(10)
-  doc.setTextColor(0x3e, 0x27, 0x23)
+  doc.setTextColor(dark[0], dark[1], dark[2])
   doc.text(CLINICIAN_CREDENTIALS.name, sigBlockX, y + 23)
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9)
-  doc.setTextColor(0x6d, 0x5d, 0x4b)
+  doc.setTextColor(medium[0], medium[1], medium[2])
   doc.text(`${CLINICIAN_CREDENTIALS.crm} · ${CLINICIAN_CREDENTIALS.rqe}`, sigBlockX, y + 28)
   doc.text(`Assinado digitalmente em ${new Date().toLocaleString('pt-BR')}`, sigBlockX, y + 33)
 
   // --- Rodapé (LGPD) ---
   const footerY = pageHeight - 12
-  doc.setDrawColor(0x7b, 0x5b, 0x3a)
+  doc.setDrawColor(primary[0], primary[1], primary[2])
   doc.setLineWidth(0.4)
   doc.line(marginX, footerY, pageWidth - marginX, footerY)
   doc.setFontSize(7)
-  doc.setTextColor(0x6d, 0x5d, 0x4b)
+  doc.setTextColor(medium[0], medium[1], medium[2])
   doc.text(
     `${CLINIC_BRANDING.name} — ${CLINIC_BRANDING.address} | WhatsApp: ${CLINIC_BRANDING.whatsapp}`,
     marginX,
     footerY + 4,
   )
   doc.text(
-    `Emitido em ${new Date().toLocaleString('pt-BR')} · Documento em conformidade com a LGPD (Lei nº 13.709/2018).`,
+    `Emitido em ${new Date().toLocaleString('pt-BR')} · Documento em conformidade com a LGPD (Lei nº 13.709/2018). Paciente identificado apenas por iniciais.`,
     marginX,
     footerY + 8,
   )
 
-  const safeName = (data.patientInfo.name || 'entrevistado').replace(/[^a-zA-Z0-9]/g, '_')
+  const safeName = computeInitials(data.patientInfo.name).replace(/[^a-zA-Z0-9]/g, '_')
   doc.save(`laudo-mini-${safeName}.pdf`)
 }
 
+/**
+ * Exporta o TXT do laudo MINI no formato de 10 seções padronizado.
+ * Usa a engine neuropsych-evaluation para consistência com o PDF.
+ */
 export function exportMini500Txt(data: Mini500ExportData): void {
+  const neuropsych = generateNeuropsychReport(buildNeuropsychContext(data))
+
   const lines: string[] = []
-  lines.push('RELATÓRIO MINI 5.0.0', '='.repeat(50), '')
-  lines.push(`Data: ${new Date().toLocaleString('pt-BR')}`, '')
-  lines.push('IDENTIFICAÇÃO', '-'.repeat(30))
-  lines.push(`Nome: ${data.patientInfo.name}`)
-  lines.push(`Protocolo: ${data.patientInfo.protocol || '—'}`)
-  lines.push(`Entrevistador: ${data.patientInfo.interviewerName || '—'}`)
-  lines.push(`Data da Entrevista: ${data.patientInfo.interviewDate || '—'}`)
-  lines.push(
-    `Início: ${data.patientInfo.startTime || '—'} | Fim: ${data.patientInfo.endTime || '—'}`,
-    '',
-  )
+  lines.push('LAUDO DE AVALIAÇÃO NEUROPSIQUIÁTRICA — MINI 5.0.0', '='.repeat(60), '')
+  lines.push(`Clínica: ${CLINIC_BRANDING.name}`, '')
+  lines.push(NEUROPSYCH_DISCLAIMER, '', '='.repeat(60), '')
+
+  // Alertas críticos
   if (data.alerts.length > 0) {
-    lines.push('ALERTAS CRÍTICOS', '-'.repeat(30))
+    lines.push('ALERTAS CRÍTICOS IDENTIFICADOS', '-'.repeat(40))
     data.alerts.forEach((a) => lines.push(`⚠ ${a}`))
     lines.push('')
   }
-  const positive = data.results.filter((r) => r.isPositive)
-  if (positive.length > 0) {
-    lines.push('DIAGNÓSTICOS POSITIVOS', '-'.repeat(30))
-    positive.forEach((r) => lines.push(`  ${r.letter} — ${r.title}: ${r.label} (${r.details})`))
+
+  // Risco iminente
+  if (neuropsych.riscoIminente) {
+    lines.push('⚠ RISCO IMINENTE', '-'.repeat(40))
+    lines.push(neuropsych.riscoIminente)
     lines.push('')
   }
-  lines.push('RESULTADOS DETALHADOS', '-'.repeat(30))
-  data.results.forEach((r) => lines.push(`  ${r.letter} — ${r.title}: ${r.label} | ${r.details}`))
-  lines.push('')
-  if (data.interpretations.length > 0) {
-    lines.push('INTERPRETAÇÃO CLÍNICA', '-'.repeat(30))
-    data.interpretations.forEach((i) => {
-      lines.push(`  [${i.moduleLetter}] ${i.title} (${i.status})`)
-      lines.push(`    ${i.interpretation}`)
-      lines.push(`    Conduta: ${i.referral}`, '')
-    })
+
+  // 10 seções
+  for (const section of neuropsych.sections) {
+    lines.push(`${section.index}. ${section.title}`, '-'.repeat(40))
+    section.lines.forEach((l) => lines.push(`  ${l}`))
+    lines.push('')
   }
+
+  lines.push('PROFISSIONAL RESPONSÁVEL', '-'.repeat(40))
   lines.push(
-    '',
-    'AVISO: Este instrumento é uma ferramenta de triagem e não substitui a avaliação clínica profissional.',
+    `${CLINICIAN_CREDENTIALS.name} — ${CLINICIAN_CREDENTIALS.crm} · ${CLINICIAN_CREDENTIALS.rqe}`,
   )
+
   const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `MINI500_${data.patientInfo.name.replace(/\s/g, '_')}_${Date.now()}.txt`
+  const safeName = computeInitials(data.patientInfo.name).replace(/[^a-zA-Z0-9]/g, '_')
+  a.download = `laudo-mini-${safeName}.txt`
   a.click()
   URL.revokeObjectURL(url)
+}
+
+/**
+ * Exporta a versão JSON do laudo MINI 5.0.0 padronizado (para integração).
+ */
+export function exportMini500Json(data: Mini500ExportData) {
+  return generateNeuropsychReport(buildNeuropsychContext(data)).json
 }

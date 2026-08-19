@@ -271,7 +271,7 @@ export function generateClinicalSummary(results: MiniModuleResult[]): string {
   const lines = positive.map((r) => `- ${r.letter}: ${r.title} — ${r.label} (${r.details})`)
   lines.push(
     '',
-    'Esta é uma triagem inicial. O diagnóstico definitivo requer avaliação clínica presencial especializada.',
+    'Esta é uma triagem inicial. Os resultados representam sinais compatíveis a confirmar e não constituem fechamento diagnóstico. A confirmação clínica requer avaliação presencial especializada.',
   )
   return lines.join('\n')
 }

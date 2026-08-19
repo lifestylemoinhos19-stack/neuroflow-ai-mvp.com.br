@@ -203,8 +203,8 @@ export function MiniSummary({ patientInfo, results, onRestart, sessionId }: Mini
       </div>
 
       <p className="text-xs text-yellow-400/70 italic mb-6">
-        AVISO: Este instrumento é uma ferramenta de triagem e não substitui a avaliação clínica
-        profissional.
+        AVISO: Este instrumento é uma ferramenta de triagem e apoio à decisão clínica. Não substitui
+        a avaliação presencial e não constitui diagnóstico.
       </p>
 
       <div className="flex gap-3 mini-print-hide">
