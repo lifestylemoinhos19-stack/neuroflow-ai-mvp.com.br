@@ -9,6 +9,8 @@ export interface ValidationResult {
   clinician_name: string
   clinician_crm: string
   clinician_rqe: string
+  assessment_type: string
+  clinic_name: string
 }
 
 export async function validateDocument(sessionId: string): Promise<ValidationResult | null> {

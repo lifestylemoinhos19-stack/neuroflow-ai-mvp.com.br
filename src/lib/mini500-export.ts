@@ -357,7 +357,10 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
   ensureSpace(40)
   y += 6
   const protocol = data.patientInfo.protocol || ''
-  const qrPng = protocol ? await fetchQrCodePng(protocol) : null
+  const [qrPng, sigImg] = await Promise.all([
+    protocol ? fetchQrCodePng(protocol) : Promise.resolve(null),
+    fetchImageAsPngData(CLINICIAN_CREDENTIALS.signatureUrl),
+  ])
   const sigBlockX = marginX + 40
   if (qrPng) {
     try {
@@ -370,18 +373,36 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
       /* qr fallback */
     }
   }
+  // Linha horizontal (assinatura digital)
   doc.setDrawColor(medium[0], medium[1], medium[2])
   doc.setLineWidth(0.3)
   doc.line(sigBlockX, y + 18, sigBlockX + 90, y + 18)
+  // Imagem da assinatura sobre a linha horizontal, centralizada
+  if (sigImg) {
+    try {
+      const sigW = 50
+      const sigH = 14
+      const sigX = sigBlockX + (90 - sigW) / 2
+      doc.addImage(sigImg.dataUrl, sigImg.format, sigX, y + 18 - sigH, sigW, sigH)
+    } catch {
+      /* signature image fallback */
+    }
+  }
+  // Abaixo da linha: NOME (Rose Mary Alves) em negrito
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(10)
   doc.setTextColor(dark[0], dark[1], dark[2])
   doc.text(CLINICIAN_CREDENTIALS.name, sigBlockX, y + 23)
+  // Abaixo: CRM + RQE
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9)
   doc.setTextColor(medium[0], medium[1], medium[2])
   doc.text(`${CLINICIAN_CREDENTIALS.crm} · ${CLINICIAN_CREDENTIALS.rqe}`, sigBlockX, y + 28)
-  doc.text(`Assinado digitalmente em ${new Date().toLocaleString('pt-BR')}`, sigBlockX, y + 33)
+  // Abaixo: "Assinado digitalmente em [data] às [hora]"
+  const sigNow = new Date()
+  const sigDate = sigNow.toLocaleDateString('pt-BR')
+  const sigTime = sigNow.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  doc.text(`Assinado digitalmente em ${sigDate} às ${sigTime}`, sigBlockX, y + 33)
 
   // --- Rodapé (LGPD) ---
   const footerY = pageHeight - 12

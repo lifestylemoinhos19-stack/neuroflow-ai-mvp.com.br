@@ -42,9 +42,11 @@ export function getBrandFooterHtml(): string {
 }
 
 export function getValidationUrl(sessionId: string): string {
-  const origin =
-    typeof window !== 'undefined' ? window.location.origin : 'https://neuroflow-ai-mvp.com.br'
-  return `${origin}/validar/${sessionId}`
+  // QR codes are embedded in PDFs that are shared and scanned later, so they
+  // must always point to the stable public domain — never to the current
+  // window origin (which may be a staging/preview URL that lands on a
+  // platform fallback page instead of the real validation route).
+  return `https://neuroflow-ai-mvp.com.br/validar/${sessionId}`
 }
 
 export function getQrCodeUrl(url: string, size: number = 150): string {
