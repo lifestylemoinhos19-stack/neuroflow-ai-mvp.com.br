@@ -273,11 +273,9 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   doc.text(`Data de emissão: ${new Date().toLocaleString('pt-BR')}`, marginX, footerY + 11)
 
   const safeName = (input.patientName || 'paciente').replace(/[^a-zA-Z0-9]/g, '_')
-  const blob = doc.output('blob')
-  const url = URL.createObjectURL(blob)
-  window.open(url, '_blank')
-  // Revoke the object URL after giving the browser time to load it in the new tab.
-  setTimeout(() => URL.revokeObjectURL(url), 60_000)
+  // Direct download via a temporary <a> element — avoids popup blockers
+  // (window.open is blocked on most modern browsers / mobile).
+  doc.save(`laudo-${safeName}.pdf`)
 }
 
 /**

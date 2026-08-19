@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client'
+import { getGuestFull } from '@/services/guest-patient'
 
 export interface AdminTest {
   id: string
@@ -53,98 +54,210 @@ function metaOf(m: unknown): Record<string, unknown> | null {
   return m && typeof m === 'object' ? (m as Record<string, unknown>) : null
 }
 
+/**
+ * Unified list of testagens: combines `anamnesis_sessions` (anamneses and
+ * scale sessions created via guest_token) with `scale_assignments` (scales
+ * assigned to a patient/guest). Scale assignments without a session_id are
+ * included as their own testagem entries so PHQ-9, GAD-7, MINI, etc. appear
+ * even when the responses were stored against an orphan session created by
+ * the public scale components.
+ *
+ * Patient names are always fetched through the SECURITY DEFINER RPC
+ * `get_guest_full` (or `list_guests_admin`) which decrypts PII server-side,
+ * so the admin never sees the raw ciphertext that lives in `guests`.
+ */
 export async function getAdminTests(): Promise<AdminTest[]> {
-  const { data, error } = await supabase
+  // --- 1) Anamnesis sessions (anamneses + orphan scale sessions) ---
+  const { data: sessions, error: eSessions } = await supabase
     .from('anamnesis_sessions')
-    .select('id, user_id, status, started_at, metadata, guest_token')
+    .select('id, user_id, profile_id, status, started_at, metadata, guest_token')
     .order('created_at', { ascending: false })
     .limit(200)
-  if (error || !data) return []
 
-  const guestIds = new Set<string>()
-  const userIds = new Set<string>()
-  for (const s of data) {
+  // --- 2) Scale assignments (PHQ-9, GAD-7, MINI, etc.) ---
+  const { data: assignments, error: eAssignments } = await supabase
+    .from('scale_assignments')
+    .select('id, scale_type, status, assigned_at, completed_at, session_id, guest_id, patient_id')
+    .order('assigned_at', { ascending: false })
+    .limit(200)
+
+  if (eSessions && eAssignments) return []
+
+  const sessionRows = sessions || []
+  const assignmentRows = assignments || []
+
+  // Sessions already covered by a scale_assignment (via session_id) are
+  // represented by the assignment row below — we skip them here to avoid
+  // duplicates. Sessions NOT covered by an assignment are kept (anamneses
+  // and orphan scale sessions created through guest_token).
+  const assignmentSessionIds = new Set(
+    assignmentRows.map((a) => a.session_id).filter(Boolean) as string[],
+  )
+  const orphanSessions = sessionRows.filter((s) => !assignmentSessionIds.has(s.id))
+
+  // --- 3) Build a unified candidate list ---
+  interface Candidate {
+    id: string
+    type: string
+    started_at: string
+    status: string
+    guest_id: string | null
+    user_id: string | null
+    profile_id: string | null
+    session_id: string | null // underlying anamnesis_session (for score lookup)
+    origin: 'Mocado' | 'Real'
+    source: 'session' | 'assignment'
+  }
+
+  const candidates: Candidate[] = []
+
+  for (const s of orphanSessions) {
     const meta = metaOf(s.metadata)
-    if (meta?.guest_id) guestIds.add(meta.guest_id as string)
-    if (s.user_id) userIds.add(s.user_id)
-  }
-
-  const guestMap: Record<string, string> = {}
-  if (guestIds.size) {
-    const { data: gs } = await supabase
-      .from('guests')
-      .select('id, first_name, last_name')
-      .in('id', [...guestIds])
-    ;(gs || []).forEach((g) => {
-      guestMap[g.id] = `${g.first_name} ${g.last_name}`.trim()
-    })
-  }
-
-  const profileMap: Record<string, { full_name: string | null; guest_id: string | null }> = {}
-  if (userIds.size) {
-    const { data: ps } = await supabase
-      .from('profiles')
-      .select('id, full_name, guest_id')
-      .in('id', [...userIds])
-    ;(ps || []).forEach((p) => {
-      profileMap[p.id] = { full_name: p.full_name, guest_id: p.guest_id }
-      if (p.guest_id && !guestMap[p.guest_id]) guestIds.add(p.guest_id)
-    })
-    const newGids = [...guestIds].filter((id) => !guestMap[id])
-    if (newGids.length) {
-      const { data: gs } = await supabase
-        .from('guests')
-        .select('id, first_name, last_name')
-        .in('id', newGids)
-      ;(gs || []).forEach((g) => {
-        guestMap[g.id] = `${g.first_name} ${g.last_name}`.trim()
-      })
-    }
-  }
-
-  const scoreMap: Record<string, number | null> = {}
-  if (data.length) {
-    const { data: responses } = await supabase
-      .from('anamnesis_responses')
-      .select('session_id, response_value')
-      .in(
-        'session_id',
-        data.map((s) => s.id),
-      )
-      .like('question_key', '%_total')
-    ;(responses || []).forEach((r) => {
-      const val = r.response_value
-      if (typeof val === 'number') {
-        scoreMap[r.session_id] = val
-      } else if (typeof val === 'string') {
-        const parsed = parseInt(val, 10)
-        if (!isNaN(parsed)) scoreMap[r.session_id] = parsed
-      }
-    })
-  }
-
-  return data.map((s) => {
-    const meta = metaOf(s.metadata)
-    const gid = (meta?.guest_id as string) || profileMap[s.user_id ?? '']?.guest_id || null
-    const name = gid
-      ? guestMap[gid] || 'Paciente'
-      : profileMap[s.user_id ?? '']?.full_name || 'Paciente'
-    return {
+    candidates.push({
       id: s.id,
       type:
         (meta?.type as string) ||
         (meta?.scale_type as string) ||
         (meta?.scale as string) ||
         'Anamnese',
-      patient_name: name,
-      origin:
-        meta?.origin === 'mock' || meta?.mock === true ? ('Mocado' as const) : ('Real' as const),
       started_at: s.started_at,
       status: s.status,
-      guest_id: gid,
-      score: scoreMap[s.id] ?? null,
+      guest_id: (meta?.guest_id as string) || null,
+      // profiles.id is FK→auth.users, so user_id doubles as a profile id
+      user_id: (s.user_id as string) || null,
+      profile_id: (s.profile_id as string) || (s.user_id as string) || null,
+      session_id: s.id,
+      origin:
+        meta?.origin === 'mock' || meta?.mock === true ? ('Mocado' as const) : ('Real' as const),
+      source: 'session',
+    })
+  }
+
+  for (const a of assignmentRows) {
+    candidates.push({
+      id: a.id,
+      type: a.scale_type,
+      started_at: a.assigned_at,
+      status: a.status,
+      guest_id: (a.guest_id as string) || null,
+      user_id: null,
+      profile_id: (a.patient_id as string) || null,
+      session_id: (a.session_id as string) || null,
+      origin: 'Real',
+      source: 'assignment',
+    })
+  }
+
+  if (!candidates.length) return []
+
+  // --- 4) Decrypt guest names via list_guests_admin (single RPC) ---
+  const guestIds = new Set<string>()
+  for (const c of candidates) if (c.guest_id) guestIds.add(c.guest_id)
+
+  const guestNameMap: Record<string, string> = {}
+  if (guestIds.size) {
+    const { data: guestRows } = await supabase.rpc('list_guests_admin')
+    ;(guestRows || []).forEach(
+      (g: { id: string; first_name: string | null; last_name: string | null }) => {
+        if (guestIds.has(g.id)) {
+          guestNameMap[g.id] = `${g.first_name || ''} ${g.last_name || ''}`.trim() || 'Paciente'
+        }
+      },
+    )
+    // Fallback per-guest RPC for any guest not returned by list_guests_admin
+    const missing = [...guestIds].filter((id) => !guestNameMap[id])
+    await Promise.all(
+      missing.map(async (id) => {
+        const { data } = await getGuestFull(id)
+        if (data) {
+          guestNameMap[id] = `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Paciente'
+        }
+      }),
+    )
+  }
+
+  // --- 5) Resolve profile names + profile->guest links ---
+  const profileIds = new Set<string>()
+  for (const c of candidates) if (c.profile_id) profileIds.add(c.profile_id)
+  const profileMap: Record<string, { full_name: string | null; guest_id: string | null }> = {}
+  if (profileIds.size) {
+    const { data: ps } = await supabase
+      .from('profiles')
+      .select('id, full_name, guest_id')
+      .in('id', [...profileIds])
+    ;(ps || []).forEach((p) => {
+      profileMap[p.id] = { full_name: p.full_name, guest_id: p.guest_id }
+    })
+  }
+
+  // --- 6) Scores: anamnesis_responses *_total for sessions + metadata totalScore ---
+  const scoreMap: Record<string, number | null> = {}
+
+  // 6a) Metadata totalScore / total_score on sessions
+  for (const c of candidates) {
+    if (c.source === 'session') {
+      const s = sessionRows.find((row) => row.id === c.id)
+      const meta = metaOf(s?.metadata)
+      const raw =
+        (meta?.totalScore as string | number | undefined) ??
+        (meta?.total_score as string | number | undefined)
+      if (raw !== undefined && raw !== null && raw !== '') {
+        const n = typeof raw === 'number' ? raw : Number(raw)
+        if (!isNaN(n)) scoreMap[c.id] = n
+      }
     }
-  })
+  }
+
+  // 6b) anamnesis_responses *_total for sessions that have a session_id
+  const sessionIdsForScore = new Set<string>()
+  for (const c of candidates) if (c.session_id) sessionIdsForScore.add(c.session_id)
+  if (sessionIdsForScore.size) {
+    const { data: responses } = await supabase
+      .from('anamnesis_responses')
+      .select('session_id, question_key, response_value')
+      .in('session_id', [...sessionIdsForScore])
+      .like('question_key', '%_total')
+    ;(responses || []).forEach((r) => {
+      const val = r.response_value
+      let n: number | null = null
+      if (typeof val === 'number') n = val
+      else if (typeof val === 'string') {
+        const parsed = parseFloat(val)
+        if (!isNaN(parsed)) n = parsed
+      }
+      if (n !== null) {
+        // Map back to the candidate that owns this session
+        const owner = candidates.find((c) => c.session_id === r.session_id)
+        if (owner && scoreMap[owner.id] === undefined) scoreMap[owner.id] = n
+      }
+    })
+  }
+
+  // --- 7) Build the final unified AdminTest list ---
+  const resolveName = (c: Candidate): string => {
+    if (c.guest_id && guestNameMap[c.guest_id]) return guestNameMap[c.guest_id]
+    if (c.profile_id && profileMap[c.profile_id]) {
+      const p = profileMap[c.profile_id]
+      if (p.guest_id && guestNameMap[p.guest_id]) return guestNameMap[p.guest_id]
+      if (p.full_name) return p.full_name
+    }
+    return 'Paciente'
+  }
+
+  const tests: AdminTest[] = candidates.map((c) => ({
+    id: c.id,
+    type: c.type,
+    patient_name: resolveName(c),
+    origin: c.origin,
+    started_at: c.started_at,
+    status: c.status,
+    guest_id: c.guest_id,
+    score: scoreMap[c.id] ?? null,
+  }))
+
+  // Most recent first
+  tests.sort((a, b) => (a.started_at < b.started_at ? 1 : a.started_at > b.started_at ? -1 : 0))
+  return tests
 }
 
 export async function createMockSession(data: SessionFormData): Promise<{ error: string | null }> {
