@@ -20,10 +20,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { AssistedApplication } from '@/components/AssistedApplication'
 import { useAuth } from '@/contexts/auth-context'
 import { supabase } from '@/lib/supabase/client'
-import {
-  ASSISTED_SCALES,
-  normalizeAssistedScaleType,
-} from '@/lib/assisted-scales-data'
+import { ASSISTED_SCALES, normalizeAssistedScaleType } from '@/lib/assisted-scales-data'
 import { CLINIC_BRANDING, CLINICIAN_CREDENTIALS } from '@/lib/clinic-branding'
 import { calculateAge, getGuestFull, type GuestFull } from '@/services/guest-patient'
 
@@ -133,7 +130,10 @@ export default function AssistedApplicationPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAF5EB]">
-        <Loader2 className="h-8 w-8 animate-spin" style={{ color: CLINIC_BRANDING.colors.primary }} />
+        <Loader2
+          className="h-8 w-8 animate-spin"
+          style={{ color: CLINIC_BRANDING.colors.primary }}
+        />
         <p className="mt-3 text-sm" style={{ color: CLINIC_BRANDING.colors.medium }}>
           Carregando aplicação assistida...
         </p>
@@ -144,7 +144,10 @@ export default function AssistedApplicationPage() {
   if (error || !scale || !assignment) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAF5EB] px-4">
-        <Card className="max-w-md w-full border-2" style={{ borderColor: CLINIC_BRANDING.colors.secondary }}>
+        <Card
+          className="max-w-md w-full border-2"
+          style={{ borderColor: CLINIC_BRANDING.colors.secondary }}
+        >
           <CardContent className="p-8 text-center space-y-4">
             <AlertTriangle className="h-10 w-10 mx-auto" style={{ color: '#b91c1c' }} />
             <h2 className="text-lg font-bold" style={{ color: CLINIC_BRANDING.colors.dark }}>
@@ -171,6 +174,8 @@ export default function AssistedApplicationPage() {
       idade={idade}
       escolaridade={escolaridade}
       guestId={assignment.guest_id}
+      patientId={assignment.patient_id}
+      professionalId={user?.id ?? null}
       professionalName={professionalName}
       assignmentId={assignment.id}
       onSaved={() => {

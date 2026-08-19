@@ -113,9 +113,7 @@ async function fetchLogoDataUrl(): Promise<string | null> {
  * de forma conservadora: só sinaliza quando o item phq9_q9 tem valor >= 1.
  * Nunca infere risco a partir de texto ambíguo.
  */
-export function detectImminentRisk(
-  responses: AssistedResponseRecord[],
-): string | null {
+export function detectImminentRisk(responses: AssistedResponseRecord[]): string | null {
   const phq9q9 = responses.find((r) => r.key === 'phq9_q9')
   if (phq9q9 && phq9q9.numericValue !== null && phq9q9.numericValue >= 1) {
     return (
@@ -140,9 +138,7 @@ function buildInterpretation(ctx: AssistedRecordContext): string[] {
   const notApplied = ctx.responses.filter((r) => r.numericValue === null)
   const manual = ctx.responses.filter((r) => r.requiresManualScoring)
 
-  lines.push(
-    `Instrumento: ${scale.name} (${scale.version}). Modo: ${scale.applicationMode}.`,
-  )
+  lines.push(`Instrumento: ${scale.name} (${scale.version}). Modo: ${scale.applicationMode}.`)
 
   if (manual.length > 0) {
     lines.push(
@@ -222,22 +218,21 @@ function buildGaps(ctx: AssistedRecordContext): string[] {
     r.flags.includes('[REQUER MEDIAÇÃO DO PROFISSIONAL]'),
   )
 
-  if (manual.length === 0 && ambiguous.length === 0 && notApplied.length === 0 && needsMediation.length === 0) {
+  if (
+    manual.length === 0 &&
+    ambiguous.length === 0 &&
+    notApplied.length === 0 &&
+    needsMediation.length === 0
+  ) {
     lines.push('Nenhuma lacuna registrada nesta aplicação.')
     return lines
   }
   if (manual.length > 0)
-    lines.push(
-      `Itens com correção manual pendente: ${manual.map((m) => m.key).join(', ')}.`,
-    )
+    lines.push(`Itens com correção manual pendente: ${manual.map((m) => m.key).join(', ')}.`)
   if (ambiguous.length > 0)
-    lines.push(
-      `Respostas ambíguas a confirmar: ${ambiguous.map((m) => m.key).join(', ')}.`,
-    )
+    lines.push(`Respostas ambíguas a confirmar: ${ambiguous.map((m) => m.key).join(', ')}.`)
   if (notApplied.length > 0)
-    lines.push(
-      `Itens não aplicados: ${notApplied.map((m) => m.key).join(', ')}.`,
-    )
+    lines.push(`Itens não aplicados: ${notApplied.map((m) => m.key).join(', ')}.`)
   if (needsMediation.length > 0)
     lines.push(
       `Itens que requereram mediação ativa: ${needsMediation.map((m) => m.key).join(', ')}.`,
@@ -262,9 +257,7 @@ function scoreDisplay(r: AssistedResponseRecord): string {
 }
 
 /** Gera a versão Markdown do registro (para revisão/JSON de texto). */
-export function generateAssistedRecordMarkdown(
-  ctx: AssistedRecordContext,
-): string {
+export function generateAssistedRecordMarkdown(ctx: AssistedRecordContext): string {
   const risk = detectImminentRisk(ctx.responses)
   const lines: string[] = []
   lines.push(`# Registro de Aplicação Assistida — ${ctx.scale.name}`)
@@ -373,9 +366,7 @@ export function generateAssistedRecordJSON(ctx: AssistedRecordContext) {
 }
 
 /** Gera e baixa o PDF do registro de aplicação assistida. */
-export async function generateAssistedRecordPDF(
-  ctx: AssistedRecordContext,
-): Promise<void> {
+export async function generateAssistedRecordPDF(ctx: AssistedRecordContext): Promise<void> {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
@@ -599,11 +590,7 @@ export async function generateAssistedRecordPDF(
 }
 
 /** Baixa um blob de texto (markdown/json) com o nome de arquivo dado. */
-export function downloadTextFile(
-  content: string,
-  filename: string,
-  mime = 'text/plain',
-) {
+export function downloadTextFile(content: string, filename: string, mime = 'text/plain') {
   const blob = new Blob([content], { type: `${mime};charset=utf-8` })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -618,7 +605,16 @@ export function downloadTextFile(
 /** Helper: constrói o contexto do registro a partir das respostas + escala. */
 export function buildRecordResponses(
   scale: AssistedScale,
-  answers: Record<string, { response: string; numeric: number | null; observation: string; flags: string[]; repetitions: number }>,
+  answers: Record<
+    string,
+    {
+      response: string
+      numeric: number | null
+      observation: string
+      flags: string[]
+      repetitions: number
+    }
+  >,
 ): AssistedResponseRecord[] {
   return scale.items.map((item: AssistedItem) => {
     const a = answers[item.key]
@@ -628,7 +624,8 @@ export function buildRecordResponses(
       domain: item.domain,
       response: a?.response ?? '',
       numericValue: a?.numeric ?? null,
-      observation: a?.observation ?? (a?.repetitions ? `Repetição do estímulo: ${a.repetitions}x.` : ''),
+      observation:
+        a?.observation ?? (a?.repetitions ? `Repetição do estímulo: ${a.repetitions}x.` : ''),
       flags: a?.flags ?? [],
       requiresManualScoring: !!item.requiresManualScoring,
       requiresMaterial: !!item.requiresMaterial,

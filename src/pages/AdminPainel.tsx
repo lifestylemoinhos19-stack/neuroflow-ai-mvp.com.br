@@ -439,7 +439,9 @@ export default function AdminPainel() {
                                       className="h-8 w-8 text-amber-400 hover:text-amber-300 hover:bg-amber-950"
                                       title="Aplicação Assistida (voz)"
                                     >
-                                      <Link to={`/aplicacao-assistida/${encodeURIComponent(t.type)}/${t.id}`}>
+                                      <Link
+                                        to={`/aplicacao-assistida/${encodeURIComponent(t.type)}/${t.id}`}
+                                      >
                                         <Headphones className="h-4 w-4" />
                                       </Link>
                                     </Button>

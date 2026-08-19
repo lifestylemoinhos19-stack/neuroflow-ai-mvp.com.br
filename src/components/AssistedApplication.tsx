@@ -48,15 +48,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useSpeech } from '@/hooks/use-speech'
-import {
-  ASSISTED_DISCLAIMER,
-  PAUSE_EVERY,
-  type AssistedScale,
-} from '@/lib/assisted-scales-data'
-import {
-  createAnamnesisSessionForGuest,
-  saveAnamnesisResponses,
-} from '@/services/anamnesis'
+import { ASSISTED_DISCLAIMER, PAUSE_EVERY, type AssistedScale } from '@/lib/assisted-scales-data'
+import { createAnamnesisSessionForGuest, saveAnamnesisResponses } from '@/services/anamnesis'
 import {
   buildRecordResponses,
   generateAssistedRecordPDF,
@@ -64,7 +57,9 @@ import {
   detectImminentRisk,
   downloadTextFile,
   type AssistedRecordContext,
+  type AssistedResponseRecord,
 } from '@/lib/assisted-record-export'
+import { saveAssistedApplication } from '@/services/assisted-application'
 import { CLINIC_BRANDING } from '@/lib/clinic-branding'
 
 /** Resposta registrada por item (literal — nunca inferida). */
@@ -93,6 +88,10 @@ export interface AssistedApplicationProps {
   professionalName: string
   /** ID do scale_assignment (para vincular a sessão). */
   assignmentId: string
+  /** ID do profissional (auth.users.id) que aplica. Opcional (página resolve). */
+  professionalId?: string | null
+  /** ID do paciente (profiles.id) vinculado ao assignment, se houver. */
+  patientId?: string | null
   /** Callback ao concluir salvamento. */
   onSaved?: (sessionId: string | null) => void
 }
@@ -107,6 +106,8 @@ export function AssistedApplication({
   guestId,
   professionalName,
   assignmentId,
+  professionalId,
+  patientId,
   onSaved,
 }: AssistedApplicationProps) {
   const navigate = useNavigate()
@@ -147,19 +148,15 @@ export function AssistedApplication({
   }, [phase, index, speakItem])
 
   // --- Helpers de sinalização (respeitando o playbook) ---
-  const flagsFor = useCallback(
-    (it: typeof item, text: string, ambiguity: number): string[] => {
-      const flags: string[] = []
-      const trimmed = text.trim()
-      if (!trimmed) flags.push('[ITEM NÃO APLICADO]')
-      else if (ambiguity >= 2)
-        flags.push('[RESPOSTA AMBÍGUA — REQUER MEDIAÇÃO DO PROFISSIONAL]')
-      if (it?.requiresManualScoring) flags.push('[REQUER CORREÇÃO DO PROFISSIONAL]')
-      if (it?.requiresMaterial) flags.push('[MATERIAL FÍSICO — VER ORIENTAÇÃO AO PROFISSIONAL]')
-      return flags
-    },
-    [],
-  )
+  const flagsFor = useCallback((it: typeof item, text: string, ambiguity: number): string[] => {
+    const flags: string[] = []
+    const trimmed = text.trim()
+    if (!trimmed) flags.push('[ITEM NÃO APLICADO]')
+    else if (ambiguity >= 2) flags.push('[RESPOSTA AMBÍGUA — REQUER MEDIAÇÃO DO PROFISSIONAL]')
+    if (it?.requiresManualScoring) flags.push('[REQUER CORREÇÃO DO PROFISSIONAL]')
+    if (it?.requiresMaterial) flags.push('[MATERIAL FÍSICO — VER ORIENTAÇÃO AO PROFISSIONAL]')
+    return flags
+  }, [])
 
   /** Resposta numérica (para likert usa o valor selecionado; points/literal null). */
   const numericFromResponse = (it: typeof item, text: string): number | null => {
@@ -179,9 +176,7 @@ export function AssistedApplication({
   // --- Ações do fluxo ---
   const toggleMic = () => {
     if (!speech.sttSupported) {
-      toast.error(
-        'Reconhecimento de voz não suportado neste navegador. Use a digitação.',
-      )
+      toast.error('Reconhecimento de voz não suportado neste navegador. Use a digitação.')
       return
     }
     if (speech.listening) {
@@ -251,8 +246,7 @@ export function AssistedApplication({
   const advance = () => {
     speech.stopListening()
     // Pausa a cada PAUSE_EVERY itens (e sempre que o item.pauseAfter marque).
-    const isPausePoint =
-      (index + 1) % PAUSE_EVERY === 0 || !!item?.pauseAfter
+    const isPausePoint = (index + 1) % PAUSE_EVERY === 0 || !!item?.pauseAfter
     if (isPausePoint && index + 1 < totalItems) {
       setPhase('pause')
       if (speech.ttsSupported) speech.speak('Podemos continuar?')
@@ -277,7 +271,10 @@ export function AssistedApplication({
         ...emptyAnswer(),
         response: '',
         numeric: null,
-        flags: ['[ITEM NÃO APLICADO]', ...(item.requiresManualScoring ? ['[REQUER CORREÇÃO DO PROFISSIONAL]'] : [])],
+        flags: [
+          '[ITEM NÃO APLICADO]',
+          ...(item.requiresManualScoring ? ['[REQUER CORREÇÃO DO PROFISSIONAL]'] : []),
+        ],
         observation: 'Item não aplicado.',
       },
     }))
@@ -300,7 +297,20 @@ export function AssistedApplication({
 
   // --- Persistência (mesmo padrão das outras escalas) ---
   const recordResponses = useMemo(
-    () => buildRecordResponses(scale, answers as Record<string, { response: string; numeric: number | null; observation: string; flags: string[]; repetitions: number }>),
+    () =>
+      buildRecordResponses(
+        scale,
+        answers as Record<
+          string,
+          {
+            response: string
+            numeric: number | null
+            observation: string
+            flags: string[]
+            repetitions: number
+          }
+        >,
+      ),
     [scale, answers],
   )
 
@@ -362,7 +372,29 @@ export function AssistedApplication({
         setSaving(false)
         return
       }
-      // 3) Vincula ao scale_assignment quando possível (metadata).
+      // 3) Persiste o registro de aplicação assistida (tabela dedicada) com
+      //    itens/pontuação/interpretação separados — conforme o playbook.
+      //    Não bloqueia o fluxo se falhar: a sessão de anamnese já foi salva.
+      try {
+        const { error: assistedErr } = await saveAssistedApplication({
+          professionalId: professionalId ?? null,
+          patientId: patientId ?? null,
+          guestId,
+          assignmentId,
+          sessionId: session.id,
+          scale,
+          items: recordResponses,
+          totalScore,
+          observations: professionalNotes,
+          recordContext: recordCtx,
+        })
+        if (assistedErr) {
+          console.warn('Assisted application: falha ao salvar registro dedicado.', assistedErr)
+        }
+      } catch (e) {
+        console.warn('Assisted application: erro ao salvar registro dedicado.', e)
+      }
+      // 4) Vincula ao scale_assignment quando possível (metadata).
       savedSessionRef.current = session.id
       toast.success('Aplicação salva para revisão do profissional.')
       onSaved?.(session.id)
@@ -475,7 +507,10 @@ export function AssistedApplication({
             className="h-9 w-9 rounded-md object-contain"
           />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold truncate" style={{ color: CLINIC_BRANDING.colors.dark }}>
+            <p
+              className="text-sm font-bold truncate"
+              style={{ color: CLINIC_BRANDING.colors.dark }}
+            >
               {scale.name}
             </p>
             <p className="text-xs" style={{ color: CLINIC_BRANDING.colors.medium }}>
@@ -493,8 +528,13 @@ export function AssistedApplication({
             style={{ width: `${progressPct}%`, backgroundColor: CLINIC_BRANDING.colors.primary }}
           />
         </div>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-1.5 flex items-center justify-between text-xs" style={{ color: CLINIC_BRANDING.colors.medium }}>
-          <span>Item {index + 1} de {totalItems}</span>
+        <div
+          className="max-w-4xl mx-auto px-4 sm:px-6 py-1.5 flex items-center justify-between text-xs"
+          style={{ color: CLINIC_BRANDING.colors.medium }}
+        >
+          <span>
+            Item {index + 1} de {totalItems}
+          </span>
           <span>{totalItems - answeredCount} restante(s)</span>
         </div>
       </header>
@@ -556,7 +596,10 @@ export function AssistedApplication({
                 size="sm"
                 onClick={() => speakItem(index)}
                 disabled={!speech.ttsSupported || speech.speaking}
-                style={{ borderColor: CLINIC_BRANDING.colors.primary, color: CLINIC_BRANDING.colors.primary }}
+                style={{
+                  borderColor: CLINIC_BRANDING.colors.primary,
+                  color: CLINIC_BRANDING.colors.primary,
+                }}
               >
                 {speech.speaking ? (
                   <Loader2 className="h-4 w-4 mr-1 animate-spin" />
@@ -570,7 +613,10 @@ export function AssistedApplication({
                   variant="outline"
                   size="sm"
                   onClick={repeatItem}
-                  style={{ borderColor: CLINIC_BRANDING.colors.secondary, color: CLINIC_BRANDING.colors.medium }}
+                  style={{
+                    borderColor: CLINIC_BRANDING.colors.secondary,
+                    color: CLINIC_BRANDING.colors.medium,
+                  }}
                 >
                   <RotateCcw className="h-4 w-4 mr-1" /> Repetir estímulo
                 </Button>
@@ -590,9 +636,7 @@ export function AssistedApplication({
                   onClick={() => setCurrentText(opt.label)}
                   className={cn(
                     'px-3 py-3 rounded-lg text-sm font-medium border transition-all text-center',
-                    selected
-                      ? 'border-2 text-white'
-                      : 'bg-white text-[#3E2723] hover:bg-[#FAF5EB]',
+                    selected ? 'border-2 text-white' : 'bg-white text-[#3E2723] hover:bg-[#FAF5EB]',
                   )}
                   style={
                     selected
@@ -655,9 +699,7 @@ export function AssistedApplication({
               Ouvindo: "{speech.interimTranscript}"
             </p>
           )}
-          {speech.error && (
-            <p className="mt-1 text-xs text-red-600">{speech.error}</p>
-          )}
+          {speech.error && <p className="mt-1 text-xs text-red-600">{speech.error}</p>}
           {answers[item.key]?.ambiguity ? (
             <p className="mt-1 text-xs text-amber-700">
               Resposta considerada ambígua — será sinalizada no registro.
@@ -750,10 +792,17 @@ function IntroScreen({
     <div className="min-h-screen bg-[#FAF5EB]">
       <header
         className="border-b"
-        style={{ backgroundColor: CLINIC_BRANDING.colors.accent, borderColor: CLINIC_BRANDING.colors.secondary }}
+        style={{
+          backgroundColor: CLINIC_BRANDING.colors.accent,
+          borderColor: CLINIC_BRANDING.colors.secondary,
+        }}
       >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-3">
-          <img src={CLINIC_BRANDING.logoUrl} alt={CLINIC_BRANDING.name} className="h-10 w-10 rounded-md object-contain" />
+          <img
+            src={CLINIC_BRANDING.logoUrl}
+            alt={CLINIC_BRANDING.name}
+            className="h-10 w-10 rounded-md object-contain"
+          />
           <div className="flex-1">
             <p className="font-bold" style={{ color: CLINIC_BRANDING.colors.dark }}>
               {CLINIC_BRANDING.name}
@@ -768,21 +817,37 @@ function IntroScreen({
         </div>
       </header>
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <Card className="border-2 shadow-sm" style={{ borderColor: CLINIC_BRANDING.colors.secondary, backgroundColor: '#fff' }}>
+        <Card
+          className="border-2 shadow-sm"
+          style={{ borderColor: CLINIC_BRANDING.colors.secondary, backgroundColor: '#fff' }}
+        >
           <CardHeader>
             <CardTitle style={{ color: CLINIC_BRANDING.colors.primary }}>{scale.name}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm" style={{ color: CLINIC_BRANDING.colors.dark }}>
+            <div
+              className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm"
+              style={{ color: CLINIC_BRANDING.colors.dark }}
+            >
               <InfoRow label="Versão" value={scale.version} />
               <InfoRow label="Modo" value={scale.applicationMode} />
-              <InfoRow label="Alvo" value={scale.target === 'responsavel' ? 'Responsável' : 'Paciente'} />
+              <InfoRow
+                label="Alvo"
+                value={scale.target === 'responsavel' ? 'Responsável' : 'Paciente'}
+              />
               <InfoRow label="Itens" value={String(scale.items.length)} />
               <InfoRow label="Paciente" value={iniciais} />
               <InfoRow label="Idade" value={idade !== null ? `${idade} anos` : '—'} />
               <InfoRow label="Escolaridade" value={escolaridade} />
             </div>
-            <div className="p-3 rounded-lg border text-sm" style={{ backgroundColor: '#FFF7E6', borderColor: CLINIC_BRANDING.colors.secondary, color: CLINIC_BRANDING.colors.dark }}>
+            <div
+              className="p-3 rounded-lg border text-sm"
+              style={{
+                backgroundColor: '#FFF7E6',
+                borderColor: CLINIC_BRANDING.colors.secondary,
+                color: CLINIC_BRANDING.colors.dark,
+              }}
+            >
               <p className="font-semibold mb-1">Como funciona</p>
               <ul className="list-disc pl-5 space-y-1">
                 <li>Uma pergunta por vez, em linguagem simples e acolhedora.</li>
@@ -793,15 +858,33 @@ function IntroScreen({
               </ul>
             </div>
             <div className="flex flex-wrap gap-3 text-xs">
-              <Badge variant="outline" className={ttsSupported ? 'border-emerald-400 text-emerald-700' : 'border-slate-400 text-slate-500'}>
+              <Badge
+                variant="outline"
+                className={
+                  ttsSupported
+                    ? 'border-emerald-400 text-emerald-700'
+                    : 'border-slate-400 text-slate-500'
+                }
+              >
                 Voz (leitura): {ttsSupported ? 'disponível' : 'não suportada'}
               </Badge>
-              <Badge variant="outline" className={sttSupported ? 'border-emerald-400 text-emerald-700' : 'border-slate-400 text-slate-500'}>
+              <Badge
+                variant="outline"
+                className={
+                  sttSupported
+                    ? 'border-emerald-400 text-emerald-700'
+                    : 'border-slate-400 text-slate-500'
+                }
+              >
                 Microfone (resposta): {sttSupported ? 'disponível' : 'use digitação'}
               </Badge>
             </div>
             <Disclaimer />
-            <Button onClick={onStart} className="w-full text-white" style={{ backgroundColor: CLINIC_BRANDING.colors.primary }}>
+            <Button
+              onClick={onStart}
+              className="w-full text-white"
+              style={{ backgroundColor: CLINIC_BRANDING.colors.primary }}
+            >
               <Play className="h-4 w-4 mr-2" /> Iniciar aplicação assistida
             </Button>
           </CardContent>
@@ -814,7 +897,9 @@ function IntroScreen({
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between border-b pb-1" style={{ borderColor: '#EFE6D6' }}>
-      <span className="font-medium" style={{ color: CLINIC_BRANDING.colors.medium }}>{label}:</span>
+      <span className="font-medium" style={{ color: CLINIC_BRANDING.colors.medium }}>
+        {label}:
+      </span>
       <span>{value}</span>
     </div>
   )
@@ -835,19 +920,30 @@ function PauseScreen({
 }) {
   return (
     <div className="min-h-screen bg-[#FAF5EB] flex items-center justify-center px-4">
-      <Card className="max-w-md w-full border-2 shadow-sm text-center" style={{ borderColor: CLINIC_BRANDING.colors.secondary, backgroundColor: '#fff' }}>
+      <Card
+        className="max-w-md w-full border-2 shadow-sm text-center"
+        style={{ borderColor: CLINIC_BRANDING.colors.secondary, backgroundColor: '#fff' }}
+      >
         <CardContent className="p-8 space-y-4">
-          <div className="mx-auto h-14 w-14 rounded-full flex items-center justify-center" style={{ backgroundColor: CLINIC_BRANDING.colors.accent }}>
+          <div
+            className="mx-auto h-14 w-14 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: CLINIC_BRANDING.colors.accent }}
+          >
             <Pause className="h-7 w-7" style={{ color: CLINIC_BRANDING.colors.primary }} />
           </div>
           <h2 className="text-xl font-bold" style={{ color: CLINIC_BRANDING.colors.dark }}>
             Podemos continuar?
           </h2>
           <p className="text-sm" style={{ color: CLINIC_BRANDING.colors.medium }}>
-            Pausa sugerida pelo protocolo. Item {index + 1} de {total} concluído. Sem pressa — retome quando o paciente estiver confortável.
+            Pausa sugerida pelo protocolo. Item {index + 1} de {total} concluído. Sem pressa —
+            retome quando o paciente estiver confortável.
           </p>
           <div className="flex flex-col gap-2">
-            <Button onClick={onContinue} className="text-white" style={{ backgroundColor: CLINIC_BRANDING.colors.primary }}>
+            <Button
+              onClick={onContinue}
+              className="text-white"
+              style={{ backgroundColor: CLINIC_BRANDING.colors.primary }}
+            >
               <Play className="h-4 w-4 mr-2" /> Sim, continuar
             </Button>
             <Button variant="outline" onClick={onSpeak} className="border-[#C4A35A] text-[#7B5B3A]">
@@ -883,7 +979,8 @@ function RiskScreen({
             <h2 className="text-xl font-bold">Risco iminente detectado</h2>
           </div>
           <p className="text-sm text-red-900">
-            Resposta ao item de risco (PHQ-9 #9) ≥ 1 registrada para o paciente <strong>{iniciais}</strong> na escala <strong>{scale.name}</strong>.
+            Resposta ao item de risco (PHQ-9 #9) ≥ 1 registrada para o paciente{' '}
+            <strong>{iniciais}</strong> na escala <strong>{scale.name}</strong>.
           </p>
           <div className="p-3 rounded-lg bg-red-100 border border-red-300 text-sm text-red-900 space-y-1">
             <p className="font-semibold">Orientação obrigatória:</p>
@@ -896,7 +993,11 @@ function RiskScreen({
             </ul>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => onSpeak('Por favor, aguarde aqui. Vou acolher você agora.')} variant="outline" className="border-red-300 text-red-700">
+            <Button
+              onClick={() => onSpeak('Por favor, aguarde aqui. Vou acolher você agora.')}
+              variant="outline"
+              className="border-red-300 text-red-700"
+            >
               <Volume2 className="h-4 w-4 mr-1" /> Falar ao paciente
             </Button>
             <Button onClick={onContinue} className="bg-red-700 text-white hover:bg-red-800">
@@ -943,10 +1044,17 @@ function SummaryScreen({
     <div className="min-h-screen bg-[#FAF5EB]">
       <header
         className="border-b sticky top-0 z-20"
-        style={{ backgroundColor: CLINIC_BRANDING.colors.accent, borderColor: CLINIC_BRANDING.colors.secondary }}
+        style={{
+          backgroundColor: CLINIC_BRANDING.colors.accent,
+          borderColor: CLINIC_BRANDING.colors.secondary,
+        }}
       >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
-          <img src={CLINIC_BRANDING.logoUrl} alt={CLINIC_BRANDING.name} className="h-9 w-9 rounded-md object-contain" />
+          <img
+            src={CLINIC_BRANDING.logoUrl}
+            alt={CLINIC_BRANDING.name}
+            className="h-9 w-9 rounded-md object-contain"
+          />
           <div className="flex-1">
             <p className="text-sm font-bold" style={{ color: CLINIC_BRANDING.colors.dark }}>
               Resumo da Aplicação Assistida
@@ -971,7 +1079,10 @@ function SummaryScreen({
         )}
 
         {/* Pontuação */}
-        <Card className="border-2 shadow-sm" style={{ borderColor: CLINIC_BRANDING.colors.secondary, backgroundColor: '#fff' }}>
+        <Card
+          className="border-2 shadow-sm"
+          style={{ borderColor: CLINIC_BRANDING.colors.secondary, backgroundColor: '#fff' }}
+        >
           <CardHeader>
             <CardTitle style={{ color: CLINIC_BRANDING.colors.primary }}>Pontuação</CardTitle>
           </CardHeader>
@@ -993,26 +1104,52 @@ function SummaryScreen({
         </Card>
 
         {/* Itens e respostas */}
-        <Card className="border-2 shadow-sm" style={{ borderColor: CLINIC_BRANDING.colors.secondary, backgroundColor: '#fff' }}>
+        <Card
+          className="border-2 shadow-sm"
+          style={{ borderColor: CLINIC_BRANDING.colors.secondary, backgroundColor: '#fff' }}
+        >
           <CardHeader>
-            <CardTitle style={{ color: CLINIC_BRANDING.colors.primary }}>Itens e Respostas</CardTitle>
+            <CardTitle style={{ color: CLINIC_BRANDING.colors.primary }}>
+              Itens e Respostas
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {recordResponses.map((r, i) => (
-              <div key={r.key} className="rounded-lg border p-3" style={{ borderColor: '#EFE6D6', backgroundColor: '#FFFCF6' }}>
+              <div
+                key={r.key}
+                className="rounded-lg border p-3"
+                style={{ borderColor: '#EFE6D6', backgroundColor: '#FFFCF6' }}
+              >
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-xs font-semibold" style={{ color: CLINIC_BRANDING.colors.medium }}>
+                  <p
+                    className="text-xs font-semibold"
+                    style={{ color: CLINIC_BRANDING.colors.medium }}
+                  >
                     {i + 1}. [{r.domain}]
                   </p>
                   <div className="flex flex-wrap gap-1">
                     {r.requiresManualScoring && (
-                      <Badge variant="outline" className="border-rose-400 text-rose-700 text-[10px]">Correção manual</Badge>
+                      <Badge
+                        variant="outline"
+                        className="border-rose-400 text-rose-700 text-[10px]"
+                      >
+                        Correção manual
+                      </Badge>
                     )}
                     {r.requiresMaterial && (
-                      <Badge variant="outline" className="border-amber-500 text-amber-700 text-[10px]">Material</Badge>
+                      <Badge
+                        variant="outline"
+                        className="border-amber-500 text-amber-700 text-[10px]"
+                      >
+                        Material
+                      </Badge>
                     )}
                     {r.flags.map((f) => (
-                      <Badge key={f} variant="outline" className="border-slate-400 text-slate-600 text-[10px]">
+                      <Badge
+                        key={f}
+                        variant="outline"
+                        className="border-slate-400 text-slate-600 text-[10px]"
+                      >
                         {f}
                       </Badge>
                     ))}
@@ -1023,10 +1160,14 @@ function SummaryScreen({
                 </p>
                 <p className="text-sm" style={{ color: CLINIC_BRANDING.colors.dark }}>
                   <span className="font-medium">Resposta:</span>{' '}
-                  {r.response || (r.numericValue === null ? '[ITEM NÃO APLICADO]' : '[SEM RESPOSTA LITERAL]')}
+                  {r.response ||
+                    (r.numericValue === null ? '[ITEM NÃO APLICADO]' : '[SEM RESPOSTA LITERAL]')}
                 </p>
                 {(r.observation || r.flags.length > 0) && (
-                  <p className="text-xs mt-1 italic" style={{ color: CLINIC_BRANDING.colors.medium }}>
+                  <p
+                    className="text-xs mt-1 italic"
+                    style={{ color: CLINIC_BRANDING.colors.medium }}
+                  >
                     Obs: {(r.observation + ' ' + r.flags.join(' ')).trim()}
                   </p>
                 )}
@@ -1036,9 +1177,14 @@ function SummaryScreen({
         </Card>
 
         {/* Observações do profissional */}
-        <Card className="border-2 shadow-sm" style={{ borderColor: CLINIC_BRANDING.colors.secondary, backgroundColor: '#fff' }}>
+        <Card
+          className="border-2 shadow-sm"
+          style={{ borderColor: CLINIC_BRANDING.colors.secondary, backgroundColor: '#fff' }}
+        >
           <CardHeader>
-            <CardTitle style={{ color: CLINIC_BRANDING.colors.primary }}>Observações do Profissional</CardTitle>
+            <CardTitle style={{ color: CLINIC_BRANDING.colors.primary }}>
+              Observações do Profissional
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Textarea
@@ -1062,7 +1208,11 @@ function SummaryScreen({
             className="text-white"
             style={{ backgroundColor: CLINIC_BRANDING.colors.primary }}
           >
-            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+            {saving ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
             {saved ? 'Salvo para revisão' : 'Salvar para Revisão'}
           </Button>
           <Button
@@ -1071,7 +1221,11 @@ function SummaryScreen({
             variant="outline"
             className="border-[#C4A35A] text-[#7B5B3A]"
           >
-            {generatingPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileDown className="h-4 w-4 mr-2" />}
+            {generatingPdf ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <FileDown className="h-4 w-4 mr-2" />
+            )}
             Gerar Registro PDF
           </Button>
           <Button variant="ghost" onClick={onJson} className="text-slate-600">

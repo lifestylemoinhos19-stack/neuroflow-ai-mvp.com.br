@@ -189,7 +189,8 @@ const GAD7_ITEMS: AssistedItem[] = [
   {
     key: 'gad7_q1',
     domain: 'Ansiedade',
-    stimulus: 'Nas últimas duas semanas, com que frequência você se sentiu nervoso, ansioso ou tenso?',
+    stimulus:
+      'Nas últimas duas semanas, com que frequência você se sentiu nervoso, ansioso ou tenso?',
     responseType: 'likert',
     options: GAD7_OPTIONS,
     allowRepetition: true,
@@ -197,7 +198,8 @@ const GAD7_ITEMS: AssistedItem[] = [
   {
     key: 'gad7_q2',
     domain: 'Preocupação',
-    stimulus: 'Com que frequência você não conseguiu parar de se preocupar ou controlar a preocupação?',
+    stimulus:
+      'Com que frequência você não conseguiu parar de se preocupar ou controlar a preocupação?',
     responseType: 'likert',
     options: GAD7_OPTIONS,
     allowRepetition: true,
@@ -342,7 +344,8 @@ const MEEM_ITEMS: AssistedItem[] = [
     responseType: 'points',
     maxScore: 1,
     requiresMaterial: true,
-    materialNote: 'Profissional: apresente a figura de polígonos sobrepostos e entregue folha/lápis.',
+    materialNote:
+      'Profissional: apresente a figura de polígonos sobrepostos e entregue folha/lápis.',
     requiresManualScoring: true,
     allowRepetition: true,
   },
@@ -645,18 +648,19 @@ const FAS_ITEMS: AssistedItem[] = [
       'Vou pedir que você diga o maior número de palavras que começam com a letra F. Terá um minuto. Pode começar.',
     responseType: 'literal',
     requiresMaterial: true,
-    materialNote: 'Profissional: cronometre 60 segundos. Registre todas as palavras; a contagem é manual.',
+    materialNote:
+      'Profissional: cronometre 60 segundos. Registre todas as palavras; a contagem é manual.',
     requiresManualScoring: true,
     allowRepetition: false,
   },
   {
     key: 'fas_a',
     domain: 'Fluência fonêmica — letra A',
-    stimulus:
-      'Agora, palavras que comecem com a letra A. Novamente, um minuto. Pode começar.',
+    stimulus: 'Agora, palavras que comecem com a letra A. Novamente, um minuto. Pode começar.',
     responseType: 'literal',
     requiresMaterial: true,
-    materialNote: 'Profissional: cronometre 60 segundos. Contagem manual de palavras válidas e únicas.',
+    materialNote:
+      'Profissional: cronometre 60 segundos. Contagem manual de palavras válidas e únicas.',
     requiresManualScoring: true,
     allowRepetition: false,
     pauseAfter: true,
@@ -664,11 +668,11 @@ const FAS_ITEMS: AssistedItem[] = [
   {
     key: 'fas_s',
     domain: 'Fluência fonêmica — letra S',
-    stimulus:
-      'Por fim, palavras que comecem com a letra S. Um minuto. Pode começar.',
+    stimulus: 'Por fim, palavras que comecem com a letra S. Um minuto. Pode começar.',
     responseType: 'literal',
     requiresMaterial: true,
-    materialNote: 'Profissional: cronometre 60 segundos. Contagem manual de palavras válidas e únicas.',
+    materialNote:
+      'Profissional: cronometre 60 segundos. Contagem manual de palavras válidas e únicas.',
     requiresManualScoring: true,
     allowRepetition: false,
   },
@@ -679,7 +683,8 @@ const FAS_ITEMS: AssistedItem[] = [
       'Agora, diga o maior número de nomes de animais que conseguir. Tem um minuto. Pode começar.',
     responseType: 'literal',
     requiresMaterial: true,
-    materialNote: 'Profissional: cronometre 60 segundos. Contagem manual de animais válidos e únicos.',
+    materialNote:
+      'Profissional: cronometre 60 segundos. Contagem manual de animais válidos e únicos.',
     requiresManualScoring: true,
     allowRepetition: false,
   },
@@ -697,8 +702,7 @@ const MCHAT_ITEMS: AssistedItem[] = [
   {
     key: 'mchat_q1',
     domain: 'Interação social',
-    stimulus:
-      'Se você aponta para algo do outro lado da sala, sua criança olha para isso?',
+    stimulus: 'Se você aponta para algo do outro lado da sala, sua criança olha para isso?',
     responseType: 'likert',
     options: MCHAT_OPTIONS,
     target: 'responsavel',
@@ -858,14 +862,16 @@ const SNAPIV_ITEMS: AssistedItem[] = [
   {
     key: 'snapiv_q1',
     domain: 'Desatenção',
-    stimulus: 'Com que frequência a criança comete erros por descuido nos trabalhos escolares ou outras atividades?',
+    stimulus:
+      'Com que frequência a criança comete erros por descuido nos trabalhos escolares ou outras atividades?',
     responseType: 'likert',
     options: SNAPIV_OPTIONS,
   },
   {
     key: 'snapiv_q2',
     domain: 'Desatenção',
-    stimulus: 'Com que frequência tem dificuldade de manter a atenção em tarefas ou atividades lúdicas?',
+    stimulus:
+      'Com que frequência tem dificuldade de manter a atenção em tarefas ou atividades lúdicas?',
     responseType: 'likert',
     options: SNAPIV_OPTIONS,
   },
@@ -894,7 +900,8 @@ const SNAPIV_ITEMS: AssistedItem[] = [
   {
     key: 'snapiv_q6',
     domain: 'Desatenção',
-    stimulus: 'Com que frequência evita ou reluta em se envolver em tarefas que exigem esforço mental?',
+    stimulus:
+      'Com que frequência evita ou reluta em se envolver em tarefas que exigem esforço mental?',
     responseType: 'likert',
     options: SNAPIV_OPTIONS,
   },
@@ -944,7 +951,8 @@ const SNAPIV_ITEMS: AssistedItem[] = [
   {
     key: 'snapiv_q13',
     domain: 'Hiperatividade',
-    stimulus: 'Com que frequência tem dificuldade em brincar ou se envolver silenciosamente em atividades?',
+    stimulus:
+      'Com que frequência tem dificuldade em brincar ou se envolver silenciosamente em atividades?',
     responseType: 'likert',
     options: SNAPIV_OPTIONS,
     pauseAfter: true,
@@ -952,7 +960,8 @@ const SNAPIV_ITEMS: AssistedItem[] = [
   {
     key: 'snapiv_q14',
     domain: 'Hiperatividade',
-    stimulus: 'Com que frequência está sempre "a mil" ou age como se fosse impulsionada por um motor?',
+    stimulus:
+      'Com que frequência está sempre "a mil" ou age como se fosse impulsionada por um motor?',
     responseType: 'likert',
     options: SNAPIV_OPTIONS,
   },
@@ -966,7 +975,8 @@ const SNAPIV_ITEMS: AssistedItem[] = [
   {
     key: 'snapiv_q16',
     domain: 'Impulsividade',
-    stimulus: 'Com que frequência responde precipitadamente antes que as perguntas tenham sido completadas?',
+    stimulus:
+      'Com que frequência responde precipitadamente antes que as perguntas tenham sido completadas?',
     responseType: 'likert',
     options: SNAPIV_OPTIONS,
   },
