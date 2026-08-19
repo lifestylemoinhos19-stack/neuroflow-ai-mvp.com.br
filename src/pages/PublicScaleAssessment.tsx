@@ -59,10 +59,25 @@ const SCALE_META: Record<string, { title: string; subtitle: string; time: string
   sds: { title: 'Sheehan Disability Scale (SDS)', subtitle: 'Impacto funcional', time: '3-5 min' },
 }
 
+/**
+ * Normaliza o parâmetro `scale` da URL para a chave usada em SCALE_META.
+ *
+ * Resolve o problema de escalas com hífen/espaço que não batiam com as chaves
+ * do mapa (ex.: "gad-7" → "gad7", "mini 5.0.0" → "mini").
+ */
+function normalizeScaleType(raw: string | undefined): string | undefined {
+  if (!raw) return undefined
+  const lower = raw.toLowerCase().trim()
+  // Caso especial: MINI 5.0.0 (pode chegar como "mini-5.0.0", "mini 5.0.0", etc.)
+  if (/^mini[\s._-]*5/.test(lower)) return 'mini500'
+  // Demais escalas: remove hifens, espaços e underscores (gad-7 → gad7, y-bocs → ybocs)
+  return lower.replace(/[\s_-]/g, '')
+}
+
 export default function PublicScaleAssessment() {
   const [searchParams] = useSearchParams()
   const guestId = searchParams.get('guest_id') || localStorage.getItem('guest_id')
-  const scaleType = searchParams.get('scale')?.toLowerCase()
+  const scaleType = normalizeScaleType(searchParams.get('scale') ?? undefined)
 
   const [consented, setConsented] = useState(false)
 

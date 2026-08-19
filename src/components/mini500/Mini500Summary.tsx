@@ -57,10 +57,10 @@ export function Mini500Summary({
     summary,
   })
 
-  const handlePdf = () => {
+  const handlePdf = async () => {
     setExporting('pdf')
     try {
-      exportMini500Pdf(buildExportData())
+      await exportMini500Pdf(buildExportData())
       toast.success('PDF gerado!')
     } catch {
       toast.error('Erro ao gerar PDF.')

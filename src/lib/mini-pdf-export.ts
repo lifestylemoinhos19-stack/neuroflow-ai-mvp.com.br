@@ -1,16 +1,50 @@
+import { jsPDF } from 'jspdf'
 import type { MiniReportData } from '@/services/mini-report'
-import {
-  CLINIC_BRANDING,
-  CLINICIAN_CREDENTIALS,
-  getBrandHeaderHtml,
-  getBrandFooterHtml,
-  getBrandCss,
-  getSignatureHtml,
-} from '@/lib/clinic-branding'
+import { CLINIC_BRANDING, CLINICIAN_CREDENTIALS, getValidationUrl } from '@/lib/clinic-branding'
 
-function esc(s: string | null | undefined): string {
-  if (!s) return '—'
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+/**
+ * Carrega uma imagem (URL remota ou asset importado) e devolve um data URL PNG
+ * pronto para `doc.addImage`. Retorna `null` em caso de falha (logo/QR opcional).
+ *
+ * Diferente da versão anterior (que usava `window.open` + `document.write` em
+ * `about:blank`), aqui carregamos a imagem no documento atual, onde URLs
+ * relativas/locais funcionam normalmente.
+ */
+async function fetchImageAsPngData(
+  url: string,
+): Promise<{ dataUrl: string; format: 'PNG' | 'JPEG' } | null> {
+  try {
+    return await new Promise((resolve) => {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = img.naturalWidth || img.width || 300
+        canvas.height = img.naturalHeight || img.height || 300
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return resolve(null)
+        ctx.drawImage(img, 0, 0)
+        resolve({ dataUrl: canvas.toDataURL('image/png'), format: 'PNG' })
+      }
+      img.onerror = () => resolve(null)
+      img.src = url
+    })
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Gera um QR Code apontando para a URL de validação da sessão e devolve um
+ * data URL PNG (usando a mesma API pública já adotada em clinic-branding). Em
+ * caso de falha de rede retorna `null` e o laudo segue sem o QR.
+ */
+async function fetchQrCodePng(sessionId: string): Promise<string | null> {
+  const url = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=2&data=${encodeURIComponent(
+    getValidationUrl(sessionId),
+  )}`
+  const data = await fetchImageAsPngData(url)
+  return data?.dataUrl ?? null
 }
 
 function fmtDate(iso: string | null): string {
@@ -31,93 +65,212 @@ function fmtDuration(start: string, end: string | null): string {
   return h > 0 ? `${h}h ${m}min` : `${m}min`
 }
 
-export function exportMiniPdf(report: MiniReportData): void {
+export async function exportMiniPdf(report: MiniReportData): Promise<void> {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const marginX = 18
+  let y = 18
+  const c = CLINIC_BRANDING.colors
   const positive = report.moduleResults.filter((r) => r.isPositive)
-  const now = new Date().toLocaleString('pt-BR')
   const fb = report.clinicalFeedback
   const hasInterpretation = fb?.system_suggestion || fb?.admin_edited_interpretation
-  const c = CLINIC_BRANDING.colors
 
-  const html = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Relatório MINI 5.0.0 - ${CLINIC_BRANDING.name}</title>
-<style>
-  body{font-family:'Segoe UI',Arial,sans-serif;padding:40px;color:${c.dark};max-width:800px;margin:0 auto}
-  h1{color:${c.primary};margin:0;font-size:24px}
-  .sub{color:${c.medium};margin:4px 0 24px;font-size:14px}
-  .sec{margin-bottom:24px}
-  .sec-t{font-size:16px;font-weight:700;color:${c.primary};border-bottom:2px solid ${c.secondary};padding-bottom:4px;margin-bottom:12px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:14px}
-  .grid .l{color:${c.medium}}
-  .grid .v{font-weight:600}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th{background:${c.accent};padding:8px;text-align:left;border-bottom:2px solid ${c.primary}}
-  td{padding:8px;border-bottom:1px solid #e2e8f0}
-  .pos{background:#fef3c7;font-weight:600}
-  .neg{color:${c.medium}}
-  .alert{background:#fef3c7;border-left:4px solid #f59e0b;padding:12px;margin-bottom:8px;font-size:14px}
-  .fb{background:${c.accent};border:1px solid ${c.secondary};border-radius:8px;padding:16px;font-size:14px;margin-bottom:12px}
-  .warn{background:${c.accent};border:1px solid ${c.secondary};border-radius:8px;padding:12px;font-size:12px;color:${c.primary};margin-top:16px}
-  ${getBrandCss()}
-</style>
-</head>
-<body>
-  ${getBrandHeaderHtml()}
-  <h1>Relatório MINI 5.0.0</h1>
-  <p class="sub">Mini International Neuropsychiatric Interview &middot; ${CLINIC_BRANDING.name} &middot; ${now}</p>
-  <div class="sec">
-    <div class="sec-t">Identificação do Entrevistado</div>
-    <div class="grid">
-      <div><span class="l">Nome: </span><span class="v">${esc(report.patient?.fullName)}</span></div>
-      <div><span class="l">Protocolo: </span><span class="v">${esc(report.protocol)}</span></div>
-      <div><span class="l">Data de Nascimento: </span><span class="v">${report.patient?.birthDate ? fmtDate(report.patient.birthDate) : '—'}</span></div>
-      <div><span class="l">Entrevistador: </span><span class="v">${esc(report.interviewerName)}</span></div>
-      <div><span class="l">Data da Entrevista: </span><span class="v">${fmtDate(report.session.started_at)}</span></div>
-      <div><span class="l">Início: </span><span class="v">${fmtTime(report.session.started_at)}</span></div>
-      <div><span class="l">Fim: </span><span class="v">${fmtTime(report.session.completed_at)}</span></div>
-      <div><span class="l">Duração: </span><span class="v">${fmtDuration(report.session.started_at, report.session.completed_at)}</span></div>
-    </div>
-  </div>
-  ${
-    positive.length > 0
-      ? `
-  <div class="sec">
-    <div class="sec-t">Achados Positivos (${positive.length})</div>
-    ${positive.map((r) => `<div class="alert"><strong>${r.letter}</strong> — ${esc(r.title)}: <strong>${esc(r.label)}</strong> (${esc(r.details)})</div>`).join('')}
-  </div>`
-      : ''
+  // --- Header: logo + nome da clínica ---
+  try {
+    const logoData = await fetchImageAsPngData(CLINIC_BRANDING.logoUrl)
+    if (logoData) {
+      doc.addImage(logoData.dataUrl, logoData.format, marginX, y, 24, 16)
+    }
+  } catch {
+    /* logo fallback */
   }
-  <div class="sec">
-    <div class="sec-t">Resultados Detalhados (Módulos A–P)</div>
-    <table>
-      <thead><tr><th>Mód</th><th>Descrição</th><th>Resultado</th><th>Detalhes</th></tr></thead>
-      <tbody>
-        ${report.moduleResults.map((r) => `<tr class="${r.isPositive ? 'pos' : 'neg'}"><td><strong>${r.letter}</strong></td><td>${esc(r.title)}</td><td>${esc(r.label)}</td><td>${esc(r.details)}</td></tr>`).join('')}
-      </tbody>
-    </table>
-  </div>
-  ${
-    hasInterpretation
-      ? `
-  <div class="sec">
-    <div class="sec-t">Interpretação Clínica</div>
-    ${fb?.system_suggestion ? `<div class="fb"><strong>Sugestão do Sistema:</strong><br/>${esc(fb.system_suggestion).replace(/\n/g, '<br/>')}</div>` : ''}
-    ${fb?.admin_edited_interpretation ? `<div class="fb"><strong>Interpretação do Profissional:</strong><br/>${esc(fb.admin_edited_interpretation).replace(/\n/g, '<br/>')}</div>` : ''}
-  </div>`
-      : ''
-  }
-  <div class="warn">⚠ Este instrumento é uma ferramenta de triagem e não substitui a avaliação clínica profissional. O diagnóstico definitivo requer avaliação presencial especializada.</div>
-  ${getSignatureHtml(report.session.completed_at, report.session.id)}
-  ${getBrandFooterHtml()}
-</body>
-</html>`
 
-  const printWindow = window.open('', '_blank')
-  if (printWindow) {
-    printWindow.document.write(html)
-    printWindow.document.close()
-    setTimeout(() => printWindow.print(), 300)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(16)
+  doc.setTextColor(0x7b, 0x5b, 0x3a)
+  doc.text(CLINIC_BRANDING.name, marginX + 28, y + 6)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(10)
+  doc.setTextColor(0x6d, 0x5d, 0x4b)
+  doc.text(
+    'Relatório MINI 5.0.0 — Mini International Neuropsychiatric Interview',
+    marginX + 28,
+    y + 12,
+  )
+
+  doc.setDrawColor(0xc4, 0xa3, 0x5a)
+  doc.setLineWidth(0.5)
+  doc.line(marginX, y + 18, pageWidth - marginX, y + 18)
+  y += 24
+
+  const ensureSpace = (needed: number) => {
+    if (y + needed > pageHeight - 24) {
+      doc.addPage()
+      y = 18
+    }
   }
+  const writeHeading = (text: string) => {
+    ensureSpace(10)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(12)
+    doc.setTextColor(0x7b, 0x5b, 0x3a)
+    doc.text(text, marginX, y)
+    doc.setDrawColor(0xc4, 0xa3, 0x5a)
+    doc.setLineWidth(0.3)
+    doc.line(marginX, y + 2, pageWidth - marginX, y + 2)
+    y += 7
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(10)
+    doc.setTextColor(0x3e, 0x27, 0x23)
+  }
+  const writeParagraph = (text: string, gap = 4) => {
+    const lines = doc.splitTextToSize(text, pageWidth - marginX * 2)
+    ensureSpace(lines.length * 5 + 2)
+    doc.text(lines, marginX, y)
+    y += lines.length * 5 + gap
+  }
+  const writeBullet = (text: string) => {
+    const indent = marginX + 4
+    const lines = doc.splitTextToSize(text, pageWidth - marginX * 2 - 6)
+    ensureSpace(lines.length * 5 + 1)
+    doc.text('•', marginX, y)
+    doc.text(lines, indent, y)
+    y += lines.length * 5 + 1
+  }
+
+  // --- Identificação do Entrevistado ---
+  writeHeading('Identificação do Entrevistado')
+  const idRows: [string, string][] = [
+    ['Nome:', report.patient?.fullName || '—'],
+    ['Protocolo:', report.protocol || '—'],
+    ['Data de Nascimento:', report.patient?.birthDate ? fmtDate(report.patient.birthDate) : '—'],
+    ['Entrevistador:', report.interviewerName || '—'],
+    ['Data da Entrevista:', fmtDate(report.session.started_at)],
+    ['Início:', fmtTime(report.session.started_at)],
+    ['Fim:', fmtTime(report.session.completed_at)],
+    ['Duração:', fmtDuration(report.session.started_at, report.session.completed_at)],
+  ]
+  idRows.forEach(([label, value]) => {
+    ensureSpace(6)
+    doc.setFont('helvetica', 'bold')
+    doc.text(label, marginX, y)
+    doc.setFont('helvetica', 'normal')
+    doc.text(value, marginX + 42, y)
+    y += 6
+  })
+  y += 3
+
+  // --- Achados positivos ---
+  if (positive.length > 0) {
+    writeHeading(`Achados Positivos (${positive.length})`)
+    for (const r of positive) {
+      writeBullet(`${r.letter} — ${r.title}: ${r.label} (${r.details}).`)
+    }
+    y += 2
+  }
+
+  // --- Resultados detalhados (tabela) ---
+  writeHeading('Resultados Detalhados (Módulos A–P)')
+  const colX = [marginX, marginX + 12, marginX + 28, marginX + 90, pageWidth - marginX]
+  const rowH = 6
+  const drawTableRow = (cells: string[], bold = false) => {
+    ensureSpace(rowH)
+    doc.setFont('helvetica', bold ? 'bold' : 'normal')
+    doc.setFontSize(9)
+    cells.forEach((cell, i) => {
+      const maxW = colX[i + 1] - colX[i] - 2
+      const lines = doc.splitTextToSize(cell, maxW)
+      doc.text(lines.slice(0, 2), colX[i] + 1, y + 4)
+    })
+    doc.setDrawColor(0xe2, 0xe8, 0xf0)
+    doc.setLineWidth(0.1)
+    doc.line(marginX, y + rowH, pageWidth - marginX, y + rowH)
+    y += rowH
+  }
+  drawTableRow(['Mód', 'Descrição', 'Resultado', 'Detalhes'], true)
+  for (const r of report.moduleResults) {
+    drawTableRow([r.letter, r.title, r.label, r.details])
+  }
+  y += 4
+
+  // --- Resumo clínico ---
+  if (report.clinicalSummary) {
+    writeHeading('Resumo Clínico')
+    writeParagraph(report.clinicalSummary)
+  }
+
+  // --- Interpretação clínica ---
+  if (hasInterpretation) {
+    writeHeading('Interpretação Clínica')
+    if (fb?.system_suggestion) writeParagraph(`Sugestão do Sistema: ${fb.system_suggestion}`)
+    if (fb?.admin_edited_interpretation)
+      writeParagraph(`Interpretação do Profissional: ${fb.admin_edited_interpretation}`)
+  }
+
+  // --- Aviso ---
+  ensureSpace(12)
+  y += 2
+  doc.setFillColor(0xfa, 0xf5, 0xeb)
+  doc.setDrawColor(0xc4, 0xa3, 0x5a)
+  doc.roundedRect(marginX, y, pageWidth - marginX * 2, 12, 2, 2, 'S')
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(0x7b, 0x5b, 0x3a)
+  const warnLines = doc.splitTextToSize(
+    'AVISO: Este instrumento é uma ferramenta de triagem e não substitui a avaliação clínica profissional. O diagnóstico definitivo requer avaliação presencial especializada.',
+    pageWidth - marginX * 2 - 6,
+  )
+  doc.text(warnLines, marginX + 3, y + 5)
+  y += 16
+
+  // --- Assinatura + QR Code ---
+  ensureSpace(40)
+  y += 6
+  const qrPng = await fetchQrCodePng(report.session.id)
+  const sigBlockX = marginX + 40
+  if (qrPng) {
+    try {
+      doc.addImage(qrPng, 'PNG', marginX, y, 28, 28)
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(7)
+      doc.setTextColor(0x6d, 0x5d, 0x4b)
+      doc.text(doc.splitTextToSize('Escaneie para verificar autenticidade', 28), marginX, y + 31)
+    } catch {
+      /* qr fallback */
+    }
+  }
+  doc.setDrawColor(0x6d, 0x5d, 0x4b)
+  doc.setLineWidth(0.3)
+  doc.line(sigBlockX, y + 18, sigBlockX + 90, y + 18)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(10)
+  doc.setTextColor(0x3e, 0x27, 0x23)
+  doc.text(CLINICIAN_CREDENTIALS.name, sigBlockX, y + 23)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9)
+  doc.setTextColor(0x6d, 0x5d, 0x4b)
+  doc.text(`${CLINICIAN_CREDENTIALS.crm} · ${CLINICIAN_CREDENTIALS.rqe}`, sigBlockX, y + 28)
+  doc.text(`Assinado digitalmente em ${new Date().toLocaleString('pt-BR')}`, sigBlockX, y + 33)
+
+  // --- Rodapé (LGPD) ---
+  const footerY = pageHeight - 12
+  doc.setDrawColor(0x7b, 0x5b, 0x3a)
+  doc.setLineWidth(0.4)
+  doc.line(marginX, footerY, pageWidth - marginX, footerY)
+  doc.setFontSize(7)
+  doc.setTextColor(0x6d, 0x5d, 0x4b)
+  doc.text(
+    `${CLINIC_BRANDING.name} — ${CLINIC_BRANDING.address} | WhatsApp: ${CLINIC_BRANDING.whatsapp}`,
+    marginX,
+    footerY + 4,
+  )
+  doc.text(
+    `Emitido em ${new Date().toLocaleString('pt-BR')} · Documento em conformidade com a LGPD (Lei nº 13.709/2018).`,
+    marginX,
+    footerY + 8,
+  )
+
+  const safeName = (report.patient?.fullName || 'entrevistado').replace(/[^a-zA-Z0-9]/g, '_')
+  doc.save(`laudo-mini-${safeName}.pdf`)
 }
