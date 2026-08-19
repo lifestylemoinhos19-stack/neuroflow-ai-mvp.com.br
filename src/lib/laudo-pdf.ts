@@ -2,6 +2,12 @@ import { jsPDF } from 'jspdf'
 import { supabase } from '@/lib/supabase/client'
 import { getGuestFull, type GuestFull } from '@/services/guest-patient'
 import { translateStatus } from '@/services/admin-sessions'
+import {
+  getSessionInterpretation,
+  saveInterpretation,
+  type InterpretationResult,
+} from '@/services/clinical-interpretation'
+import { phq9SeverityLabels, gad7SeverityLabels } from '@/lib/phq9-gad7-data'
 
 interface LaudoInput {
   // AdminTest
@@ -16,12 +22,25 @@ interface LaudoInput {
 
 interface LaudoContext {
   guest: GuestFull | null
+  /** Saved admin/system interpretation text (may be empty). */
   interpretation: string
+  /** Rich AI interpretation, generated on the fly when nothing is saved. */
+  aiInterpretation: InterpretationResult | null
+}
+
+const SEVERITY_LABELS: Record<string, string> = {
+  low: 'Baixa',
+  moderate: 'Moderada',
+  high: 'Alta',
 }
 
 /**
  * Build an interpretation string from the scale type + score, using the
  * project's existing thresholds (see lib/phq9-gad7-data, lib/scales-data, etc).
+ *
+ * This is now a last-resort fallback used only when neither saved
+ * clinical_feedback nor the AI engine (`getSessionInterpretation`) return
+ * anything usable (e.g. orphan mock sessions with no responses).
  */
 function buildInterpretation(scaleType: string, score: number | null): string {
   if (score === null) return 'Pontuação não disponível.'
@@ -87,42 +106,132 @@ function buildInterpretation(scaleType: string, score: number | null): string {
 }
 
 /**
+ * Resolve the real `anamnesis_sessions.id` for a testagem.
+ *
+ * `testId` arriving from the admin test list can be either:
+ *  - an `anamnesis_sessions.id` (orphan sessions / anamneses), or
+ *  - a `scale_assignments.id` (PHQ-9, GAD-7, MINI, etc.).
+ *
+ * `clinical_feedback.session_id` and `anamnesis_responses.session_id` both
+ * reference `anamnesis_sessions.id`, so for a scale_assignment we MUST fetch
+ * its `session_id` column instead of using the assignment id directly — that
+ * was the original bug (it never matched any feedback row).
+ */
+async function resolveRealSessionId(testId: string): Promise<{
+  sessionId: string | null
+  isAssignment: boolean
+}> {
+  // Fast path: testId is itself an anamnesis_session id.
+  const { data: session } = await supabase
+    .from('anamnesis_sessions')
+    .select('id')
+    .eq('id', testId)
+    .maybeSingle()
+  if (session) return { sessionId: session.id, isAssignment: false }
+
+  // Otherwise look it up as a scale_assignment.
+  const { data: assignment } = await supabase
+    .from('scale_assignments')
+    .select('id, session_id')
+    .eq('id', testId)
+    .maybeSingle()
+  if (assignment) {
+    return { sessionId: assignment.session_id ?? null, isAssignment: true }
+  }
+  return { sessionId: null, isAssignment: false }
+}
+
+/**
  * Load extra context for the laudo: decrypted guest data + clinical feedback
  * interpretation (admin_edited_interpretation) for the session.
+ *
+ * When no `clinical_feedback` row exists (the common case, since the AI
+ * interpretation is not auto-saved on scale completion), we fall back to
+ * `getSessionInterpretation()` to generate the rich analysis (findings,
+ * comorbidities, global severity) on the fly, and best-effort persist it so
+ * subsequent generations don't need to recompute.
  */
-async function loadLaudoContext(guestId: string | null, sessionId: string): Promise<LaudoContext> {
+async function loadLaudoContext(guestId: string | null, testId: string): Promise<LaudoContext> {
   let guest: GuestFull | null = null
   if (guestId) {
     const { data } = await getGuestFull(guestId)
     guest = data
   }
 
+  // Map the admin test id back to the real anamnesis_session id.
+  const { sessionId } = await resolveRealSessionId(testId)
+
   let interpretation = ''
-  try {
-    const { data: feedback } = await supabase
-      .from('clinical_feedback')
-      .select('admin_edited_interpretation, system_suggestion, comments')
-      .eq('session_id', sessionId)
-      .maybeSingle()
-    if (feedback) {
-      interpretation =
-        feedback.admin_edited_interpretation ||
-        feedback.system_suggestion ||
-        feedback.comments ||
-        ''
+  let aiInterpretation: InterpretationResult | null = null
+
+  // 1) Try saved clinical_feedback (keyed by the real session_id).
+  if (sessionId) {
+    try {
+      const { data: feedback } = await supabase
+        .from('clinical_feedback')
+        .select('admin_edited_interpretation, system_suggestion, comments')
+        .eq('session_id', sessionId)
+        .maybeSingle()
+      if (feedback) {
+        interpretation =
+          feedback.admin_edited_interpretation ||
+          feedback.system_suggestion ||
+          feedback.comments ||
+          ''
+      }
+    } catch {
+      /* ignore */
     }
-  } catch {
-    /* ignore */
   }
 
-  return { guest, interpretation }
+  // 2) No saved interpretation → generate the rich AI analysis on the fly.
+  if (!interpretation && sessionId) {
+    try {
+      aiInterpretation = await getSessionInterpretation(sessionId)
+    } catch {
+      /* ignore */
+    }
+
+    // 3) Best-effort: persist the generated interpretation so the next laudo
+    //    generation doesn't need to recompute it. Requires an authenticated
+    //    admin/doctor; failures are silently ignored (the PDF still renders).
+    if (aiInterpretation && aiInterpretation.hasScaleData) {
+      try {
+        await saveInterpretation(
+          sessionId,
+          aiInterpretation.suggestion,
+          aiInterpretation.suggestion,
+          aiInterpretation.phq9Score,
+          aiInterpretation.gad7Score,
+          aiInterpretation.cognitiveVrc,
+          aiInterpretation.assqScore,
+          aiInterpretation.snapIvScore,
+          aiInterpretation.asrs18Score,
+          aiInterpretation.mocaScore,
+          aiInterpretation.meemScore,
+          aiInterpretation.hamdScore,
+          aiInterpretation.hamaScore,
+          aiInterpretation.snapIvInattention,
+          aiInterpretation.snapIvHyperactivity,
+          aiInterpretation.globalSeverity,
+        )
+      } catch {
+        /* ignore — non-fatal */
+      }
+    }
+  }
+
+  return { guest, interpretation, aiInterpretation }
 }
 
 /**
  * Generate and download a PDF laudo for a completed testagem.
  */
 export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
-  const { guest, interpretation } = await loadLaudoContext(input.guestId, input.testId)
+  const { guest, interpretation, aiInterpretation } = await loadLaudoContext(
+    input.guestId,
+    input.testId,
+  )
 
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
@@ -243,13 +352,117 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(10)
   doc.setTextColor(51, 65, 85)
-  const finalInterpretation = interpretation.trim() || buildInterpretation(input.type, input.score)
-  const interpLines = doc.splitTextToSize(finalInterpretation, pageWidth - marginX * 2)
-  doc.text(interpLines, marginX, y)
-  y += interpLines.length * 5 + 6
+
+  const ensureSpace = (needed: number) => {
+    if (y + needed > pageHeight - 30) {
+      doc.addPage()
+      y = 20
+    }
+  }
+
+  const writeParagraph = (text: string, gap = 4) => {
+    const lines = doc.splitTextToSize(text, pageWidth - marginX * 2)
+    ensureSpace(lines.length * 5 + 2)
+    doc.text(lines, marginX, y)
+    y += lines.length * 5 + gap
+  }
+
+  const writeSubheading = (text: string) => {
+    ensureSpace(10)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(10, 25, 47)
+    doc.text(text, marginX, y)
+    y += 6
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(10)
+    doc.setTextColor(51, 65, 85)
+  }
+
+  const writeBullet = (text: string) => {
+    const bullet = '•'
+    const indent = marginX + 4
+    const lines = doc.splitTextToSize(text, pageWidth - marginX * 2 - 6)
+    ensureSpace(lines.length * 5 + 1)
+    doc.text(bullet, marginX, y)
+    doc.text(lines, indent, y)
+    y += lines.length * 5 + 1
+  }
+
+  if (aiInterpretation && aiInterpretation.hasScaleData) {
+    // Rich AI interpretation: severity → findings → comorbidities → scores →
+    // cognitive → recommendation.
+    const severityLabel = SEVERITY_LABELS[aiInterpretation.globalSeverity] || '—'
+    writeParagraph(`Severidade global estimada: ${severityLabel}.`)
+
+    if (aiInterpretation.findings.length > 0) {
+      writeSubheading('Achados clínicos:')
+      for (const f of aiInterpretation.findings) {
+        writeBullet(`${f.suggestion} (${f.scale}: ${f.score}, corte ${f.threshold}).`)
+      }
+      y += 2
+    }
+
+    if (aiInterpretation.comorbidities.length > 0) {
+      writeSubheading('Comorbidades detectadas:')
+      for (const c of aiInterpretation.comorbidities) {
+        writeBullet(c)
+      }
+      y += 2
+    }
+
+    // Per-scale scores with severity badges where available.
+    const scaleRows: string[] = []
+    if (aiInterpretation.phq9Score)
+      scaleRows.push(
+        `PHQ-9: ${aiInterpretation.phq9Score}/27 (${phq9SeverityLabels[aiInterpretation.phq9Severity]})`,
+      )
+    if (aiInterpretation.gad7Score)
+      scaleRows.push(
+        `GAD-7: ${aiInterpretation.gad7Score}/21 (${gad7SeverityLabels[aiInterpretation.gad7Severity]})`,
+      )
+    if (aiInterpretation.assqScore !== null) scaleRows.push(`ASSQ: ${aiInterpretation.assqScore}`)
+    if (aiInterpretation.snapIvScore !== null)
+      scaleRows.push(`SNAP-IV: ${aiInterpretation.snapIvScore.toFixed(2)}`)
+    if (aiInterpretation.asrs18Score !== null)
+      scaleRows.push(`ASRS-18: ${aiInterpretation.asrs18Score}`)
+    if (aiInterpretation.mocaScore !== null)
+      scaleRows.push(`MoCA: ${aiInterpretation.mocaScore}/30`)
+    if (aiInterpretation.meemScore !== null)
+      scaleRows.push(`MEEM: ${aiInterpretation.meemScore}/30`)
+    if (aiInterpretation.hamdScore !== null) scaleRows.push(`HAM-D: ${aiInterpretation.hamdScore}`)
+    if (aiInterpretation.hamaScore !== null) scaleRows.push(`HAM-A: ${aiInterpretation.hamaScore}`)
+    if (scaleRows.length > 0) {
+      writeSubheading('Pontuações por escala:')
+      writeParagraph(scaleRows.join(' | '))
+    }
+
+    if (aiInterpretation.cognitiveVrc !== null) {
+      writeParagraph(
+        `Performance cognitiva (VRC): ${aiInterpretation.cognitiveVrc.toFixed(2)}${
+          aiInterpretation.cognitiveVrc < 0.5
+            ? ' — abaixo do esperado, recomenda-se investigação complementar.'
+            : '.'
+        }`,
+      )
+    }
+
+    // Recommendation / system suggestion (already excludes the findings list
+    // duplication since suggestion is built from findings; we surface it as
+    // the final clinical recommendation).
+    writeSubheading('Recomendações:')
+    writeParagraph(aiInterpretation.suggestion)
+  } else {
+    // Either a saved interpretation exists, or no AI data is available —
+    // render the text we have and fall back to the score-based summary.
+    const finalInterpretation =
+      interpretation.trim() || buildInterpretation(input.type, input.score)
+    writeParagraph(finalInterpretation)
+  }
+  y += 4
 
   // --- Signature ---
-  y += 14
+  ensureSpace(20)
+  y += 10
   doc.setDrawColor(100, 116, 139)
   doc.setLineWidth(0.3)
   doc.line(marginX + 30, y, marginX + 130, y)
