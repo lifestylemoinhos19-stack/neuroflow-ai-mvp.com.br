@@ -9,11 +9,11 @@ export const CLINIC_BRANDING = {
   whatsapp: '51 3282-6929',
   logoUrl: casaBrancaLogo,
   colors: {
-    primary: '#0f4c81',
-    secondary: '#1a73e8',
-    accent: '#e8f4fd',
-    dark: '#0a2540',
-    medium: '#475569',
+    primary: '#7B5B3A',
+    secondary: '#C4A35A',
+    accent: '#FAF5EB',
+    dark: '#3E2723',
+    medium: '#6D5D4B',
   },
 } as const
 

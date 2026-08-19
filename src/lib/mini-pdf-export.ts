@@ -58,8 +58,8 @@ export function exportMiniPdf(report: MiniReportData): void {
   .pos{background:#fef3c7;font-weight:600}
   .neg{color:${c.medium}}
   .alert{background:#fef3c7;border-left:4px solid #f59e0b;padding:12px;margin-bottom:8px;font-size:14px}
-  .fb{background:${c.accent};border:1px solid #bfdbfe;border-radius:8px;padding:16px;font-size:14px;margin-bottom:12px}
-  .warn{background:${c.accent};border:1px solid #bfdbfe;border-radius:8px;padding:12px;font-size:12px;color:${c.primary};margin-top:16px}
+  .fb{background:${c.accent};border:1px solid ${c.secondary};border-radius:8px;padding:16px;font-size:14px;margin-bottom:12px}
+  .warn{background:${c.accent};border:1px solid ${c.secondary};border-radius:8px;padding:12px;font-size:12px;color:${c.primary};margin-top:16px}
   ${getBrandCss()}
 </style>
 </head>

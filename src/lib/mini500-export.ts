@@ -1,6 +1,13 @@
 import { Mini500ModuleResult } from '@/lib/mini500-scoring'
 import { ClinicalInterpretation } from '@/lib/mini500-interpretation'
 import { Mini500PatientInfo } from '@/services/mini500-service'
+import {
+  CLINIC_BRANDING,
+  getBrandHeaderHtml,
+  getBrandFooterHtml,
+  getBrandCss,
+  getSignatureHtml,
+} from '@/lib/clinic-branding'
 
 export interface Mini500ExportData {
   patientInfo: Mini500PatientInfo
@@ -18,22 +25,25 @@ function esc(s: string | null | undefined): string {
 export function exportMini500Pdf(data: Mini500ExportData): void {
   const now = new Date().toLocaleString('pt-BR')
   const positive = data.results.filter((r) => r.isPositive)
+  const c = CLINIC_BRANDING.colors
   const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
-<title>Relatório MINI 5.0.0</title><style>
-body{font-family:'Segoe UI',Arial,sans-serif;padding:40px;color:#1e293b;max-width:800px;margin:0 auto}
-h1{color:#0ea5e9;margin:0;font-size:24px}.sub{color:#64748b;margin:4px 0 24px;font-size:14px}
-.sec{margin-bottom:24px}.sec-t{font-size:16px;font-weight:700;color:#0ea5e9;border-bottom:2px solid #38bdf8;padding-bottom:4px;margin-bottom:12px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:14px}.grid .l{color:#64748b}
+<title>Relatório MINI 5.0.0 - ${CLINIC_BRANDING.name}</title><style>
+body{font-family:'Segoe UI',Arial,sans-serif;padding:40px;color:${c.dark};max-width:800px;margin:0 auto}
+h1{color:${c.primary};margin:0;font-size:24px}.sub{color:${c.medium};margin:4px 0 24px;font-size:14px}
+.sec{margin-bottom:24px}.sec-t{font-size:16px;font-weight:700;color:${c.primary};border-bottom:2px solid ${c.secondary};padding-bottom:4px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:14px}.grid .l{color:${c.medium}}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{background:#f0f9ff;padding:8px;text-align:left;border-bottom:2px solid #0ea5e9}
+th{background:${c.accent};padding:8px;text-align:left;border-bottom:2px solid ${c.primary}}
 td{padding:8px;border-bottom:1px solid #e2e8f0}
 .pos{background:#fef3c7;font-weight:600}
 .alert-box{background:#fee2e2;border-left:4px solid #dc2626;padding:12px;margin-bottom:8px;font-size:14px;border-radius:4px}
-.interp-box{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:16px;font-size:14px;margin-bottom:12px}
-.warn{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px;font-size:12px;color:#0ea5e9;margin-top:16px}
+.interp-box{background:${c.accent};border:1px solid ${c.secondary};border-radius:8px;padding:16px;font-size:14px;margin-bottom:12px}
+.warn{background:${c.accent};border:1px solid ${c.secondary};border-radius:8px;padding:12px;font-size:12px;color:${c.primary};margin-top:16px}
+${getBrandCss()}
 </style></head><body>
+${getBrandHeaderHtml()}
 <h1>Relatório MINI 5.0.0</h1>
-<p class="sub">Mini International Neuropsychiatric Interview &middot; ${now}</p>
+<p class="sub">Mini International Neuropsychiatric Interview &middot; ${CLINIC_BRANDING.name} &middot; ${now}</p>
 <div class="sec"><div class="sec-t">Identificação</div><div class="grid">
 <div><span class="l">Nome: </span>${esc(data.patientInfo.name)}</div>
 <div><span class="l">Protocolo: </span>${esc(data.patientInfo.protocol)}</div>
@@ -49,6 +59,8 @@ ${data.results.map((r) => `<tr class="${r.isPositive ? 'pos' : ''}"><td><strong>
 </tbody></table></div>
 ${data.interpretations.length > 0 ? `<div class="sec"><div class="sec-t">Interpretação Clínica</div>${data.interpretations.map((i) => `<div class="interp-box"><strong>${i.moduleLetter} — ${esc(i.title)}</strong> (${esc(i.status)})<br/>${esc(i.interpretation)}<br/><br/><strong>Conduta:</strong> ${esc(i.referral)}</div>`).join('')}</div>` : ''}
 <div class="warn">⚠ Este instrumento é uma ferramenta de triagem e não substitui a avaliação clínica profissional.</div>
+${getSignatureHtml(null, data.patientInfo.protocol)}
+${getBrandFooterHtml()}
 </body></html>`
   const w = window.open('', '_blank')
   if (w) {
