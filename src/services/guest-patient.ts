@@ -313,6 +313,8 @@ export const SCALE_DISPLAY_NAMES: Record<string, string> = {
   FTDRS: 'FTDRS (Demência Frontotemporal)',
   'MINI 5.0.0': 'MINI 5.0.0 (Entrevista Neuropsiquiátrica Internacional)',
   ANAMNESE: 'Anamnese (Entrevista Clínica Inicial)',
+  MARCOS: 'Marcos do Desenvolvimento (Neurodesenvolvimento)',
+  'COG-TRIAGE': 'Triagem Cognitiva NeuroFlow (Cognição)',
 }
 
 export function getScaleDisplayName(scaleType: string): string {
@@ -357,6 +359,10 @@ export function getScaleRoute(scaleType: string): string {
       return '/mini'
     case 'ANAMNESE':
       return '/avaliacao/anamnese'
+    case 'MARCOS':
+      return '/avaliacao/marcos-desenvolvimento'
+    case 'COG-TRIAGE':
+      return '/avaliacao/triagem-cognitiva'
     default:
       return '/avaliacao'
   }

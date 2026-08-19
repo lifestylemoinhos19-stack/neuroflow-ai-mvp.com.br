@@ -238,9 +238,97 @@ export const MEEM_SCALE: ExtraScale = {
   },
 }
 
+// Triagem Cognitiva NeuroFlow — itens com pontuação individual (0-30).
+// Avalia memória, atenção, funções executivas, linguagem e orientação.
+// Complementa MoCA e MEEM e serve como escala atribuível isolada.
+const COGNITIVE_TRIAGE_ITEMS: ScaleItem[] = [
+  // Orientação (5 pontos)
+  { key: 'ct_q1', text: 'Orientação temporal — data atual (dia, mês e ano)', maxScore: 2 },
+  { key: 'ct_q2', text: 'Orientação temporal — dia da semana e estação do ano', maxScore: 1 },
+  { key: 'ct_q3', text: 'Orientação espacial — local onde se encontra', maxScore: 1 },
+  { key: 'ct_q4', text: 'Orientação espacial — cidade e estado', maxScore: 1 },
+  // Atenção (6 pontos)
+  {
+    key: 'ct_q5',
+    text: 'Atenção sustentada — repete sequência diretamente (ex.: 3-1-5-2-4)',
+    maxScore: 2,
+  },
+  { key: 'ct_q6', text: 'Atenção dividida — repete sequência inversa', maxScore: 2 },
+  {
+    key: 'ct_q7',
+    text: 'Atenção seletiva — subtrai 7 de 100 cinco vezes (100-93-86-79-72-65)',
+    maxScore: 2,
+  },
+  // Memória (6 pontos)
+  {
+    key: 'ct_q8',
+    text: 'Memória imediata — repete 3 palavras (ex.: casa, árvore, livro)',
+    maxScore: 1,
+  },
+  { key: 'ct_q9', text: 'Memória recente — lembra de eventos das últimas 24 horas', maxScore: 2 },
+  {
+    key: 'ct_q10',
+    text: 'Memória de evocação — recorda as 3 palavras após intervalo',
+    maxScore: 3,
+  },
+  // Funções executivas (6 pontos)
+  {
+    key: 'ct_q11',
+    text: 'Fluência verbal — nomeia palavras começando com a letra "F" (1 min)',
+    maxScore: 2,
+  },
+  {
+    key: 'ct_q12',
+    text: 'Flexibilidade cognitiva — nomeia semelhanças (ex.: trem e bicicleta)',
+    maxScore: 2,
+  },
+  {
+    key: 'ct_q13',
+    text: 'Inibição e planejamento — desenha um relógio com ponteiros corretos',
+    maxScore: 2,
+  },
+  // Linguagem (4 pontos)
+  { key: 'ct_q14', text: 'Nomeação — nomeia objetos comuns (ex.: relógio, caneta)', maxScore: 2 },
+  { key: 'ct_q15', text: 'Repetição — repete uma frase complexa corretamente', maxScore: 1 },
+  { key: 'ct_q16', text: 'Compreensão — segue instrução de 3 etapas', maxScore: 1 },
+  // Raciocínio visuoespacial (3 pontos)
+  {
+    key: 'ct_q17',
+    text: 'Habilidade visuoespacial — copia figura geométrica (polígonos)',
+    maxScore: 1,
+  },
+  {
+    key: 'ct_q18',
+    text: 'Reconhecimento visuoespacial — identifica figuras sobrepostas',
+    maxScore: 1,
+  },
+  {
+    key: 'ct_q19',
+    text: 'Organização visuoespacial — desenha um cubo em perspectiva',
+    maxScore: 1,
+  },
+]
+
+export const COGNITIVE_TRIAGE_SCALE: ExtraScale = {
+  key: 'cognitive-triage',
+  title: 'Triagem Cognitiva NeuroFlow',
+  subtitle: 'Triagem cognitiva complementar (MoCA/MEEM) — 30 pontos',
+  mode: 'points',
+  items: COGNITIVE_TRIAGE_ITEMS,
+  maxTotal: 30,
+  disclaimer: DISCLAIMER,
+  getSeverity: (s) => {
+    if (s <= 12) return { label: 'Comprometimento cognitivo severo', color: '#ef4444' }
+    if (s <= 18) return { label: 'Comprometimento cognitivo moderado', color: '#f97316' }
+    if (s <= 23) return { label: 'Comprometimento cognitivo leve', color: '#eab308' }
+    return { label: 'Cognição dentro do esperado', color: '#22c55e' }
+  },
+}
+
 export const EXTRA_SCALES: Record<string, ExtraScale> = {
   hamd: HAMD_SCALE,
   hama: HAMA_SCALE,
   asrs18: ASRS_SCALE,
   meem: MEEM_SCALE,
+  'cognitive-triage': COGNITIVE_TRIAGE_SCALE,
 }

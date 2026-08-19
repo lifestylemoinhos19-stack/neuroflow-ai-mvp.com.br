@@ -47,6 +47,16 @@ export default function ClinicalModulesHub() {
       toast({ title: 'Em breve', description: 'Esta avaliação estará disponível em breve.' })
       return
     }
+    // Escalas públicas (/avaliacao/*) não dependem de sessão clínica do
+    // profissional — abrem direto na rota pública de avaliação.
+    const isPublicScale =
+      scale.route?.startsWith('/avaliacao/') ||
+      scale.key === 'milestones' ||
+      scale.key === 'cognitive-evaluation'
+    if (isPublicScale && scale.route) {
+      navigate(scale.route)
+      return
+    }
     if (scale.key === 'mini-5' && scale.route) {
       navigate(scale.route)
       return

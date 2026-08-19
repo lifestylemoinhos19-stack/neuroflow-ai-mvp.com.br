@@ -7,7 +7,15 @@ export interface AssessmentResponse {
 }
 
 export async function saveAssessmentToSupabase(
-  scaleType: 'snap-iv' | 'assq' | 'cbcl' | 'phq9' | 'sds' | 'ybocs',
+  scaleType:
+    | 'snap-iv'
+    | 'assq'
+    | 'cbcl'
+    | 'phq9'
+    | 'sds'
+    | 'ybocs'
+    | 'milestones'
+    | 'cognitive-triage',
   responses: AssessmentResponse[],
   summary: Record<string, unknown>,
 ): Promise<boolean> {
@@ -60,7 +68,15 @@ export async function saveAssessmentToSupabase(
  * renderizados dentro de /avaliacao/* (modo guest).
  */
 export async function saveAssessmentToSupabaseForGuest(
-  scaleType: 'snap-iv' | 'assq' | 'cbcl' | 'phq9' | 'sds' | 'ybocs',
+  scaleType:
+    | 'snap-iv'
+    | 'assq'
+    | 'cbcl'
+    | 'phq9'
+    | 'sds'
+    | 'ybocs'
+    | 'milestones'
+    | 'cognitive-triage',
   responses: AssessmentResponse[],
   summary: Record<string, unknown>,
   guestId?: string | null,

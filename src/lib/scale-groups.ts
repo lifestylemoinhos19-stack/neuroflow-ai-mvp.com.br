@@ -28,10 +28,24 @@ export const SCALE_GROUPS: Record<string, ScaleOption[]> = {
   'TEA (Autismo)': [
     { id: 'assq', label: 'ASSQ', name: 'Questionário de Triagem de Autismo', time: '10-15 min' },
   ],
+  Neurodesenvolvimento: [
+    {
+      id: 'milestones',
+      label: 'MARCOS',
+      name: 'Marcos do Desenvolvimento Infantil (0-6 anos)',
+      time: '10-15 min',
+    },
+  ],
   Cognição: [
     { id: 'moca', label: 'MoCA', name: 'Avaliação Cognitiva Montreal', time: '10-15 min' },
     { id: 'meem', label: 'MEEM', name: 'Mini Exame do Estado Mental', time: '7-10 min' },
     { id: 'fas', label: 'FAS', name: 'Teste de Fluência Verbal', time: '3-5 min' },
+    {
+      id: 'cognitive-triage',
+      label: 'COG-TRIAGE',
+      name: 'Triagem Cognitiva NeuroFlow (0-30)',
+      time: '15-20 min',
+    },
   ],
   TOC: [{ id: 'ybocs', label: 'Y-BOCS', name: 'Escala de Obsessão-Compulsão', time: '15-20 min' }],
   Demência: [

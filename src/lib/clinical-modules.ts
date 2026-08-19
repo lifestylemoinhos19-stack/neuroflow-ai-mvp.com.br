@@ -6,6 +6,8 @@ export interface ScaleInfo {
   estimatedTime: string
   route: string | null
   available: boolean
+  /** Categoria clínica do módulo (ex.: neurodesenvolvimento, cognição). */
+  category?: string
 }
 
 export interface ClinicalModule {
@@ -52,21 +54,23 @@ export const clinicalModules: ClinicalModule[] = [
         key: 'milestones',
         name: 'Marcos do Desenvolvimento',
         purpose:
-          'Avaliação dos marcos do desenvolvimento motor, social e cognitivo da criança em diferentes faixas etárias.',
+          'Avaliação dos marcos do desenvolvimento motor, social e cognitivo da criança em diferentes faixas etárias (0-6 anos), baseada nos marcos do CDC.',
         targetAudience: 'Pais/Cuidadores de crianças de 0 a 6 anos',
         estimatedTime: '10-15 min',
-        route: null,
-        available: false,
+        route: '/avaliacao/marcos-desenvolvimento',
+        available: true,
+        category: 'neurodesenvolvimento',
       },
       {
         key: 'cognitive-evaluation',
         name: 'Avaliação Cognitiva',
         purpose:
-          'Triagem cognitiva para identificar necessidades de avaliação neuropsicológica detalhada.',
+          'Triagem cognitiva complementar (memória, atenção, funções executivas, linguagem e orientação) que integra MoCA, MEEM e a Triagem Cognitiva NeuroFlow (0-30 pontos).',
         targetAudience: 'Adolescentes e Adultos',
         estimatedTime: '15-20 min',
-        route: null,
-        available: false,
+        route: '/avaliacao/triagem-cognitiva',
+        available: true,
+        category: 'cognicao',
       },
     ],
   },
@@ -92,8 +96,8 @@ export const clinicalModules: ClinicalModule[] = [
           'Triagem de TDAH em adultos através de 18 questões sobre frequência de comportamentos relacionados à atenção e hiperatividade.',
         targetAudience: 'Adultos (18+ anos)',
         estimatedTime: '5-10 min',
-        route: null,
-        available: false,
+        route: '/avaliacao/asrs18',
+        available: true,
       },
     ],
   },

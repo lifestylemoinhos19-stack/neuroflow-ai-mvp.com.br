@@ -12,6 +12,7 @@ import { MocaAssessment } from '@/components/MocaAssessment'
 import { FasAssessment } from '@/components/FasAssessment'
 import { FtdrsAssessment } from '@/components/FtdrsAssessment'
 import { GenericScaleAssessment } from '@/components/GenericScaleAssessment'
+import { MarcosDesenvolvimentoAssessment } from '@/components/MarcosDesenvolvimentoAssessment'
 import { EXTRA_SCALES } from '@/lib/extra-scales-data'
 
 /**
@@ -57,6 +58,16 @@ const SCALE_META: Record<string, { title: string; subtitle: string; time: string
     time: '15-20 min',
   },
   sds: { title: 'Sheehan Disability Scale (SDS)', subtitle: 'Impacto funcional', time: '3-5 min' },
+  'marcos-desenvolvimento': {
+    title: 'Marcos do Desenvolvimento Infantil (0-6 anos)',
+    subtitle: 'Triagem do neurodesenvolvimento',
+    time: '10-15 min',
+  },
+  'cognitive-triage': {
+    title: 'Triagem Cognitiva NeuroFlow',
+    subtitle: 'Triagem cognitiva complementar (MoCA/MEEM)',
+    time: '15-20 min',
+  },
 }
 
 /**
@@ -70,6 +81,9 @@ function normalizeScaleType(raw: string | undefined): string | undefined {
   const lower = raw.toLowerCase().trim()
   // Caso especial: MINI 5.0.0 (pode chegar como "mini-5.0.0", "mini 5.0.0", etc.)
   if (/^mini[\s._-]*5/.test(lower)) return 'mini500'
+  // Casos especiais: siglas que não colapsam diretamente para a chave do SCALE_META.
+  if (lower === 'marcos') return 'marcos-desenvolvimento'
+  if (lower === 'cog-triage' || lower === 'cogtriage') return 'cognitive-triage'
   // Demais escalas: remove hifens, espaços e underscores (gad-7 → gad7, y-bocs → ybocs)
   return lower.replace(/[\s_-]/g, '')
 }
@@ -170,10 +184,13 @@ function ScaleContent({ scaleType }: { scaleType: string }) {
       return <FasAssessment />
     case 'ftdrs':
       return <FtdrsAssessment />
+    case 'marcos-desenvolvimento':
+      return <MarcosDesenvolvimentoAssessment />
     case 'hamd':
     case 'hama':
     case 'asrs18':
     case 'meem':
+    case 'cognitive-triage':
       return <GenericScaleAssessment scale={EXTRA_SCALES[scaleType]} />
     default:
       return null

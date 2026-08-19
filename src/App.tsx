@@ -118,6 +118,8 @@ function AppInner() {
         <Route path="/avaliacao/asrs18" element={<PublicScaleAssessment />} />
         <Route path="/avaliacao/moca" element={<PublicScaleAssessment />} />
         <Route path="/avaliacao/meem" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/triagem-cognitiva" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/marcos-desenvolvimento" element={<PublicScaleAssessment />} />
         <Route path="/avaliacao/ybocs" element={<PublicScaleAssessment />} />
         <Route path="/avaliacao/fas" element={<PublicScaleAssessment />} />
         <Route path="/avaliacao/ftdrs" element={<PublicScaleAssessment />} />
