@@ -55,6 +55,7 @@ import Gad7Page from '@/pages/Gad7Page'
 import Mini500 from '@/pages/Mini500'
 import AdminPainel from '@/pages/AdminPainel'
 import AssignScales from '@/pages/AssignScales'
+import AssistedApplicationPage from '@/pages/AssistedApplicationPage'
 import type { ReactNode } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 
@@ -324,6 +325,15 @@ function AppInner() {
             element={
               <AuthGuard requireClinical>
                 <IndicatorsDashboard />
+              </AuthGuard>
+            }
+          />
+          {/* /aplicacao-assistida: admin, doctor, staff (modo assistido por voz). */}
+          <Route
+            path="/aplicacao-assistida/:scaleType/:assignmentId"
+            element={
+              <AuthGuard requireStaff>
+                <AssistedApplicationPage />
               </AuthGuard>
             }
           />

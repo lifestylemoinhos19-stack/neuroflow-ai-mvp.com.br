@@ -36,8 +36,11 @@ import {
   AlertOctagon,
   QrCode,
   FileDown,
+  Headphones,
 } from 'lucide-react'
 import { generateLaudoPDF } from '@/lib/laudo-pdf'
+import { normalizeAssistedScaleType } from '@/lib/assisted-scales-data'
+import { Link } from 'react-router-dom'
 import CalmExplorerQRCard from '@/components/CalmExplorerQRCard'
 import {
   Select,
@@ -427,22 +430,37 @@ export default function AdminPainel() {
                                 setDeleteTarget({ type: 'session', id: t.id, name: t.type })
                               }
                               extra={
-                                t.status === 'completed' ? (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950"
-                                    onClick={() => handleGenerateLaudo(t)}
-                                    disabled={laudoGenerating === t.id}
-                                    title="Gerar Laudo PDF"
-                                  >
-                                    {laudoGenerating === t.id ? (
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                      <FileDown className="h-4 w-4" />
-                                    )}
-                                  </Button>
-                                ) : undefined
+                                <>
+                                  {normalizeAssistedScaleType(t.type) && (
+                                    <Button
+                                      asChild
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-amber-400 hover:text-amber-300 hover:bg-amber-950"
+                                      title="Aplicação Assistida (voz)"
+                                    >
+                                      <Link to={`/aplicacao-assistida/${encodeURIComponent(t.type)}/${t.id}`}>
+                                        <Headphones className="h-4 w-4" />
+                                      </Link>
+                                    </Button>
+                                  )}
+                                  {t.status === 'completed' ? (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950"
+                                      onClick={() => handleGenerateLaudo(t)}
+                                      disabled={laudoGenerating === t.id}
+                                      title="Gerar Laudo PDF"
+                                    >
+                                      {laudoGenerating === t.id ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <FileDown className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  ) : undefined}
+                                </>
                               }
                             />
                           </TableCell>
