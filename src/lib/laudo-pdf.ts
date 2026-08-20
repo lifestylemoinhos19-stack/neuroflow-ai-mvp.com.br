@@ -55,11 +55,32 @@ async function resolveRealSessionId(testId: string): Promise<{
 
   const { data: assignment } = await supabase
     .from('scale_assignments')
-    .select('id, session_id')
+    .select('id, session_id, guest_id, scale_type')
     .eq('id', testId)
     .maybeSingle()
   if (assignment) {
-    return { sessionId: assignment.session_id ?? null, isAssignment: true }
+    if (assignment.session_id) {
+      return { sessionId: assignment.session_id, isAssignment: true }
+    }
+
+    if (assignment.guest_id && assignment.scale_type) {
+      const normalizedScaleType = assignment.scale_type.toLowerCase().replace(/[-\s.]/g, '')
+
+      const { data: orphanSession } = await supabase
+        .from('anamnesis_sessions')
+        .select('id')
+        .eq('metadata->>guest_id', assignment.guest_id)
+        .eq('metadata->>scaleType', normalizedScaleType)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (orphanSession) {
+        return { sessionId: orphanSession.id, isAssignment: true }
+      }
+    }
+
+    return { sessionId: null, isAssignment: true }
   }
   return { sessionId: null, isAssignment: false }
 }
