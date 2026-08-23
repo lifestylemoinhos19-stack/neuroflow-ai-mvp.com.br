@@ -146,27 +146,25 @@ async function resolveRealSessionId(testId: string): Promise<{
         )
       }
 
-      // Nível 3 (Último recurso): busca por question_key compatível em anamnesis_responses
+      // Nível 3 (Último recurso): busca por question_key compatível via RPC SECURITY DEFINER
       const scalePrefix = assignment.scale_type.toLowerCase().replace(/[-\s.]/g, '')
-      const { data: matchResp, error: matchErr } = await supabase
-        .from('anamnesis_responses')
-        .select('session_id')
-        .ilike('question_key', `${scalePrefix}%`)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+      const { data: matchResp, error: matchErr } = await (supabase.rpc as any)(
+        'find_session_by_question_prefix',
+        { p_prefix: scalePrefix },
+      )
 
-      if (matchResp?.session_id) {
-        return { sessionId: matchResp.session_id, isAssignment: true }
+      const matchRows = matchResp as { session_id: string }[] | null
+      if (matchRows && matchRows.length > 0 && matchRows[0]?.session_id) {
+        return { sessionId: matchRows[0].session_id, isAssignment: true }
       }
       if (matchErr) {
         console.warn(
-          '[resolveRealSessionId] Nível 3 (question_key ilike) falhou:',
+          '[resolveRealSessionId] Nível 3 (RPC find_session_by_question_prefix) falhou:',
           matchErr.message,
         )
       } else {
         console.warn(
-          '[resolveRealSessionId] Nível 3 (question_key ilike) não encontrou respostas com prefixo:',
+          '[resolveRealSessionId] Nível 3 (RPC find_session_by_question_prefix) não encontrou respostas com prefixo:',
           scalePrefix,
         )
       }
