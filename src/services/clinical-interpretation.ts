@@ -10,6 +10,10 @@ import {
 import { assqQuestions, snapQuestions, interpretSnapIV } from '@/lib/assessment-data'
 import {
   generateScreening,
+  snapKeys as screeningSnapKeys,
+  snapLegacyKeys,
+  meemKeys,
+  mocaKeys,
   asrs18Keys,
   hamdKeys,
   hamaKeys,
@@ -80,6 +84,10 @@ function scoreQuestionnaire(responses: RawResponse[], keys: string[]): number {
   }, 0)
 }
 
+function hasAnyKey(responses: RawResponse[], keys: string[]): boolean {
+  return keys.some((key) => responses.some((resp) => resp.question_key === key))
+}
+
 function getSingleScore(responses: RawResponse[], key: string): number | null {
   const r = responses.find((resp) => resp.question_key === key)
   return r ? parseValue(r.response_value) : null
@@ -98,27 +106,35 @@ export async function getSessionInterpretation(
   const phq9Keys = phq9Questions.map((q: any) => q.key as string)
   const gad7Keys = gad7Questions.map((q: any) => q.key as string)
   const assqKeys = assqQuestions.map((q) => q.key)
-  const snapKeys = snapQuestions.map((q) => q.key)
 
   const phq9Score = scoreQuestionnaire(raw, phq9Keys)
   const gad7Score = scoreQuestionnaire(raw, gad7Keys)
   const assqScore = scoreQuestionnaire(raw, assqKeys)
 
+  const hasSnapData = hasAnyKey(raw, screeningSnapKeys) || hasAnyKey(raw, snapLegacyKeys)
   const snapAnswers: Record<string, number> = {}
-  snapKeys.forEach((key) => {
-    const r = raw.find((resp) => resp.question_key === key)
-    snapAnswers[key] = r ? parseValue(r.response_value) : 0
-  })
+  for (let i = 1; i <= 18; i++) {
+    const newKey = `snapiv_q${i}`
+    const legacyKey = `snap_${i}`
+    const rNew = raw.find((resp) => resp.question_key === newKey)
+    const rLegacy = raw.find((resp) => resp.question_key === legacyKey)
+    const r = rNew ?? rLegacy
+    snapAnswers[newKey] = r ? parseValue(r.response_value) : 0
+  }
   const snapResult = interpretSnapIV(snapAnswers)
-  const snapIvScore = snapResult.average
+  const snapIvScore = hasSnapData ? snapResult.average : null
 
-  const asrs18Score = scoreQuestionnaire(raw, asrs18Keys)
-  const mocaScore = getSingleScore(raw, 'moca_total')
-  const meemScore = getSingleScore(raw, 'meem_total')
-  const hamdScore = scoreQuestionnaire(raw, hamdKeys)
-  const hamaScore = scoreQuestionnaire(raw, hamaKeys)
-  const ybocsScore = scoreQuestionnaire(raw, ybocsKeys)
-  const sdsScore = scoreQuestionnaire(raw, sdsKeys)
+  const asrs18Score = hasAnyKey(raw, asrs18Keys) ? scoreQuestionnaire(raw, asrs18Keys) : null
+  const mocaScore = hasAnyKey(raw, mocaKeys)
+    ? scoreQuestionnaire(raw, mocaKeys)
+    : getSingleScore(raw, 'moca_total')
+  const meemScore = hasAnyKey(raw, meemKeys)
+    ? scoreQuestionnaire(raw, meemKeys)
+    : getSingleScore(raw, 'meem_total')
+  const hamdScore = hasAnyKey(raw, hamdKeys) ? scoreQuestionnaire(raw, hamdKeys) : null
+  const hamaScore = hasAnyKey(raw, hamaKeys) ? scoreQuestionnaire(raw, hamaKeys) : null
+  const ybocsScore = hasAnyKey(raw, ybocsKeys) ? scoreQuestionnaire(raw, ybocsKeys) : null
+  const sdsScore = hasAnyKey(raw, sdsKeys) ? scoreQuestionnaire(raw, sdsKeys) : null
 
   const { data: session } = await supabase
     .from('anamnesis_sessions')

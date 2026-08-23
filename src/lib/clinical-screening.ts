@@ -27,6 +27,10 @@ export interface ScreeningResult {
   hasData: boolean
 }
 
+export const snapKeys: string[] = Array.from({ length: 18 }, (_, i) => `snapiv_q${i + 1}`)
+export const snapLegacyKeys: string[] = Array.from({ length: 18 }, (_, i) => `snap_${i + 1}`)
+export const meemKeys: string[] = Array.from({ length: 10 }, (_, i) => `meem_q${i + 1}`)
+export const mocaKeys: string[] = Array.from({ length: 30 }, (_, i) => `moca_q${i + 1}`)
 export const asrs18Keys: string[] = Array.from({ length: 18 }, (_, i) => `asrs_q${i + 1}`)
 export const hamdKeys: string[] = Array.from({ length: 17 }, (_, i) => `hamd_q${i + 1}`)
 export const hamaKeys: string[] = Array.from({ length: 14 }, (_, i) => `hama_q${i + 1}`)
