@@ -85,23 +85,18 @@ async function resolveRealSessionId(testId: string): Promise<{
     if (assignment.scale_type) {
       const normalizedScaleType = assignment.scale_type.toLowerCase().replace(/[-\s.]/g, '')
 
-      // Nível 2.2: busca por metadata->>scaleType
-      let queryType = supabase
-        .from('anamnesis_sessions')
-        .select('id')
-        .eq('metadata->>scaleType', normalizedScaleType)
+      // Nível 2.2: busca por metadata->>scaleType via RPC SECURITY DEFINER
+      const { data: orphanRows, error: orphanErr } = await (supabase.rpc as any)(
+        'find_session_by_scale_type',
+        {
+          p_scale_type: normalizedScaleType,
+          p_guest_id: assignment.guest_id || null,
+        },
+      )
+      const orphanSession = orphanRows?.[0] || null
 
-      if (assignment.guest_id) {
-        queryType = queryType.eq('metadata->>guest_id', assignment.guest_id)
-      }
-
-      const { data: orphanSession, error: orphanErr } = await queryType
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-
-      if (orphanSession) {
-        return { sessionId: orphanSession.id, isAssignment: true }
+      if (orphanSession?.session_id) {
+        return { sessionId: orphanSession.session_id, isAssignment: true }
       }
       if (orphanErr) {
         console.warn(
@@ -114,26 +109,20 @@ async function resolveRealSessionId(testId: string): Promise<{
         )
       }
 
-      // Nível 2.3 (NOVO): busca por metadata->>scale_name, metadata->>scale_key ou scale_type (ex: Gad7Assessment grava scale_key: 'gad7' e scale_name: 'GAD-7')
+      // Nível 2.3: busca por metadata->>scale_name, metadata->>scale_key ou scale_type via RPC SECURITY DEFINER
       const scaleKeyAlt = assignment.scale_type.toLowerCase().replace(/[-\s.]/g, '')
-      let queryAlt = supabase
-        .from('anamnesis_sessions')
-        .select('id')
-        .or(
-          `metadata->>scale_name.ilike.%${assignment.scale_type}%,metadata->>scale_key.eq.${scaleKeyAlt},metadata->>scale_type.ilike.%${assignment.scale_type}%`,
-        )
+      const { data: altRows, error: altErr } = await (supabase.rpc as any)(
+        'find_session_by_scale_metadata',
+        {
+          p_scale_name: assignment.scale_type,
+          p_scale_key: scaleKeyAlt,
+          p_guest_id: assignment.guest_id || null,
+        },
+      )
+      const altSession = altRows?.[0] || null
 
-      if (assignment.guest_id) {
-        queryAlt = queryAlt.eq('metadata->>guest_id', assignment.guest_id)
-      }
-
-      const { data: altSession, error: altErr } = await queryAlt
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-
-      if (altSession) {
-        return { sessionId: altSession.id, isAssignment: true }
+      if (altSession?.session_id) {
+        return { sessionId: altSession.session_id, isAssignment: true }
       }
       if (altErr) {
         console.warn(
