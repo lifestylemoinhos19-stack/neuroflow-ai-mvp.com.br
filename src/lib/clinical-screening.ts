@@ -25,7 +25,7 @@ export interface ScreeningResult {
   hasData: boolean
 }
 
-export const asrs18Keys: string[] = Array.from({ length: 18 }, (_, i) => `asrs_${i + 1}`)
+export const asrs18Keys: string[] = Array.from({ length: 18 }, (_, i) => `asrs_q${i + 1}`)
 
 export function generateScreening(scores: ScaleScores): ScreeningResult {
   const findings: ScreeningFinding[] = []
