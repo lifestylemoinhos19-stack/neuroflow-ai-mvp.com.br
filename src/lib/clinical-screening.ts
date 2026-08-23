@@ -8,6 +8,7 @@ export interface ScaleScores {
   meem: number | null
   hamd: number | null
   hama: number | null
+  ybocs: number | null
 }
 
 export interface ScreeningFinding {
@@ -28,6 +29,7 @@ export interface ScreeningResult {
 export const asrs18Keys: string[] = Array.from({ length: 18 }, (_, i) => `asrs_q${i + 1}`)
 export const hamdKeys: string[] = Array.from({ length: 17 }, (_, i) => `hamd_q${i + 1}`)
 export const hamaKeys: string[] = Array.from({ length: 14 }, (_, i) => `hama_q${i + 1}`)
+export const ybocsKeys: string[] = Array.from({ length: 10 }, (_, i) => `ybocs_q${i + 1}`)
 
 export function generateScreening(scores: ScaleScores): ScreeningResult {
   const findings: ScreeningFinding[] = []
@@ -113,6 +115,15 @@ export function generateScreening(scores: ScaleScores): ScreeningResult {
       threshold: '≥ 8',
     })
   }
+  if (scores.ybocs !== null && scores.ybocs >= 8) {
+    findings.push({
+      category: 'TOC',
+      suggestion: 'Sinais sugestivos de TOC',
+      scale: 'Y-BOCS',
+      score: scores.ybocs,
+      threshold: '≥ 8',
+    })
+  }
 
   const comorbidities = detectComorbidities(findings)
   const fullSuggestion = buildSuggestion(findings, comorbidities)
@@ -161,7 +172,8 @@ export function computeGlobalSeverity(scores: ScaleScores): 'low' | 'moderate' |
     (scores.moca !== null && scores.moca < 18) ||
     (scores.meem !== null && scores.meem < 18) ||
     (scores.hamd !== null && scores.hamd >= 20) ||
-    (scores.hama !== null && scores.hama >= 20)
+    (scores.hama !== null && scores.hama >= 20) ||
+    (scores.ybocs !== null && scores.ybocs >= 24)
 
   if (hasHighSeverity) return 'high'
   return 'moderate'

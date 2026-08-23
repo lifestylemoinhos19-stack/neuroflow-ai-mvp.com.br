@@ -13,6 +13,7 @@ import {
   asrs18Keys,
   hamdKeys,
   hamaKeys,
+  ybocsKeys,
   type ScreeningFinding,
   computeGlobalSeverity,
 } from '@/lib/clinical-screening'
@@ -48,6 +49,7 @@ export interface InterpretationResult {
   meemScore: number | null
   hamdScore: number | null
   hamaScore: number | null
+  ybocsScore: number | null
   findings: ScreeningFinding[]
   comorbidities: string[]
   /** Análise por domínio com severidade estimada (linguagem cautelosa). */
@@ -112,6 +114,7 @@ export async function getSessionInterpretation(
   const meemScore = getSingleScore(raw, 'meem_total')
   const hamdScore = scoreQuestionnaire(raw, hamdKeys)
   const hamaScore = scoreQuestionnaire(raw, hamaKeys)
+  const ybocsScore = scoreQuestionnaire(raw, ybocsKeys)
 
   const { data: session } = await supabase
     .from('anamnesis_sessions')
@@ -141,6 +144,7 @@ export async function getSessionInterpretation(
     meemScore,
     hamdScore,
     hamaScore,
+    ybocsScore,
   ]
   const hasScaleData = allScores.some((s) => s !== null && s !== 0)
 
@@ -154,6 +158,7 @@ export async function getSessionInterpretation(
     meem: meemScore,
     hamd: hamdScore,
     hama: hamaScore,
+    ybocs: ybocsScore || null,
   })
 
   let suggestion = screening.fullSuggestion
@@ -172,6 +177,7 @@ export async function getSessionInterpretation(
     meemScore,
     hamdScore,
     hamaScore,
+    ybocsScore: ybocsScore || null,
     cognitiveVrc,
   })
   const hypotheses = buildHypotheses(screening.findings)
@@ -185,6 +191,7 @@ export async function getSessionInterpretation(
     meemScore,
     hamdScore,
     hamaScore,
+    ybocsScore: ybocsScore || null,
     cognitiveVrc,
   })
   suggestion += `\n\n${hypotheses.join('\n')}`
@@ -223,6 +230,7 @@ export async function getSessionInterpretation(
       meemScore: null,
       hamdScore: null,
       hamaScore: null,
+      ybocsScore: null,
       snapIvInattention: null,
       snapIvHyperactivity: null,
       globalSeverity: 'low',
@@ -250,6 +258,7 @@ export async function getSessionInterpretation(
     meemScore,
     hamdScore,
     hamaScore,
+    ybocsScore: ybocsScore || null,
     snapIvInattention: snapResult.inattentionAvg || null,
     snapIvHyperactivity: snapResult.hyperactivityAvg || null,
     globalSeverity: computeGlobalSeverity({
@@ -262,6 +271,7 @@ export async function getSessionInterpretation(
       meem: meemScore,
       hamd: hamdScore,
       hama: hamaScore,
+      ybocs: ybocsScore || null,
     }),
     findings: screening.findings,
     comorbidities: screening.comorbidities,
@@ -287,6 +297,7 @@ interface ScoreBag {
   meemScore: number | null
   hamdScore: number | null
   hamaScore: number | null
+  ybocsScore?: number | null
   cognitiveVrc: number | null
 }
 
@@ -396,10 +407,29 @@ function domainCognicao(s: ScoreBag): { severity: Sev; descricao: string } {
   return { severity: sev, descricao: parts.join(' ') }
 }
 
-function domainComportamento(): {
+function domainComportamento(s: ScoreBag): {
   severity: Sev
   descricao: string
 } {
+  if (s.ybocsScore !== null && s.ybocsScore !== undefined && s.ybocsScore > 0) {
+    let faixa = 'sintomas subclínicos'
+    let sev: Sev = null
+    if (s.ybocsScore >= 24) {
+      faixa = 'faixa grave'
+      sev = 'alta'
+    } else if (s.ybocsScore >= 16) {
+      faixa = 'faixa moderada'
+      sev = 'moderada'
+    } else if (s.ybocsScore >= 8) {
+      faixa = 'faixa leve'
+      sev = 'baixa'
+    }
+    return {
+      severity: sev,
+      descricao: `Y-BOCS ${s.ybocsScore}/40 — compatível com ${faixa} para obsessões/compulsões.`,
+    }
+  }
+
   // Comportamento no InterpretationResult reflete escalas; o detalhe por escala
   // (Y-BOCS, SDS) entra via laudo-pdf. Aqui sinalizamos apenas ausência de dados
   // diretos, para não inventar.
@@ -459,7 +489,7 @@ function buildDomainAnalysis(s: ScoreBag): DomainAnalysis {
     humor: domainHumor(s),
     ansiedade: domainAnsiedade(s),
     cognicao: domainCognicao(s),
-    comportamento: domainComportamento(),
+    comportamento: domainComportamento(s),
     neurodesenvolvimento: domainNeurodesenvolvimento(s),
   }
 }
@@ -484,6 +514,8 @@ function buildGaps(s: ScoreBag): string[] {
   if (s.meemScore === null) gaps.push('MEEM sem pontuação informada.')
   if (s.hamdScore === null) gaps.push('HAM-D sem pontuação informada.')
   if (s.hamaScore === null) gaps.push('HAM-A sem pontuação informada.')
+  if (s.ybocsScore === null || s.ybocsScore === undefined)
+    gaps.push('Y-BOCS sem pontuação informada.')
   if (s.cognitiveVrc === null) gaps.push('VRC não disponível.')
   return gaps
 }
