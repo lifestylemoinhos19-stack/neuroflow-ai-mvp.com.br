@@ -163,9 +163,10 @@ export default function AdminPainel() {
         guestId: t.guest_id,
       })
       toast.success('Laudo PDF gerado com sucesso.')
-    } catch (e) {
-      toast.error('Erro ao gerar laudo PDF.')
-      console.error(e)
+    } catch (e: any) {
+      const msg = e?.message || 'Erro ao gerar laudo PDF.'
+      toast.error(msg)
+      console.error('Erro ao gerar laudo PDF:', e)
     } finally {
       setLaudoGenerating(null)
     }

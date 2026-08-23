@@ -85,9 +85,10 @@ export function Phq9Assessment() {
       await completeAnamnesisSession(session.id)
 
       // Atualiza o scale_assignments correspondente com o session_id gerado
-      if (guestId) {
-        try {
-          const { error: updateError } = await supabase
+      try {
+        let updated = false
+        if (guestId) {
+          const { data: updatedRows, error: updateError } = await supabase
             .from('scale_assignments')
             .update({
               session_id: session.id,
@@ -96,13 +97,39 @@ export function Phq9Assessment() {
             })
             .eq('guest_id', guestId)
             .eq('scale_type', 'PHQ-9')
+            .select('id')
 
-          if (updateError) {
-            console.error('Erro ao atualizar scale_assignments (PHQ-9):', updateError)
+          if (!updateError && updatedRows && updatedRows.length > 0) {
+            updated = true
+          } else if (updateError) {
+            console.warn('Tentativa com guest_id em scale_assignments (PHQ-9) falhou:', updateError)
           }
-        } catch (err) {
-          console.error('Erro ao atualizar scale_assignments (PHQ-9):', err)
         }
+
+        // Fallback: se não atualizou (guestId null ou 0 linhas afetadas), tenta sem guest_id
+        if (!updated) {
+          const { data: pendingRows } = await supabase
+            .from('scale_assignments')
+            .select('id')
+            .eq('scale_type', 'PHQ-9')
+            .eq('status', 'pending')
+            .is('session_id', null)
+            .order('created_at', { ascending: false })
+            .limit(1)
+
+          if (pendingRows && pendingRows.length > 0) {
+            await supabase
+              .from('scale_assignments')
+              .update({
+                session_id: session.id,
+                status: 'completed',
+                completed_at: new Date().toISOString(),
+              })
+              .eq('id', pendingRows[0].id)
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao atualizar scale_assignments (PHQ-9):', err)
       }
 
       setSaving(false)

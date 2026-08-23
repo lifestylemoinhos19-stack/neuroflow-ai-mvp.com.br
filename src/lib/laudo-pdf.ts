@@ -46,36 +46,56 @@ async function resolveRealSessionId(testId: string): Promise<{
   sessionId: string | null
   isAssignment: boolean
 }> {
-  const { data: session } = await supabase
+  // Nível 1: testId é um ID direto de anamnesis_sessions
+  const { data: session, error: sessionErr } = await supabase
     .from('anamnesis_sessions')
     .select('id')
     .eq('id', testId)
     .maybeSingle()
-  if (session) return { sessionId: session.id, isAssignment: false }
 
-  const { data: assignment } = await supabase
+  if (session) return { sessionId: session.id, isAssignment: false }
+  if (sessionErr) {
+    console.warn(
+      '[resolveRealSessionId] Nível 1 (busca direta por id em anamnesis_sessions) falhou:',
+      sessionErr.message,
+    )
+  }
+
+  // Nível 2: testId é um ID de scale_assignments
+  const { data: assignment, error: assignErr } = await supabase
     .from('scale_assignments')
     .select('id, session_id, guest_id, scale_type')
     .eq('id', testId)
     .maybeSingle()
+
+  if (assignErr) {
+    console.warn('[resolveRealSessionId] Falha ao consultar scale_assignments:', assignErr.message)
+  }
+
   if (assignment) {
+    // 2.1: session_id já vinculado na atribuição
     if (assignment.session_id) {
       return { sessionId: assignment.session_id, isAssignment: true }
     }
+    console.warn(
+      '[resolveRealSessionId] scale_assignment encontrado sem session_id preenchido:',
+      assignment.id,
+    )
 
     if (assignment.scale_type) {
       const normalizedScaleType = assignment.scale_type.toLowerCase().replace(/[-\s.]/g, '')
 
-      let query = supabase
+      // Nível 2.2: busca por metadata->>scaleType
+      let queryType = supabase
         .from('anamnesis_sessions')
         .select('id')
         .eq('metadata->>scaleType', normalizedScaleType)
 
       if (assignment.guest_id) {
-        query = query.eq('metadata->>guest_id', assignment.guest_id)
+        queryType = queryType.eq('metadata->>guest_id', assignment.guest_id)
       }
 
-      const { data: orphanSession } = await query
+      const { data: orphanSession, error: orphanErr } = await queryType
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
@@ -83,10 +103,52 @@ async function resolveRealSessionId(testId: string): Promise<{
       if (orphanSession) {
         return { sessionId: orphanSession.id, isAssignment: true }
       }
+      if (orphanErr) {
+        console.warn(
+          '[resolveRealSessionId] Nível 2.2 (metadata->>scaleType) falhou com erro:',
+          orphanErr.message,
+        )
+      } else {
+        console.warn(
+          '[resolveRealSessionId] Nível 2.2 (metadata->>scaleType) não encontrou sessão compatível.',
+        )
+      }
 
-      // Último fallback: busca por question_key compatível
+      // Nível 2.3 (NOVO): busca por metadata->>scale_name, metadata->>scale_key ou scale_type (ex: Gad7Assessment grava scale_key: 'gad7' e scale_name: 'GAD-7')
+      const scaleKeyAlt = assignment.scale_type.toLowerCase().replace(/[-\s.]/g, '')
+      let queryAlt = supabase
+        .from('anamnesis_sessions')
+        .select('id')
+        .or(
+          `metadata->>scale_name.ilike.%${assignment.scale_type}%,metadata->>scale_key.eq.${scaleKeyAlt},metadata->>scale_type.ilike.%${assignment.scale_type}%`,
+        )
+
+      if (assignment.guest_id) {
+        queryAlt = queryAlt.eq('metadata->>guest_id', assignment.guest_id)
+      }
+
+      const { data: altSession, error: altErr } = await queryAlt
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (altSession) {
+        return { sessionId: altSession.id, isAssignment: true }
+      }
+      if (altErr) {
+        console.warn(
+          '[resolveRealSessionId] Nível 2.3 (metadata->>scale_name / scale_key) falhou:',
+          altErr.message,
+        )
+      } else {
+        console.warn(
+          '[resolveRealSessionId] Nível 2.3 (metadata->>scale_name / scale_key) não encontrou sessão.',
+        )
+      }
+
+      // Nível 3 (Último recurso): busca por question_key compatível em anamnesis_responses
       const scalePrefix = assignment.scale_type.toLowerCase().replace(/[-\s.]/g, '')
-      const { data: matchResp } = await supabase
+      const { data: matchResp, error: matchErr } = await supabase
         .from('anamnesis_responses')
         .select('session_id')
         .ilike('question_key', `${scalePrefix}%`)
@@ -97,10 +159,23 @@ async function resolveRealSessionId(testId: string): Promise<{
       if (matchResp?.session_id) {
         return { sessionId: matchResp.session_id, isAssignment: true }
       }
+      if (matchErr) {
+        console.warn(
+          '[resolveRealSessionId] Nível 3 (question_key ilike) falhou:',
+          matchErr.message,
+        )
+      } else {
+        console.warn(
+          '[resolveRealSessionId] Nível 3 (question_key ilike) não encontrou respostas com prefixo:',
+          scalePrefix,
+        )
+      }
     }
 
     return { sessionId: null, isAssignment: true }
   }
+
+  console.warn('[resolveRealSessionId] Nenhum registro encontrado para testId:', testId)
   return { sessionId: null, isAssignment: false }
 }
 
@@ -118,58 +193,74 @@ async function loadLaudoContext(guestId: string | null, testId: string): Promise
 
   const { sessionId } = await resolveRealSessionId(testId)
 
+  if (!sessionId) {
+    throw new Error(
+      'Não foi possível gerar o laudo: Sessão clínica não encontrada para este registro.',
+    )
+  }
+
   let interpretation = ''
   let aiInterpretation: InterpretationResult | null = null
 
-  if (sessionId) {
-    try {
-      const { data: feedback } = await supabase
-        .from('clinical_feedback')
-        .select('admin_edited_interpretation, system_suggestion, comments')
-        .eq('session_id', sessionId)
-        .maybeSingle()
-      if (feedback) {
-        interpretation =
-          feedback.admin_edited_interpretation ||
-          feedback.system_suggestion ||
-          feedback.comments ||
-          ''
-      }
-    } catch {
-      /* ignore */
+  try {
+    const { data: feedback } = await supabase
+      .from('clinical_feedback')
+      .select('admin_edited_interpretation, system_suggestion, comments')
+      .eq('session_id', sessionId)
+      .maybeSingle()
+    if (feedback) {
+      interpretation =
+        feedback.admin_edited_interpretation ||
+        feedback.system_suggestion ||
+        feedback.comments ||
+        ''
     }
+  } catch {
+    /* ignore */
   }
 
-  if (!interpretation && sessionId) {
-    try {
-      aiInterpretation = await getSessionInterpretation(sessionId)
-    } catch {
-      /* ignore */
-    }
+  try {
+    aiInterpretation = await getSessionInterpretation(sessionId)
+  } catch (err: any) {
+    throw new Error(
+      `Não foi possível gerar o laudo: Falha ao interpretar sessão (${err?.message || 'erro desconhecido'}).`,
+    )
+  }
 
-    if (aiInterpretation && aiInterpretation.hasScaleData) {
-      try {
-        await saveInterpretation(
-          sessionId,
-          aiInterpretation.suggestion,
-          aiInterpretation.suggestion,
-          aiInterpretation.phq9Score,
-          aiInterpretation.gad7Score,
-          aiInterpretation.cognitiveVrc,
-          aiInterpretation.assqScore,
-          aiInterpretation.snapIvScore,
-          aiInterpretation.asrs18Score,
-          aiInterpretation.mocaScore,
-          aiInterpretation.meemScore,
-          aiInterpretation.hamdScore,
-          aiInterpretation.hamaScore,
-          aiInterpretation.snapIvInattention,
-          aiInterpretation.snapIvHyperactivity,
-          aiInterpretation.globalSeverity,
-        )
-      } catch {
-        /* ignore — non-fatal */
-      }
+  if (!aiInterpretation) {
+    throw new Error(
+      'Não foi possível gerar o laudo: Falha ao carregar as respostas criptografadas da sessão.',
+    )
+  }
+
+  if (!aiInterpretation.hasScaleData && !interpretation.trim()) {
+    throw new Error(
+      `Não foi possível gerar o laudo: ${aiInterpretation.suggestion || 'Nenhum dado válido de escala encontrado nesta sessão.'}`,
+    )
+  }
+
+  if (aiInterpretation.hasScaleData) {
+    try {
+      await saveInterpretation(
+        sessionId,
+        aiInterpretation.suggestion,
+        interpretation || aiInterpretation.suggestion,
+        aiInterpretation.phq9Score,
+        aiInterpretation.gad7Score,
+        aiInterpretation.cognitiveVrc,
+        aiInterpretation.assqScore,
+        aiInterpretation.snapIvScore,
+        aiInterpretation.asrs18Score,
+        aiInterpretation.mocaScore,
+        aiInterpretation.meemScore,
+        aiInterpretation.hamdScore,
+        aiInterpretation.hamaScore,
+        aiInterpretation.snapIvInattention,
+        aiInterpretation.snapIvHyperactivity,
+        aiInterpretation.globalSeverity,
+      )
+    } catch {
+      /* ignore — non-fatal */
     }
   }
 

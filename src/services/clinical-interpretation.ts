@@ -191,14 +191,27 @@ export async function getSessionInterpretation(
   }
 
   if (!hasScaleData) {
+    const rawCount = raw.length
+    const foundKeys = raw.map((r) => r.question_key).filter(Boolean)
+    let noDataMessage =
+      'Nenhum dado de escalas encontrado para esta sessão. Complete as escalas para gerar uma interpretação contextual.'
+    let gapMessage = 'Nenhum dado de escalas fornecido para esta sessão.'
+
+    if (rawCount > 0) {
+      const keysPreview =
+        foundKeys.slice(0, 10).join(', ') +
+        (foundKeys.length > 10 ? ` (+${foundKeys.length - 10} outras)` : '')
+      noDataMessage = `Dados encontrados (${rawCount} respostas), mas formato não reconhecido por nenhuma escala padrão (chaves: ${keysPreview}).`
+      gapMessage = `Formato de respostas não reconhecido: ${keysPreview}`
+    }
+
     return {
       phq9Score: 0,
       gad7Score: 0,
       phq9Severity: getPhq9Severity(0),
       gad7Severity: getGad7Severity(0),
       cognitiveVrc,
-      suggestion:
-        'Nenhum dado de escalas encontrado para esta sessão. Complete as escalas para gerar uma interpretação contextual.',
+      suggestion: noDataMessage,
       hasComorbidity: false,
       hasScaleData: false,
       assqScore: null,
@@ -215,7 +228,7 @@ export async function getSessionInterpretation(
       comorbidities: [],
       domainAnalysis,
       hypotheses: [],
-      gaps: ['Nenhum dado de escalas fornecido para esta sessão.'],
+      gaps: [gapMessage],
     }
   }
 

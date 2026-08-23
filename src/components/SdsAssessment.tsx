@@ -105,9 +105,10 @@ export function SdsAssessment() {
     }
     await completeAnamnesisSession(sessionId)
 
-    if (guestId) {
-      try {
-        await supabase
+    try {
+      let updated = false
+      if (guestId) {
+        const { data: updatedRows, error: updateError } = await supabase
           .from('scale_assignments')
           .update({
             session_id: sessionId,
@@ -116,9 +117,39 @@ export function SdsAssessment() {
           })
           .eq('guest_id', guestId)
           .eq('scale_type', 'SDS')
-      } catch (err) {
-        console.error('Erro ao atualizar scale_assignments (SDS):', err)
+          .select('id')
+
+        if (!updateError && updatedRows && updatedRows.length > 0) {
+          updated = true
+        } else if (updateError) {
+          console.warn('Tentativa com guest_id em scale_assignments (SDS) falhou:', updateError)
+        }
       }
+
+      // Fallback: se não atualizou (guestId null ou 0 linhas afetadas), tenta sem guest_id
+      if (!updated) {
+        const { data: pendingRows } = await supabase
+          .from('scale_assignments')
+          .select('id')
+          .eq('scale_type', 'SDS')
+          .eq('status', 'pending')
+          .is('session_id', null)
+          .order('created_at', { ascending: false })
+          .limit(1)
+
+        if (pendingRows && pendingRows.length > 0) {
+          await supabase
+            .from('scale_assignments')
+            .update({
+              session_id: sessionId,
+              status: 'completed',
+              completed_at: new Date().toISOString(),
+            })
+            .eq('id', pendingRows[0].id)
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao atualizar scale_assignments (SDS):', err)
     }
 
     setSaving(false)
