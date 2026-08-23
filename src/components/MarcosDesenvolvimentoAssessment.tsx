@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { AssessmentProgress } from '@/components/AssessmentProgress'
+import { supabase } from '@/lib/supabase/client'
 import {
   createAnamnesisSessionForGuest,
   saveAnamnesisResponses,
@@ -87,6 +88,27 @@ export function MarcosDesenvolvimentoAssessment() {
       return
     }
     await completeAnamnesisSession(session.id)
+
+    // Atualiza o scale_assignments correspondente com o session_id gerado
+    if (guestId) {
+      try {
+        const { error: updateError } = await supabase
+          .from('scale_assignments')
+          .update({
+            session_id: session.id,
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+          })
+          .eq('guest_id', guestId)
+          .eq('scale_type', 'MARCOS')
+
+        if (updateError) {
+          console.error('Erro ao atualizar scale_assignments (MARCOS):', updateError)
+        }
+      } catch (err) {
+        console.error('Erro ao atualizar scale_assignments (MARCOS):', err)
+      }
+    }
 
     setSaving(false)
     localStorage.removeItem(MILESTONES_DRAFT_KEY)

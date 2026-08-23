@@ -4,7 +4,12 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { AssessmentProgress } from '@/components/AssessmentProgress'
-import { saveAssessmentToSupabaseForGuest } from '@/services/assessment'
+import { supabase } from '@/lib/supabase/client'
+import {
+  createAnamnesisSessionForGuest,
+  saveAnamnesisResponses,
+  completeAnamnesisSession,
+} from '@/services/anamnesis'
 import {
   phq9Questions,
   phq9Options,
@@ -61,24 +66,55 @@ export function Phq9Assessment() {
       question_label: q.text,
       response_value: answers[q.key] ?? 0,
     }))
-    const ok = await saveAssessmentToSupabaseForGuest(
-      'phq9',
-      responses,
-      {
-        totalScore,
-        severity: severity.label,
-      },
-      guestId,
-    )
-    setSaving(false)
-    if (ok) {
+
+    try {
+      const session = await createAnamnesisSessionForGuest(guestId)
+      if (!session) {
+        setSaving(false)
+        toast.error('Não foi possível criar a sessão. Verifique sua identificação.')
+        return
+      }
+
+      const saved = await saveAnamnesisResponses(session.id, responses)
+      if (!saved) {
+        setSaving(false)
+        toast.error('Erro ao salvar avaliação.')
+        return
+      }
+
+      await completeAnamnesisSession(session.id)
+
+      // Atualiza o scale_assignments correspondente com o session_id gerado
+      if (guestId) {
+        try {
+          const { error: updateError } = await supabase
+            .from('scale_assignments')
+            .update({
+              session_id: session.id,
+              status: 'completed',
+              completed_at: new Date().toISOString(),
+            })
+            .eq('guest_id', guestId)
+            .eq('scale_type', 'PHQ-9')
+
+          if (updateError) {
+            console.error('Erro ao atualizar scale_assignments (PHQ-9):', updateError)
+          }
+        } catch (err) {
+          console.error('Erro ao atualizar scale_assignments (PHQ-9):', err)
+        }
+      }
+
+      setSaving(false)
       localStorage.removeItem(PHQ9_DRAFT_KEY)
       setShowResult(true)
       setTimeout(() => topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
       toast.success('Avaliação PHQ-9 salva com sucesso!', {
         style: { background: '#00FFFF', color: '#0A192F', fontWeight: 600 },
       })
-    } else {
+    } catch (err) {
+      setSaving(false)
+      console.error('Erro no fluxo PHQ-9:', err)
       toast.error('Erro ao salvar avaliação.')
     }
   }

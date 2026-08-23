@@ -115,6 +115,27 @@ export function Gad7Assessment() {
         await completeAnamnesisSession(sessionId)
       }
 
+      // Atualiza o scale_assignments correspondente com o session_id gerado
+      if (guestId) {
+        try {
+          const { error: updateError } = await supabase
+            .from('scale_assignments')
+            .update({
+              session_id: sessionId,
+              status: 'completed',
+              completed_at: new Date().toISOString(),
+            })
+            .eq('guest_id', guestId)
+            .eq('scale_type', 'GAD-7')
+
+          if (updateError) {
+            console.error('Erro ao atualizar scale_assignments (GAD-7):', updateError)
+          }
+        } catch (err) {
+          console.error('Erro ao atualizar scale_assignments (GAD-7):', err)
+        }
+      }
+
       setResult({ score: totalScore, severity: getGad7Severity(totalScore) })
     } catch {
       setError('Erro ao salvar respostas. Tente novamente.')
