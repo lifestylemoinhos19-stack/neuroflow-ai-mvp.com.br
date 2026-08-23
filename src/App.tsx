@@ -244,7 +244,7 @@ function AppInner() {
           <Route
             path="/dashboard"
             element={
-              <RoleGate allow={['admin', 'doctor', 'hospede']} denyStaff>
+              <RoleGate allow={['admin', 'doctor', 'paciente']} denyStaff>
                 <Dashboard />
               </RoleGate>
             }
@@ -264,7 +264,7 @@ function AppInner() {
           <Route
             path="/historico"
             element={
-              <RoleGate allow={['admin', 'doctor', 'hospede']} denyStaff>
+              <RoleGate allow={['admin', 'doctor', 'paciente']} denyStaff>
                 <History />
               </RoleGate>
             }
@@ -273,7 +273,7 @@ function AppInner() {
           <Route
             path="/documentos"
             element={
-              <RoleGate allow={['admin', 'doctor', 'hospede']} denyStaff>
+              <RoleGate allow={['admin', 'doctor', 'paciente']} denyStaff>
                 <Documents />
               </RoleGate>
             }

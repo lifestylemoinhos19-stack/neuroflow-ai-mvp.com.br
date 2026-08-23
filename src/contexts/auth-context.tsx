@@ -105,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = !!profile && profile.role === 'admin'
   const isDoctor = !!profile && profile.role === 'doctor'
   const isStaff = !!profile && profile.role === 'staff'
-  const isPatient = !!profile && profile.role === 'hospede'
+  const isPatient = !!profile && profile.role === 'paciente'
   const bleOnboardingCompleted = onboarding
     ? !onboarding.is_first_access
     : !!profile?.has_completed_onboarding
@@ -229,7 +229,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         {
           id: data.user.id,
           full_name: email.split('@')[0],
-          role: 'hospede',
+          role: 'paciente',
           privacy_consent: privacyConsent,
           privacy_consent_accepted_at: new Date().toISOString(),
         },
@@ -281,7 +281,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: user.id,
         privacy_consent: true,
         privacy_consent_accepted_at: new Date().toISOString(),
-        role: 'hospede',
+        role: 'paciente',
         full_name: user.name,
       },
       { onConflict: 'id' },

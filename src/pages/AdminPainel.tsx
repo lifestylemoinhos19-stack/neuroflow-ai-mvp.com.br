@@ -88,9 +88,9 @@ const ROLE_LABELS: Record<string, string> = {
   admin: 'Admin',
   doctor: 'Profissional',
   staff: 'Equipe Técnica',
-  hospede: 'Paciente',
+  paciente: 'Paciente',
 }
-const ROLE_OPTIONS: ProfileRole[] = ['admin', 'doctor', 'staff', 'hospede']
+const ROLE_OPTIONS: ProfileRole[] = ['admin', 'doctor', 'staff', 'paciente']
 
 type DeleteTarget = { type: 'patient' | 'session' | 'report'; id: string; name: string } | null
 
@@ -1143,6 +1143,7 @@ export default function AdminPainel() {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="text-white font-semibold">Nome</TableHead>
+                        <TableHead className="text-white font-semibold">E-mail</TableHead>
                         <TableHead className="text-white font-semibold">ID</TableHead>
                         <TableHead className="text-white font-semibold">Criado em</TableHead>
                         <TableHead className="text-white font-semibold">Perfil (Role)</TableHead>
@@ -1154,6 +1155,7 @@ export default function AdminPainel() {
                           <TableCell className="text-sm font-bold text-white">
                             {u.full_name || '—'}
                           </TableCell>
+                          <TableCell className="text-sm text-slate-300">{u.email || '—'}</TableCell>
                           <TableCell className="text-xs text-white/85 font-mono">
                             {u.id.slice(0, 8)}…
                           </TableCell>

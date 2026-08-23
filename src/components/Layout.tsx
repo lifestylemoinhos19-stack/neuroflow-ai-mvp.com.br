@@ -74,7 +74,7 @@ const staffNavItems: NavItem[] = [
   { path: '/focus-session', label: 'Explorador da Calma', icon: Brain },
 ]
 
-// Patient (hospede): simplified dashboard + own interviews + calm explorer.
+// Patient (paciente): simplified dashboard + own interviews + calm explorer.
 // NO diagnostic tools (MINI, Módulos Clínicos, Anamnese, Escalas).
 const patientNavItems: NavItem[] = [
   { path: '/dashboard', label: 'Meu Painel', icon: LayoutDashboard },

@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase/client'
 import type { Database } from '@/lib/supabase/types'
 
-export type ProfileRole = 'admin' | 'doctor' | 'staff' | 'hospede'
+export type ProfileRole = 'admin' | 'doctor' | 'staff' | 'paciente'
 
 export interface AdminUserProfile {
   id: string
@@ -12,18 +12,15 @@ export interface AdminUserProfile {
 }
 
 export async function getAdminUsers(): Promise<AdminUserProfile[]> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, full_name, role, created_at')
+  const { data, error } = await (supabase.from('profiles') as any)
+    .select('id, email, full_name, role, created_at')
     .order('created_at', { ascending: false })
     .limit(200)
   if (error || !data) return []
 
-  // Busca e-mails a partir de auth.users não é exposto via API; usamos user_id
-  // vinculado ao próprio perfil. Para exibição, usamos full_name + id curto.
-  return data.map((p) => ({
+  return (data as any[]).map((p) => ({
     id: p.id,
-    email: null,
+    email: p.email ?? null,
     full_name: p.full_name,
     role: p.role,
     created_at: p.created_at,
