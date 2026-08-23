@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client'
+import type { Json } from '@/lib/supabase/types'
 
 export interface AnamnesisSession {
   id: string
@@ -49,16 +50,14 @@ export async function createAnamnesisSession(): Promise<AnamnesisSession | null>
  */
 export async function createAnamnesisSessionForGuest(
   guestId?: string | null,
+  scaleType?: string | null,
 ): Promise<AnamnesisSession | null> {
-  // Se há usuário autenticado, reutiliza o fluxo padrão.
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (user) return createAnamnesisSession()
-
-  // Sem auth: exige guest_id para criar a sessão anon.
   if (!guestId) return null
-  return createGuestAnamnesisSession(guestId)
+  return createGuestAnamnesisSession(guestId, scaleType)
 }
 
 /**
@@ -68,13 +67,20 @@ export async function createAnamnesisSessionForGuest(
  */
 export async function createGuestAnamnesisSession(
   guestId: string,
+  scaleType?: string | null,
 ): Promise<AnamnesisSession | null> {
-  // guest_token acts as the public handle that lets anon read its own
-  // session/responses via RLS (anamnesis_sessions_select_anon).
   const guestToken =
     typeof crypto !== 'undefined' && 'randomUUID' in crypto
       ? crypto.randomUUID()
       : `${guestId}-${Date.now()}-${Math.random().toString(36).slice(2)}`
+
+  const metadata: Record<string, Json | undefined> = {
+    guest_id: guestId,
+    source: 'public_anamnesis',
+  }
+  if (scaleType) {
+    metadata.scaleType = scaleType
+  }
 
   const { data, error } = await supabase
     .from('anamnesis_sessions')
@@ -82,7 +88,7 @@ export async function createGuestAnamnesisSession(
       status: 'in_progress',
       started_at: new Date().toISOString(),
       guest_token: guestToken,
-      metadata: { guest_id: guestId, source: 'public_anamnesis' },
+      metadata,
     })
     .select()
     .single()

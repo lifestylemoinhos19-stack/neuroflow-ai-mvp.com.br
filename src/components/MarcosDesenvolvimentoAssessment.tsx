@@ -75,7 +75,7 @@ export function MarcosDesenvolvimentoAssessment() {
     }))
 
     // Cria a sessão (autenticada ou anon via guest) e salva respostas.
-    const session = await createAnamnesisSessionForGuest(guestId)
+    const session = await createAnamnesisSessionForGuest(guestId, 'MARCOS')
     if (!session) {
       setSaving(false)
       toast.error('Não foi possível criar a sessão. Verifique sua identificação.')

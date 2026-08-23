@@ -49,7 +49,7 @@ export function Gad7Assessment() {
     if (passedSessionId) return passedSessionId
     // Fluxo público (guest): cria uma sessão anon vinculada ao guest_id.
     if (guestId) {
-      const session = await createAnamnesisSessionForGuest(guestId)
+      const session = await createAnamnesisSessionForGuest(guestId, 'GAD-7')
       return session?.id ?? null
     }
     const {

@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { AssessmentProgress } from '@/components/AssessmentProgress'
+import { supabase } from '@/lib/supabase/client'
 import {
   saveAnamnesisResponses,
   completeAnamnesisSession,
@@ -64,7 +65,7 @@ export function GenericScaleAssessment({ scale }: { scale: ExtraScale }) {
     }))
 
     // Cria a sessão (autenticada ou anon via guest) e salva respostas.
-    const session = await createAnamnesisSessionForGuest(guestId)
+    const session = await createAnamnesisSessionForGuest(guestId, scale.title)
     if (!session) {
       setSaving(false)
       toast.error('Não foi possível criar a sessão. Verifique sua identificação.')
@@ -77,6 +78,22 @@ export function GenericScaleAssessment({ scale }: { scale: ExtraScale }) {
       return
     }
     await completeAnamnesisSession(session.id)
+
+    if (guestId) {
+      try {
+        await supabase
+          .from('scale_assignments')
+          .update({
+            session_id: session.id,
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+          })
+          .eq('guest_id', guestId)
+          .eq('scale_type', scale.title)
+      } catch (err) {
+        console.error('Erro ao atualizar scale_assignments:', err)
+      }
+    }
 
     setSaving(false)
     localStorage.removeItem(draftKey)

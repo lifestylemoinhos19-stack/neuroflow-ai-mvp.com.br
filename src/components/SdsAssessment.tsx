@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { AssessmentProgress } from '@/components/AssessmentProgress'
 import { SdsResult } from '@/components/SdsResult'
+import { supabase } from '@/lib/supabase/client'
 import {
   createAnamnesisSessionForGuest,
   saveAnamnesisResponses,
@@ -64,7 +65,7 @@ export function SdsAssessment() {
   useEffect(() => {
     let mounted = true
     const initSession = async () => {
-      const session = await createAnamnesisSessionForGuest(guestId)
+      const session = await createAnamnesisSessionForGuest(guestId, 'SDS')
       if (mounted && session) setSessionId(session.id)
       if (mounted) setSessionLoading(false)
     }
@@ -72,7 +73,7 @@ export function SdsAssessment() {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [guestId])
 
   const totalSds = getSdsTotalScore(answers)
   const totalSherra = getSherraTotalScore(answers)
@@ -103,6 +104,23 @@ export function SdsAssessment() {
       return
     }
     await completeAnamnesisSession(sessionId)
+
+    if (guestId) {
+      try {
+        await supabase
+          .from('scale_assignments')
+          .update({
+            session_id: sessionId,
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+          })
+          .eq('guest_id', guestId)
+          .eq('scale_type', 'SDS')
+      } catch (err) {
+        console.error('Erro ao atualizar scale_assignments (SDS):', err)
+      }
+    }
+
     setSaving(false)
     setShowResult(true)
     setTimeout(() => topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
@@ -116,7 +134,7 @@ export function SdsAssessment() {
     setShowResult(false)
     setSessionLoading(true)
     setSessionId(null)
-    const session = await createAnamnesisSessionForGuest(guestId)
+    const session = await createAnamnesisSessionForGuest(guestId, 'SDS')
     if (session) setSessionId(session.id)
     setSessionLoading(false)
   }

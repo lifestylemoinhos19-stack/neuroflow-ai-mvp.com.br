@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { Brain, Lock, AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 import { PublicPageShell } from '@/components/PublicPageShell'
@@ -90,9 +90,11 @@ function normalizeScaleType(raw: string | undefined): string | undefined {
 
 export default function PublicScaleAssessment() {
   const [searchParams] = useSearchParams()
+  const location = useLocation()
+  const urlScaleParam = searchParams.get('scale') ?? undefined
+  const pathScale = location.pathname.replace(/^\/avaliacao\//, '').replace(/\/$/, '')
+  const scaleType = normalizeScaleType(urlScaleParam || pathScale)
   const guestId = searchParams.get('guest_id') || localStorage.getItem('guest_id')
-  const scaleType = normalizeScaleType(searchParams.get('scale') ?? undefined)
-
   const [consented, setConsented] = useState(false)
 
   // Identificação ausente.

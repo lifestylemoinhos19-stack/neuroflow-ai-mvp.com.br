@@ -68,7 +68,7 @@ export function Phq9Assessment() {
     }))
 
     try {
-      const session = await createAnamnesisSessionForGuest(guestId)
+      const session = await createAnamnesisSessionForGuest(guestId, 'PHQ-9')
       if (!session) {
         setSaving(false)
         toast.error('Não foi possível criar a sessão. Verifique sua identificação.')
