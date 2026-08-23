@@ -13,7 +13,7 @@ export interface AdminUserProfile {
 
 export async function getAdminUsers(): Promise<AdminUserProfile[]> {
   const { data, error } = await (supabase.from('profiles') as any)
-    .select('id, email, full_name, role, created_at')
+    .select('id, email, nome, role, created_at')
     .order('created_at', { ascending: false })
     .limit(200)
   if (error || !data) return []
@@ -21,7 +21,7 @@ export async function getAdminUsers(): Promise<AdminUserProfile[]> {
   return (data as any[]).map((p) => ({
     id: p.id,
     email: p.email ?? null,
-    full_name: p.full_name,
+    full_name: p.nome ?? null,
     role: p.role,
     created_at: p.created_at,
   }))

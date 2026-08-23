@@ -55,11 +55,11 @@ export async function fetchMiniReportData(sessionId: string): Promise<MiniReport
   const profileId = session.profile_id || session.user_id
 
   if (profileId) {
-    const { data: profile } = await supabase
+    const { data: profile } = (await supabase
       .from('profiles')
-      .select('guest_id, full_name')
+      .select('guest_id, nome')
       .eq('id', profileId)
-      .maybeSingle()
+      .maybeSingle()) as { data: { guest_id: string | null; nome: string | null } | null }
 
     if (profile?.guest_id) {
       const { data: guest } = await supabase
@@ -71,12 +71,12 @@ export async function fetchMiniReportData(sessionId: string): Promise<MiniReport
       if (guest) {
         patient = {
           fullName:
-            `${guest.first_name || ''} ${guest.last_name || ''}`.trim() || profile.full_name || '—',
+            `${guest.first_name || ''} ${guest.last_name || ''}`.trim() || profile.nome || '—',
           birthDate: guest.birth_date,
         }
       }
-    } else if (profile?.full_name) {
-      patient = { fullName: profile.full_name, birthDate: null }
+    } else if (profile?.nome) {
+      patient = { fullName: profile.nome, birthDate: null }
     }
   }
 

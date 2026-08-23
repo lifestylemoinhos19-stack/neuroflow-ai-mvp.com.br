@@ -194,10 +194,10 @@ export async function getAdminTests(): Promise<AdminTest[]> {
   if (profileIds.size) {
     const { data: ps } = await supabase
       .from('profiles')
-      .select('id, full_name, guest_id')
+      .select('id, nome, guest_id')
       .in('id', [...profileIds])
-    ;(ps || []).forEach((p) => {
-      profileMap[p.id] = { full_name: p.full_name, guest_id: p.guest_id }
+    ;(ps || []).forEach((p: any) => {
+      profileMap[p.id] = { full_name: p.nome, guest_id: p.guest_id }
     })
   }
 

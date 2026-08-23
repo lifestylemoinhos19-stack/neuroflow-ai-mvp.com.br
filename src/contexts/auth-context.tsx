@@ -228,7 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await supabase.from('profiles').upsert(
         {
           id: data.user.id,
-          full_name: email.split('@')[0],
+          nome: email.split('@')[0],
           role: 'paciente',
           privacy_consent: privacyConsent,
           privacy_consent_accepted_at: new Date().toISOString(),
@@ -282,7 +282,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         privacy_consent: true,
         privacy_consent_accepted_at: new Date().toISOString(),
         role: 'paciente',
-        full_name: user.name,
+        nome: user.name,
       },
       { onConflict: 'id' },
     )

@@ -91,10 +91,10 @@ export default function AssignScales() {
       // Buscar nomes via profiles (patient_id é o profile id do paciente)
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, full_name')
+        .select('id, nome')
         .in('id', [...patientIds])
-      ;(profiles || []).forEach((p) => {
-        patientMap[p.id] = p.full_name || 'Paciente'
+      ;(profiles || []).forEach((p: any) => {
+        patientMap[p.id] = p.nome || 'Paciente'
       })
     }
     if (guestIds.size) {

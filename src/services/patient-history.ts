@@ -66,10 +66,10 @@ export async function getPatientsWithEvaluations(): Promise<PatientInfo[]> {
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, full_name, guest_id')
+    .select('id, nome, guest_id')
     .in('id', userIds)
 
-  const guestIds = (profiles || []).map((p) => p.guest_id).filter(Boolean) as string[]
+  const guestIds = (profiles || []).map((p: any) => p.guest_id).filter(Boolean) as string[]
 
   let guests: any[] = []
   if (guestIds.length > 0) {
@@ -81,12 +81,12 @@ export async function getPatientsWithEvaluations(): Promise<PatientInfo[]> {
   }
 
   return userIds.map((userId) => {
-    const profile = profiles?.find((p) => p.id === userId)
+    const profile = (profiles as any[])?.find((p) => p.id === userId)
     const guest = guests.find((g) => g.id === profile?.guest_id)
     const evaluationCount = sessions.filter((s) => s.user_id === userId).length
     const fullName = guest
       ? `${guest.first_name} ${guest.last_name}`.trim()
-      : profile?.full_name || 'Paciente'
+      : profile?.nome || 'Paciente'
     return {
       user_id: userId,
       full_name: fullName,
