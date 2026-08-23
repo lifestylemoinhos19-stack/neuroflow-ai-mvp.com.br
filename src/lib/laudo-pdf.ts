@@ -63,20 +63,39 @@ async function resolveRealSessionId(testId: string): Promise<{
       return { sessionId: assignment.session_id, isAssignment: true }
     }
 
-    if (assignment.guest_id && assignment.scale_type) {
+    if (assignment.scale_type) {
       const normalizedScaleType = assignment.scale_type.toLowerCase().replace(/[-\s.]/g, '')
 
-      const { data: orphanSession } = await supabase
+      let query = supabase
         .from('anamnesis_sessions')
         .select('id')
-        .eq('metadata->>guest_id', assignment.guest_id)
         .eq('metadata->>scaleType', normalizedScaleType)
+
+      if (assignment.guest_id) {
+        query = query.eq('metadata->>guest_id', assignment.guest_id)
+      }
+
+      const { data: orphanSession } = await query
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
 
       if (orphanSession) {
         return { sessionId: orphanSession.id, isAssignment: true }
+      }
+
+      // Último fallback: busca por question_key compatível
+      const scalePrefix = assignment.scale_type.toLowerCase().replace(/[-\s.]/g, '')
+      const { data: matchResp } = await supabase
+        .from('anamnesis_responses')
+        .select('session_id')
+        .ilike('question_key', `${scalePrefix}%`)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (matchResp?.session_id) {
+        return { sessionId: matchResp.session_id, isAssignment: true }
       }
     }
 
