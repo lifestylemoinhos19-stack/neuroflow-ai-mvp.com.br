@@ -9,6 +9,7 @@ export interface ScaleScores {
   hamd: number | null
   hama: number | null
   ybocs: number | null
+  sds: number | null
 }
 
 export interface ScreeningFinding {
@@ -30,6 +31,7 @@ export const asrs18Keys: string[] = Array.from({ length: 18 }, (_, i) => `asrs_q
 export const hamdKeys: string[] = Array.from({ length: 17 }, (_, i) => `hamd_q${i + 1}`)
 export const hamaKeys: string[] = Array.from({ length: 14 }, (_, i) => `hama_q${i + 1}`)
 export const ybocsKeys: string[] = Array.from({ length: 10 }, (_, i) => `ybocs_q${i + 1}`)
+export const sdsKeys: string[] = ['sds_q1', 'sds_q2', 'sds_q3']
 
 export function generateScreening(scores: ScaleScores): ScreeningResult {
   const findings: ScreeningFinding[] = []
@@ -124,6 +126,15 @@ export function generateScreening(scores: ScaleScores): ScreeningResult {
       threshold: '≥ 8',
     })
   }
+  if (scores.sds !== null && scores.sds >= 5) {
+    findings.push({
+      category: 'Incapacidade Funcional',
+      suggestion: 'Sinais de comprometimento funcional significativo',
+      scale: 'SDS',
+      score: scores.sds,
+      threshold: '≥ 5',
+    })
+  }
 
   const comorbidities = detectComorbidities(findings)
   const fullSuggestion = buildSuggestion(findings, comorbidities)
@@ -173,7 +184,8 @@ export function computeGlobalSeverity(scores: ScaleScores): 'low' | 'moderate' |
     (scores.meem !== null && scores.meem < 18) ||
     (scores.hamd !== null && scores.hamd >= 20) ||
     (scores.hama !== null && scores.hama >= 20) ||
-    (scores.ybocs !== null && scores.ybocs >= 24)
+    (scores.ybocs !== null && scores.ybocs >= 24) ||
+    (scores.sds !== null && scores.sds >= 8)
 
   if (hasHighSeverity) return 'high'
   return 'moderate'

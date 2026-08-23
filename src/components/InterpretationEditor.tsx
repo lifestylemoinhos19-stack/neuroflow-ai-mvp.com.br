@@ -74,6 +74,7 @@ export function InterpretationEditor({ sessionId }: { sessionId: string }) {
       interpretation.snapIvInattention,
       interpretation.snapIvHyperactivity,
       interpretation.globalSeverity,
+      interpretation.sdsScore,
     )
     setSaving(false)
     if (error) {
@@ -130,6 +131,8 @@ export function InterpretationEditor({ sessionId }: { sessionId: string }) {
       { label: 'MEEM', score: interpretation.meemScore },
       { label: 'HAM-D', score: interpretation.hamdScore },
       { label: 'HAM-A', score: interpretation.hamaScore },
+      { label: 'Y-BOCS', score: interpretation.ybocsScore },
+      { label: 'SDS', score: interpretation.sdsScore },
     ]
 
   return (

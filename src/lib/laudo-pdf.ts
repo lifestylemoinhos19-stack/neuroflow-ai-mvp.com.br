@@ -245,6 +245,7 @@ async function loadLaudoContext(guestId: string | null, testId: string): Promise
         aiInterpretation.snapIvInattention,
         aiInterpretation.snapIvHyperactivity,
         aiInterpretation.globalSeverity,
+        aiInterpretation.sdsScore,
       )
     } catch {
       /* ignore — non-fatal */

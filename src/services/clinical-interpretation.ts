@@ -14,9 +14,11 @@ import {
   hamdKeys,
   hamaKeys,
   ybocsKeys,
+  sdsKeys,
   type ScreeningFinding,
   computeGlobalSeverity,
 } from '@/lib/clinical-screening'
+import { getSdsImpairmentLevel } from '@/lib/sds-data'
 
 /**
  * Análise por domínio (humor, ansiedade, cognição, comportamento,
@@ -50,6 +52,7 @@ export interface InterpretationResult {
   hamdScore: number | null
   hamaScore: number | null
   ybocsScore: number | null
+  sdsScore: number | null
   findings: ScreeningFinding[]
   comorbidities: string[]
   /** Análise por domínio com severidade estimada (linguagem cautelosa). */
@@ -115,6 +118,7 @@ export async function getSessionInterpretation(
   const hamdScore = scoreQuestionnaire(raw, hamdKeys)
   const hamaScore = scoreQuestionnaire(raw, hamaKeys)
   const ybocsScore = scoreQuestionnaire(raw, ybocsKeys)
+  const sdsScore = scoreQuestionnaire(raw, sdsKeys)
 
   const { data: session } = await supabase
     .from('anamnesis_sessions')
@@ -145,6 +149,7 @@ export async function getSessionInterpretation(
     hamdScore,
     hamaScore,
     ybocsScore,
+    sdsScore,
   ]
   const hasScaleData = allScores.some((s) => s !== null && s !== 0)
 
@@ -159,6 +164,7 @@ export async function getSessionInterpretation(
     hamd: hamdScore,
     hama: hamaScore,
     ybocs: ybocsScore || null,
+    sds: sdsScore || null,
   })
 
   let suggestion = screening.fullSuggestion
@@ -178,6 +184,7 @@ export async function getSessionInterpretation(
     hamdScore,
     hamaScore,
     ybocsScore: ybocsScore || null,
+    sdsScore: sdsScore || null,
     cognitiveVrc,
   })
   const hypotheses = buildHypotheses(screening.findings)
@@ -192,6 +199,7 @@ export async function getSessionInterpretation(
     hamdScore,
     hamaScore,
     ybocsScore: ybocsScore || null,
+    sdsScore: sdsScore || null,
     cognitiveVrc,
   })
   suggestion += `\n\n${hypotheses.join('\n')}`
@@ -231,6 +239,7 @@ export async function getSessionInterpretation(
       hamdScore: null,
       hamaScore: null,
       ybocsScore: null,
+      sdsScore: null,
       snapIvInattention: null,
       snapIvHyperactivity: null,
       globalSeverity: 'low',
@@ -259,6 +268,7 @@ export async function getSessionInterpretation(
     hamdScore,
     hamaScore,
     ybocsScore: ybocsScore || null,
+    sdsScore: sdsScore || null,
     snapIvInattention: snapResult.inattentionAvg || null,
     snapIvHyperactivity: snapResult.hyperactivityAvg || null,
     globalSeverity: computeGlobalSeverity({
@@ -272,6 +282,7 @@ export async function getSessionInterpretation(
       hamd: hamdScore,
       hama: hamaScore,
       ybocs: ybocsScore || null,
+      sds: sdsScore || null,
     }),
     findings: screening.findings,
     comorbidities: screening.comorbidities,
@@ -298,6 +309,7 @@ interface ScoreBag {
   hamdScore: number | null
   hamaScore: number | null
   ybocsScore?: number | null
+  sdsScore?: number | null
   cognitiveVrc: number | null
 }
 
@@ -411,9 +423,11 @@ function domainComportamento(s: ScoreBag): {
   severity: Sev
   descricao: string
 } {
+  const parts: string[] = []
+  let sev: Sev = null
+
   if (s.ybocsScore !== null && s.ybocsScore !== undefined && s.ybocsScore > 0) {
     let faixa = 'sintomas subclínicos'
-    let sev: Sev = null
     if (s.ybocsScore >= 24) {
       faixa = 'faixa grave'
       sev = 'alta'
@@ -424,15 +438,28 @@ function domainComportamento(s: ScoreBag): {
       faixa = 'faixa leve'
       sev = 'baixa'
     }
+    parts.push(`Y-BOCS ${s.ybocsScore}/40 — compatível com ${faixa} para obsessões/compulsões.`)
+  }
+
+  if (s.sdsScore !== null && s.sdsScore !== undefined && s.sdsScore > 0) {
+    const level = getSdsImpairmentLevel(s.sdsScore)
+    if (s.sdsScore >= 8) {
+      sev = 'alta'
+    } else if (s.sdsScore >= 5) {
+      sev = sev === 'alta' ? 'alta' : 'moderada'
+    } else {
+      sev = sev || 'baixa'
+    }
+    parts.push(`SDS ${s.sdsScore}/30 — compatível com ${level.label} para incapacidade funcional.`)
+  }
+
+  if (parts.length > 0) {
     return {
       severity: sev,
-      descricao: `Y-BOCS ${s.ybocsScore}/40 — compatível com ${faixa} para obsessões/compulsões.`,
+      descricao: parts.join(' '),
     }
   }
 
-  // Comportamento no InterpretationResult reflete escalas; o detalhe por escala
-  // (Y-BOCS, SDS) entra via laudo-pdf. Aqui sinalizamos apenas ausência de dados
-  // diretos, para não inventar.
   return {
     severity: null,
     descricao: 'Sem instrumentos de comportamento fornecidos neste fluxo.',
@@ -516,6 +543,7 @@ function buildGaps(s: ScoreBag): string[] {
   if (s.hamaScore === null) gaps.push('HAM-A sem pontuação informada.')
   if (s.ybocsScore === null || s.ybocsScore === undefined)
     gaps.push('Y-BOCS sem pontuação informada.')
+  if (s.sdsScore === null || s.sdsScore === undefined) gaps.push('SDS sem pontuação informada.')
   if (s.cognitiveVrc === null) gaps.push('VRC não disponível.')
   return gaps
 }
@@ -537,6 +565,7 @@ export async function saveInterpretation(
   snapIvInattention?: number | null,
   snapIvHyperactivity?: number | null,
   globalSeverity?: 'low' | 'moderate' | 'high' | null,
+  sdsScore?: number | null,
 ): Promise<{ error: string | null }> {
   const {
     data: { user },
@@ -564,6 +593,7 @@ export async function saveInterpretation(
       snap_iv_inattention: snapIvInattention,
       snap_iv_hyperactivity: snapIvHyperactivity,
       global_severity: globalSeverity,
+      sds_score: sdsScore,
     } as any,
     { onConflict: 'session_id' },
   )
