@@ -22,6 +22,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { Progress } from '@/components/ui/progress'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Loader2 } from 'lucide-react'
 import {
   Trash2,
@@ -37,6 +39,14 @@ import {
   QrCode,
   FileDown,
   Headphones,
+  ArrowLeft,
+  Calendar,
+  Mail,
+  Phone,
+  CreditCard,
+  User,
+  ClipboardList,
+  CheckCircle2,
 } from 'lucide-react'
 import { generateLaudoPDF } from '@/lib/laudo-pdf'
 import { normalizeAssistedScaleType } from '@/lib/assisted-scales-data'
@@ -54,9 +64,12 @@ import { toast } from 'sonner'
 import { getAdminPatients, deletePatientData, type AdminPatient } from '@/services/admin-painel'
 import {
   getAdminTests,
+  getPatientTests,
+  getSessionResponsesDecrypted,
   deleteTestData,
   translateStatus,
   type AdminTest,
+  type DecryptedSessionResponse,
 } from '@/services/admin-sessions'
 import { getAdminReports, deleteReport, type AdminReport } from '@/services/admin-reports'
 import {
@@ -124,6 +137,18 @@ export default function AdminPainel() {
   const [loading, setLoading] = useState(true)
   const [roleUpdating, setRoleUpdating] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('patients')
+
+  // Drill-down states
+  const [selectedPatient, setSelectedPatient] = useState<AdminPatient | null>(null)
+  const [patientTestsList, setPatientTestsList] = useState<AdminTest[]>([])
+  const [loadingPatientTests, setLoadingPatientTests] = useState(false)
+
+  const [selectedTest, setSelectedTest] = useState<{
+    test: AdminTest
+    patientName: string
+  } | null>(null)
+  const [testResponses, setTestResponses] = useState<DecryptedSessionResponse[]>([])
+  const [loadingResponses, setLoadingResponses] = useState(false)
   const [patientDialog, setPatientDialog] = useState<{
     open: boolean
     patient: AdminPatient | null
@@ -222,6 +247,105 @@ export default function AdminPainel() {
     setLoading(false)
   }, [])
 
+  // Carrega avaliações quando um paciente é selecionado
+  const handleSelectPatient = async (patient: AdminPatient) => {
+    setSelectedPatient(patient)
+    setSelectedTest(null)
+    setLoadingPatientTests(true)
+    try {
+      const pTests = await getPatientTests(patient.id)
+      setPatientTestsList(pTests)
+    } catch (err) {
+      console.error('Erro ao buscar avaliações do paciente:', err)
+      toast.error('Erro ao buscar avaliações do paciente.')
+    } finally {
+      setLoadingPatientTests(false)
+    }
+  }
+
+  // Carrega respostas descriptografadas quando um teste é selecionado
+  const handleSelectTest = async (test: AdminTest, patientName: string) => {
+    setSelectedTest({ test, patientName })
+    setLoadingResponses(true)
+    setTestResponses([])
+    try {
+      if (test.session_id) {
+        const { data, error } = await getSessionResponsesDecrypted(test.session_id)
+        if (error) {
+          toast.error(`Erro ao carregar respostas: ${error}`)
+        } else {
+          setTestResponses(data)
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao buscar respostas descriptografadas:', err)
+      toast.error('Erro ao buscar respostas da sessão.')
+    } finally {
+      setLoadingResponses(false)
+    }
+  }
+
+  const renderProgressIndicator = (t: AdminTest) => {
+    if (!t.session_id) {
+      return (
+        <Badge
+          variant="outline"
+          className="border-slate-700 text-slate-400 text-xs bg-slate-900/50"
+        >
+          Sem respostas
+        </Badge>
+      )
+    }
+
+    const typeUpper = (t.type || '').toUpperCase()
+    if (typeUpper.includes('MINI 5.0.0') || typeUpper === 'MINI' || typeUpper.includes('MINI 5')) {
+      return (
+        <Badge
+          variant="secondary"
+          className="bg-amber-950/70 text-amber-300 border border-amber-800/40 text-xs"
+        >
+          Entrevista estruturada
+        </Badge>
+      )
+    }
+
+    const expected = t.expected_questions
+    const answered = t.response_count ?? 0
+
+    if (expected === null || expected === undefined) {
+      return (
+        <Badge variant="outline" className="border-slate-700 text-slate-400 text-xs">
+          N/A
+        </Badge>
+      )
+    }
+
+    const percentage = Math.min(100, Math.round((answered / expected) * 100))
+    const isComplete = answered >= expected
+
+    return (
+      <div className="flex flex-col gap-1 min-w-[110px] max-w-[140px]">
+        <div className="flex items-center justify-between text-xs">
+          <Badge
+            variant="secondary"
+            className={
+              isComplete
+                ? 'bg-emerald-950 text-emerald-300 border border-emerald-800/50 font-medium px-1.5 py-0 text-[11px]'
+                : 'bg-amber-950 text-amber-300 border border-amber-800/50 font-medium px-1.5 py-0 text-[11px]'
+            }
+          >
+            {answered}/{expected}
+          </Badge>
+          <span className="text-[10px] text-white/60 font-mono">{percentage}%</span>
+        </div>
+        <Progress
+          value={percentage}
+          className="h-1.5 bg-slate-800 [&>div]:bg-gradient-to-r [&>div]:from-amber-600 [&>div]:to-emerald-500"
+        />
+      </div>
+    )
+  }
+
   const handleRoleChange = async (profileId: string, newRole: ProfileRole) => {
     setRoleUpdating(profileId)
     const { error } = await updateUserRole(profileId, newRole)
@@ -302,73 +426,509 @@ export default function AdminPainel() {
         </TabsList>
 
         <TabsContent value="patients">
-          <Card className="border-slate-800">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-base font-bold text-white">
-                Pacientes Cadastrados
-              </CardTitle>
-              <Button size="sm" onClick={() => setPatientDialog({ open: true, patient: null })}>
-                <Plus className="h-4 w-4 mr-1" /> Novo
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {patients.length === 0 ? (
-                <p className="text-center text-white/80 py-8">Nenhum paciente encontrado.</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-white font-semibold">Nome</TableHead>
-                        <TableHead className="text-white font-semibold">E-mail</TableHead>
-                        <TableHead className="text-white font-semibold">Telefone</TableHead>
-                        <TableHead className="text-white font-semibold">CPF</TableHead>
-                        <TableHead className="text-white font-semibold">Nascimento</TableHead>
-                        <TableHead className="text-white font-semibold text-center">
-                          Testes
-                        </TableHead>
-                        <TableHead className="text-white font-semibold text-right">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {patients.map((p) => (
-                        <TableRow key={p.id}>
-                          <TableCell className="text-sm font-bold text-white">
-                            {p.first_name} {p.last_name}
-                          </TableCell>
-                          <TableCell className="text-sm text-white/80">{p.email || '-'}</TableCell>
-                          <TableCell className="text-sm text-white/80">{p.phone || '-'}</TableCell>
-                          <TableCell className="text-sm text-white/80 font-mono">
-                            {p.document || '-'}
-                          </TableCell>
-                          <TableCell className="text-sm text-white/80">
-                            {p.birth_date
-                              ? new Date(p.birth_date).toLocaleDateString('pt-BR')
-                              : '-'}
-                          </TableCell>
-                          <TableCell className="text-sm text-center">
-                            <Badge variant="secondary">{p.evaluation_count}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <ActionButtons
-                              onEdit={() => setPatientDialog({ open: true, patient: p })}
-                              onDelete={() =>
-                                setDeleteTarget({
-                                  type: 'patient',
-                                  id: p.id,
-                                  name: `${p.first_name} ${p.last_name}`,
-                                })
-                              }
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+          {/* NÍVEL 3: VISÃO DE RESPOSTAS DA AVALIAÇÃO SELECIONADA */}
+          {selectedTest && selectedPatient ? (
+            <Card className="border-slate-800">
+              <CardHeader className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedTest(null)
+                      // Recarrega as avaliações do paciente ao voltar
+                      handleSelectPatient(selectedPatient)
+                    }}
+                    className="border-slate-700 text-slate-200 hover:bg-slate-800"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-1.5" /> Voltar para Avaliações
+                  </Button>
+
+                  {/* Botão Gerar Laudo PDF com validação e tooltip */}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            disabled={
+                              !selectedTest.test.session_id ||
+                              loadingResponses ||
+                              testResponses.length === 0 ||
+                              laudoGenerating === selectedTest.test.id
+                            }
+                            onClick={() => handleGenerateLaudo(selectedTest.test)}
+                            className="bg-amber-600 hover:bg-amber-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {laudoGenerating === selectedTest.test.id ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Gerando PDF...
+                              </>
+                            ) : (
+                              <>
+                                <FileDown className="h-4 w-4 mr-1.5" /> Gerar Laudo PDF
+                              </>
+                            )}
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      {!selectedTest.test.session_id ? (
+                        <TooltipContent className="bg-slate-900 border-slate-700 text-slate-200">
+                          Sem sessão de respostas vinculada
+                        </TooltipContent>
+                      ) : !loadingResponses && testResponses.length === 0 ? (
+                        <TooltipContent className="bg-slate-900 border-slate-700 text-slate-200">
+                          Nenhuma resposta registrada
+                        </TooltipContent>
+                      ) : null}
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+
+                <div className="bg-slate-900/80 border border-slate-800 rounded-lg p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <span className="text-xs text-white/60 block">Paciente</span>
+                    <span className="text-sm font-bold text-white flex items-center gap-1.5 mt-0.5">
+                      <User className="h-3.5 w-3.5 text-primary" /> {selectedTest.patientName}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-white/60 block">Escala / Instrumento</span>
+                    <span className="text-sm font-bold text-amber-300 flex items-center gap-1.5 mt-0.5">
+                      <ClipboardList className="h-3.5 w-3.5 text-amber-400" />{' '}
+                      {selectedTest.test.type}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-white/60 block">Data de Aplicação</span>
+                    <span className="text-sm text-white/90 flex items-center gap-1.5 mt-0.5">
+                      <Calendar className="h-3.5 w-3.5 text-white/60" />{' '}
+                      {new Date(selectedTest.test.started_at).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-white/60 block">Pontuação Total Calculada</span>
+                    <span className="text-sm font-bold text-emerald-400 flex items-center gap-1.5 mt-0.5">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />{' '}
+                      {selectedTest.test.score !== null
+                        ? `${selectedTest.test.score} pontos`
+                        : 'Não calculada'}
+                    </span>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-white">
+                    Respostas Registradas ({testResponses.length})
+                  </h3>
+                  {selectedTest.test.session_id ? (
+                    <span className="text-xs text-white/50 font-mono">
+                      Sessão: {selectedTest.test.session_id.slice(0, 8)}…
+                    </span>
+                  ) : null}
+                </div>
+
+                {loadingResponses ? (
+                  <div className="py-12 flex flex-col items-center justify-center gap-3">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-sm text-white/70">
+                      Carregando e descriptografando respostas...
+                    </p>
+                  </div>
+                ) : !selectedTest.test.session_id ? (
+                  <div className="py-10 text-center border border-dashed border-slate-800 rounded-lg p-6">
+                    <p className="text-slate-400">Sem respostas vinculadas a esta avaliação.</p>
+                  </div>
+                ) : testResponses.length === 0 ? (
+                  <div className="py-10 text-center border border-dashed border-slate-800 rounded-lg p-6">
+                    <p className="text-slate-400">Nenhuma resposta registrada para esta sessão.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-md border border-slate-800">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-slate-800 bg-slate-900/50">
+                          <TableHead className="text-white font-semibold w-12 text-center">
+                            #
+                          </TableHead>
+                          <TableHead className="text-white font-semibold">
+                            Pergunta / Campo
+                          </TableHead>
+                          <TableHead className="text-white font-semibold w-1/3">Resposta</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {testResponses.map((r, idx) => (
+                          <TableRow
+                            key={r.id || idx}
+                            className="border-slate-800/60 hover:bg-slate-900/40"
+                          >
+                            <TableCell className="text-xs font-mono text-white/50 text-center">
+                              {idx + 1}
+                            </TableCell>
+                            <TableCell className="text-sm font-medium text-slate-200">
+                              {r.question_label || r.question_key}
+                              {r.question_label && (
+                                <span className="block text-[11px] font-mono text-white/40 mt-0.5">
+                                  {r.question_key}
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-sm text-amber-300/90 font-medium">
+                              {r.response_value !== null && r.response_value !== undefined
+                                ? String(r.response_value)
+                                : '—'}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : selectedPatient ? (
+            /* NÍVEL 2: VISÃO DE DETALHE DO PACIENTE COM LISTA DE AVALIAÇÕES */
+            <Card className="border-slate-800">
+              <CardHeader className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedPatient(null)
+                      setSelectedTest(null)
+                      loadData()
+                    }}
+                    className="border-slate-700 text-slate-200 hover:bg-slate-800"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-1.5" /> Voltar para Lista de Pacientes
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => setPatientDialog({ open: true, patient: selectedPatient })}
+                  >
+                    <Pencil className="h-3.5 w-3.5 mr-1" /> Editar Paciente
+                  </Button>
+                </div>
+
+                {/* Dados do Paciente */}
+                <div className="bg-slate-900/80 border border-slate-800 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-800">
+                    <User className="h-5 w-5 text-primary" />
+                    <h2 className="text-lg font-bold text-white">
+                      {selectedPatient.first_name} {selectedPatient.last_name}
+                    </h2>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="space-y-1">
+                      <span className="text-xs text-white/60 flex items-center gap-1">
+                        <Mail className="h-3 w-3" /> E-mail
+                      </span>
+                      <p className="font-medium text-slate-200">{selectedPatient.email || '—'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-xs text-white/60 flex items-center gap-1">
+                        <Phone className="h-3 w-3" /> Telefone
+                      </span>
+                      <p className="font-medium text-slate-200">{selectedPatient.phone || '—'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-xs text-white/60 flex items-center gap-1">
+                        <CreditCard className="h-3 w-3" /> CPF / Documento
+                      </span>
+                      <p className="font-mono font-medium text-slate-200">
+                        {selectedPatient.document || '—'}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-xs text-white/60 flex items-center gap-1">
+                        <Calendar className="h-3 w-3" /> Data de Nascimento
+                      </span>
+                      <p className="font-medium text-slate-200">
+                        {selectedPatient.birth_date
+                          ? new Date(selectedPatient.birth_date).toLocaleDateString('pt-BR')
+                          : '—'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-bold text-white flex items-center gap-2">
+                    <ClipboardList className="h-4 w-4 text-primary" /> Avaliações e Testagens
+                  </CardTitle>
+                  <Button size="sm" onClick={() => setSessionDialog({ open: true, session: null })}>
+                    <Plus className="h-4 w-4 mr-1" /> Nova Testagem
+                  </Button>
+                </div>
+
+                {loadingPatientTests ? (
+                  <div className="py-12 flex flex-col items-center justify-center gap-3">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-sm text-white/70">Carregando avaliações do paciente...</p>
+                  </div>
+                ) : patientTestsList.length === 0 ? (
+                  <div className="py-8 text-center border border-dashed border-slate-800 rounded-lg">
+                    <p className="text-white/70">
+                      Nenhuma avaliação encontrada para este paciente.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-md border border-slate-800">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-slate-800 bg-slate-900/50">
+                          <TableHead className="text-white font-semibold">Tipo da Escala</TableHead>
+                          <TableHead className="text-white font-semibold">Data</TableHead>
+                          <TableHead className="text-white font-semibold">Status</TableHead>
+                          <TableHead className="text-white font-semibold">Progresso</TableHead>
+                          <TableHead className="text-white font-semibold text-center">
+                            Pontuação
+                          </TableHead>
+                          <TableHead className="text-white font-semibold text-right">
+                            Ações
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {patientTestsList.map((t) => (
+                          <TableRow
+                            key={t.id}
+                            className="border-slate-800/60 hover:bg-slate-800/50 cursor-pointer transition-colors"
+                            onClick={() =>
+                              handleSelectTest(
+                                t,
+                                `${selectedPatient.first_name} ${selectedPatient.last_name}`,
+                              )
+                            }
+                          >
+                            <TableCell className="text-sm font-bold text-white">
+                              <div className="flex items-center gap-2">
+                                <span className="text-primary hover:underline">{t.type}</span>
+                                <Badge
+                                  variant="secondary"
+                                  className={
+                                    t.origin === 'Mocado'
+                                      ? 'bg-amber-950 text-amber-300 text-[10px]'
+                                      : 'bg-emerald-950 text-emerald-300 text-[10px]'
+                                  }
+                                >
+                                  {t.origin}
+                                </Badge>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-sm text-white/80">
+                              {new Date(t.started_at).toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                              })}
+                            </TableCell>
+                            <TableCell className="text-sm text-slate-200">
+                              <Badge
+                                variant="outline"
+                                className="border-slate-700 bg-slate-900/60 text-slate-200"
+                              >
+                                {translateStatus(t.status)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm" onClick={(e) => e.stopPropagation()}>
+                              {renderProgressIndicator(t)}
+                            </TableCell>
+                            <TableCell className="text-sm text-center font-semibold text-amber-300">
+                              {t.score !== null ? t.score : '—'}
+                            </TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              <div className="flex justify-end gap-1">
+                                {normalizeAssistedScaleType(t.type) && (
+                                  <Button
+                                    asChild
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-amber-400 hover:text-amber-300 hover:bg-amber-950"
+                                    title="Aplicação Assistida (voz)"
+                                  >
+                                    <Link
+                                      to={`/aplicacao-assistida/${encodeURIComponent(t.type)}/${t.id}`}
+                                    >
+                                      <Headphones className="h-4 w-4" />
+                                    </Link>
+                                  </Button>
+                                )}
+
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-8 w-8 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950 disabled:opacity-40"
+                                          onClick={() => handleGenerateLaudo(t)}
+                                          disabled={
+                                            !t.session_id ||
+                                            (t.response_count !== undefined &&
+                                              t.response_count === 0) ||
+                                            laudoGenerating === t.id
+                                          }
+                                        >
+                                          {laudoGenerating === t.id ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                          ) : (
+                                            <FileDown className="h-4 w-4" />
+                                          )}
+                                        </Button>
+                                      </span>
+                                    </TooltipTrigger>
+                                    {!t.session_id ? (
+                                      <TooltipContent className="bg-slate-900 border-slate-700 text-slate-200 text-xs">
+                                        Sem sessão de respostas vinculada
+                                      </TooltipContent>
+                                    ) : t.response_count !== undefined && t.response_count === 0 ? (
+                                      <TooltipContent className="bg-slate-900 border-slate-700 text-slate-200 text-xs">
+                                        Nenhuma resposta registrada
+                                      </TooltipContent>
+                                    ) : (
+                                      <TooltipContent className="bg-slate-900 border-slate-700 text-slate-200 text-xs">
+                                        Gerar Laudo PDF
+                                      </TooltipContent>
+                                    )}
+                                  </Tooltip>
+                                </TooltipProvider>
+
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-slate-300 hover:text-white hover:bg-slate-800"
+                                  onClick={() => setSessionDialog({ open: true, session: t })}
+                                  title="Editar"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-950"
+                                  onClick={() =>
+                                    setDeleteTarget({ type: 'session', id: t.id, name: t.type })
+                                  }
+                                  title="Excluir"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            /* NÍVEL 1: LISTA PRINCIPAL DE PACIENTES */
+            <Card className="border-slate-800">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <CardTitle className="text-base font-bold text-white">
+                    Pacientes Cadastrados
+                  </CardTitle>
+                  <CardDescription className="text-xs text-white/60">
+                    Clique em um paciente para ver seus detalhes e histórico de avaliações.
+                  </CardDescription>
+                </div>
+                <Button size="sm" onClick={() => setPatientDialog({ open: true, patient: null })}>
+                  <Plus className="h-4 w-4 mr-1" /> Novo
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {patients.length === 0 ? (
+                  <p className="text-center text-white/80 py-8">Nenhum paciente encontrado.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-white font-semibold">Nome</TableHead>
+                          <TableHead className="text-white font-semibold">E-mail</TableHead>
+                          <TableHead className="text-white font-semibold">Telefone</TableHead>
+                          <TableHead className="text-white font-semibold">CPF</TableHead>
+                          <TableHead className="text-white font-semibold">Nascimento</TableHead>
+                          <TableHead className="text-white font-semibold text-center">
+                            Testes
+                          </TableHead>
+                          <TableHead className="text-white font-semibold text-right">
+                            Ações
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {patients.map((p) => (
+                          <TableRow
+                            key={p.id}
+                            className="cursor-pointer hover:bg-slate-800/60 transition-colors group"
+                            onClick={() => handleSelectPatient(p)}
+                          >
+                            <TableCell className="text-sm font-bold text-white group-hover:text-amber-300">
+                              <span className="underline decoration-slate-700 group-hover:decoration-amber-400">
+                                {p.first_name} {p.last_name}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-sm text-white/80">
+                              {p.email || '-'}
+                            </TableCell>
+                            <TableCell className="text-sm text-white/80">
+                              {p.phone || '-'}
+                            </TableCell>
+                            <TableCell className="text-sm text-white/80 font-mono">
+                              {p.document || '-'}
+                            </TableCell>
+                            <TableCell className="text-sm text-white/80">
+                              {p.birth_date
+                                ? new Date(p.birth_date).toLocaleDateString('pt-BR')
+                                : '-'}
+                            </TableCell>
+                            <TableCell className="text-sm text-center">
+                              <Badge variant="secondary" className="bg-slate-800 text-slate-200">
+                                {p.evaluation_count}
+                              </Badge>
+                            </TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              <ActionButtons
+                                onEdit={() => setPatientDialog({ open: true, patient: p })}
+                                onDelete={() =>
+                                  setDeleteTarget({
+                                    type: 'patient',
+                                    id: p.id,
+                                    name: `${p.first_name} ${p.last_name}`,
+                                  })
+                                }
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="tests">
@@ -448,20 +1008,36 @@ export default function AdminPainel() {
                                     </Button>
                                   )}
                                   {t.status === 'completed' ? (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950"
-                                      onClick={() => handleGenerateLaudo(t)}
-                                      disabled={laudoGenerating === t.id}
-                                      title="Gerar Laudo PDF"
-                                    >
-                                      {laudoGenerating === t.id ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                      ) : (
-                                        <FileDown className="h-4 w-4" />
-                                      )}
-                                    </Button>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span>
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              className="h-8 w-8 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950 disabled:opacity-40"
+                                              onClick={() => handleGenerateLaudo(t)}
+                                              disabled={!t.session_id || laudoGenerating === t.id}
+                                            >
+                                              {laudoGenerating === t.id ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                              ) : (
+                                                <FileDown className="h-4 w-4" />
+                                              )}
+                                            </Button>
+                                          </span>
+                                        </TooltipTrigger>
+                                        {!t.session_id ? (
+                                          <TooltipContent className="bg-slate-900 border-slate-700 text-slate-200 text-xs">
+                                            Sem sessão de respostas vinculada
+                                          </TooltipContent>
+                                        ) : (
+                                          <TooltipContent className="bg-slate-900 border-slate-700 text-slate-200 text-xs">
+                                            Gerar Laudo PDF
+                                          </TooltipContent>
+                                        )}
+                                      </Tooltip>
+                                    </TooltipProvider>
                                   ) : undefined}
                                 </>
                               }

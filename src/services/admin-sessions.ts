@@ -9,7 +9,18 @@ export interface AdminTest {
   started_at: string
   status: string
   guest_id: string | null
+  session_id: string | null
   score: number | null
+  response_count?: number
+  expected_questions?: number | null
+}
+
+export interface DecryptedSessionResponse {
+  id: string
+  question_key: string
+  question_label: string
+  response_value: string
+  created_at?: string
 }
 
 export interface SessionFormData {
@@ -252,9 +263,9 @@ export async function getAdminTests(): Promise<AdminTest[]> {
     started_at: c.started_at,
     status: c.status,
     guest_id: c.guest_id,
+    session_id: c.session_id,
     score: scoreMap[c.id] ?? null,
   }))
-
   // Most recent first
   tests.sort((a, b) => (a.started_at < b.started_at ? 1 : a.started_at > b.started_at ? -1 : 0))
   return tests
@@ -317,6 +328,104 @@ export async function updateSession(
     if (e2) return { error: e2.message }
   }
   return { error: null }
+}
+
+/**
+ * Retorna o número esperado de perguntas por escala conforme a especificação:
+ * - PHQ-9: 9 perguntas
+ * - GAD-7: 7 perguntas
+ * - ASRS-18: 18 perguntas
+ * - SNAP-IV: 18 perguntas
+ * - ASSQ: 27 perguntas
+ * - MEEM: 30 itens
+ * - MoCA: 30 itens
+ * - HAM-D: 17 perguntas
+ * - HAM-A: 14 perguntas
+ * - Y-BOCS: 10 perguntas
+ * - FAS: 2 campos
+ * - FTDRS: 6 domínios
+ * - SDS: 20 perguntas
+ * - M-CHAT-R: 20 perguntas
+ * - MINI 5.0.0 / outros: null (tratados de forma especial ou N/A)
+ */
+export function getScaleExpectedQuestions(scaleType: string): number | null {
+  const norm = (scaleType || '').toUpperCase().trim()
+  if (norm.includes('PHQ-9') || norm === 'PHQ9') return 9
+  if (norm.includes('GAD-7') || norm === 'GAD7') return 7
+  if (norm.includes('ASRS-18') || norm.includes('ASRS')) return 18
+  if (norm.includes('SNAP-IV') || norm.includes('SNAPIV') || norm.includes('SNAP-4')) return 18
+  if (norm.includes('ASSQ')) return 27
+  if (norm.includes('MEEM') || norm.includes('MMSE')) return 30
+  if (norm.includes('MOCA')) return 30
+  if (norm.includes('HAM-D') || norm.includes('HAMD')) return 17
+  if (norm.includes('HAM-A') || norm.includes('HAMA')) return 14
+  if (norm.includes('Y-BOCS') || norm.includes('YBOCS')) return 10
+  if (norm.includes('FAS')) return 2
+  if (norm.includes('FTDRS')) return 6
+  if (norm.includes('SDS')) return 20
+  if (norm.includes('M-CHAT') || norm.includes('MCHAT')) return 20
+  return null
+}
+
+/**
+ * Busca respostas descriptografadas de uma sessão via RPC get_session_responses_decrypted.
+ */
+export async function getSessionResponsesDecrypted(
+  sessionId: string,
+): Promise<{ data: DecryptedSessionResponse[]; error: string | null }> {
+  try {
+    const { data, error } = await supabase.rpc('get_session_responses_decrypted', {
+      p_session_id: sessionId,
+    })
+    if (error) return { data: [], error: error.message }
+    return { data: (data as DecryptedSessionResponse[]) || [], error: null }
+  } catch (err: any) {
+    return { data: [], error: err?.message || 'Erro ao buscar respostas descriptografadas' }
+  }
+}
+
+/**
+ * Retorna as avaliações/testagens de um paciente específico (filtradas por guest_id),
+ * incluindo a contagem real de anamnesis_responses para cada sessão vinculada.
+ */
+export async function getPatientTests(guestId: string): Promise<AdminTest[]> {
+  const allTests = await getAdminTests()
+  const patientTests = allTests.filter((t) => t.guest_id === guestId)
+
+  // Coleta os session_ids das avaliações do paciente
+  const sessionIds = [...new Set(patientTests.map((t) => t.session_id).filter(Boolean) as string[])]
+
+  const responseCounts: Record<string, number> = {}
+
+  if (sessionIds.length > 0) {
+    // Busca contagem de respostas de anamnesis_responses excluindo eventuais somas/totais (_total)
+    // para bater com as perguntas reais respondidas
+    const { data: respRows } = await supabase
+      .from('anamnesis_responses')
+      .select('session_id, question_key')
+      .in('session_id', sessionIds)
+
+    if (respRows) {
+      for (const r of respRows) {
+        if (!r.session_id) continue
+        // Se a chave não for um totalizador interno, incrementa a contagem de respostas
+        const isTotalKey = r.question_key?.endsWith('_total')
+        if (!isTotalKey) {
+          responseCounts[r.session_id] = (responseCounts[r.session_id] || 0) + 1
+        }
+      }
+    }
+  }
+
+  return patientTests.map((t) => {
+    const respCount = t.session_id ? (responseCounts[t.session_id] ?? 0) : 0
+    const expected = getScaleExpectedQuestions(t.type)
+    return {
+      ...t,
+      response_count: respCount,
+      expected_questions: expected,
+    }
+  })
 }
 
 export async function deleteTestData(sessionId: string): Promise<{ error: string | null }> {
