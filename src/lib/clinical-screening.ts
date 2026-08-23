@@ -26,6 +26,8 @@ export interface ScreeningResult {
 }
 
 export const asrs18Keys: string[] = Array.from({ length: 18 }, (_, i) => `asrs_q${i + 1}`)
+export const hamdKeys: string[] = Array.from({ length: 17 }, (_, i) => `hamd_q${i + 1}`)
+export const hamaKeys: string[] = Array.from({ length: 14 }, (_, i) => `hama_q${i + 1}`)
 
 export function generateScreening(scores: ScaleScores): ScreeningResult {
   const findings: ScreeningFinding[] = []

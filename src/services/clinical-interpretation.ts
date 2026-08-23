@@ -11,6 +11,8 @@ import { assqQuestions, snapQuestions, interpretSnapIV } from '@/lib/assessment-
 import {
   generateScreening,
   asrs18Keys,
+  hamdKeys,
+  hamaKeys,
   type ScreeningFinding,
   computeGlobalSeverity,
 } from '@/lib/clinical-screening'
@@ -108,8 +110,8 @@ export async function getSessionInterpretation(
   const asrs18Score = scoreQuestionnaire(raw, asrs18Keys)
   const mocaScore = getSingleScore(raw, 'moca_total')
   const meemScore = getSingleScore(raw, 'meem_total')
-  const hamdScore = getSingleScore(raw, 'hamd_total')
-  const hamaScore = getSingleScore(raw, 'hama_total')
+  const hamdScore = scoreQuestionnaire(raw, hamdKeys)
+  const hamaScore = scoreQuestionnaire(raw, hamaKeys)
 
   const { data: session } = await supabase
     .from('anamnesis_sessions')

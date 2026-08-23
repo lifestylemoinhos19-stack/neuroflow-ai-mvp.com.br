@@ -11,75 +11,75 @@ export interface AssessmentOption {
 
 export const snapQuestions: AssessmentQuestion[] = [
   {
-    key: 'snap_1',
+    key: 'snapiv_q1',
     text: 'Comete erros por descuido nos trabalhos escolares ou outras atividades',
     group: 'inattention',
   },
   {
-    key: 'snap_2',
+    key: 'snapiv_q2',
     text: 'Tem dificuldade de manter a atenção em tarefas ou atividades lúdicas',
     group: 'inattention',
   },
   {
-    key: 'snap_3',
+    key: 'snapiv_q3',
     text: 'Parece não estar ouvindo quando se fala diretamente com ela',
     group: 'inattention',
   },
   {
-    key: 'snap_4',
+    key: 'snapiv_q4',
     text: 'Não segue instruções até o fim e não termina tarefas',
     group: 'inattention',
   },
   {
-    key: 'snap_5',
+    key: 'snapiv_q5',
     text: 'Tem dificuldade de organizar tarefas e atividades',
     group: 'inattention',
   },
   {
-    key: 'snap_6',
+    key: 'snapiv_q6',
     text: 'Evita ou reluta em se envolver em tarefas que exigem esforço mental',
     group: 'inattention',
   },
   {
-    key: 'snap_7',
+    key: 'snapiv_q7',
     text: 'Perde coisas necessárias para tarefas ou atividades',
     group: 'inattention',
   },
-  { key: 'snap_8', text: 'Distrai-se facilmente com estímulos externos', group: 'inattention' },
-  { key: 'snap_9', text: 'Esquece-se de atividades diárias', group: 'inattention' },
+  { key: 'snapiv_q8', text: 'Distrai-se facilmente com estímulos externos', group: 'inattention' },
+  { key: 'snapiv_q9', text: 'Esquece-se de atividades diárias', group: 'inattention' },
   {
-    key: 'snap_10',
+    key: 'snapiv_q10',
     text: 'Move as mãos ou pés inquietamente ou se remexe na cadeira',
     group: 'hyperactivity',
   },
   {
-    key: 'snap_11',
+    key: 'snapiv_q11',
     text: 'Sai do lugar em situações em que se espera que fique sentado',
     group: 'hyperactivity',
   },
   {
-    key: 'snap_12',
+    key: 'snapiv_q12',
     text: 'Corre ou escala excessivamente em situações inadequadas',
     group: 'hyperactivity',
   },
   {
-    key: 'snap_13',
+    key: 'snapiv_q13',
     text: 'Tem dificuldade em brincar ou se envolver silenciosamente em atividades',
     group: 'hyperactivity',
   },
   {
-    key: 'snap_14',
+    key: 'snapiv_q14',
     text: 'Está sempre "a mil" ou age como se fosse impulsionada por um motor',
     group: 'hyperactivity',
   },
-  { key: 'snap_15', text: 'Fala em excesso', group: 'hyperactivity' },
+  { key: 'snapiv_q15', text: 'Fala em excesso', group: 'hyperactivity' },
   {
-    key: 'snap_16',
+    key: 'snapiv_q16',
     text: 'Responde precipitadamente antes que as perguntas tenham sido completadas',
     group: 'hyperactivity',
   },
-  { key: 'snap_17', text: 'Tem dificuldade de esperar sua vez', group: 'hyperactivity' },
-  { key: 'snap_18', text: 'Interrompe ou se intromete nos outros', group: 'hyperactivity' },
+  { key: 'snapiv_q17', text: 'Tem dificuldade de esperar sua vez', group: 'hyperactivity' },
+  { key: 'snapiv_q18', text: 'Interrompe ou se intromete nos outros', group: 'hyperactivity' },
 ]
 
 export const snapOptions: AssessmentOption[] = [
