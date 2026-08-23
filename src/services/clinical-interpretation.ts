@@ -81,10 +81,9 @@ function getSingleScore(responses: RawResponse[], key: string): number | null {
 export async function getSessionInterpretation(
   sessionId: string,
 ): Promise<InterpretationResult | null> {
-  const { data: responses, error } = await supabase
-    .from('anamnesis_responses')
-    .select('question_key, response_value')
-    .eq('session_id', sessionId)
+  const { data: responses, error } = await supabase.rpc('get_session_responses_decrypted', {
+    p_session_id: sessionId,
+  })
 
   if (error || !responses) return null
 
