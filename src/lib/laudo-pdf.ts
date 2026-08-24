@@ -342,10 +342,14 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
       })()
     : null
 
-  // Queixa principal / história — se não houver nada melhor, usa a escala
-  // aplicada como contexto mínimo (sem inventar).
-  const scaleName = input.type || 'Avaliação'
-  const queixa = interpretation.trim() ? interpretation.trim() : `Avaliação aplicada: ${scaleName}.`
+  // Queixa principal / história — se houver anamnesisData estruturado, prioriza
+  const anamnesis = aiInterpretation?.anamnesisData
+  const scaleName = aiInterpretation?.scaleName || input.type || 'Avaliação'
+  const queixa =
+    anamnesis?.chiefComplaint ||
+    (interpretation.trim() ? interpretation.trim() : `Avaliação aplicada: ${scaleName}.`)
+  const historia =
+    anamnesis?.developmentalHistory || (interpretation.trim() ? interpretation.trim() : null)
 
   const reportCtx: NeuropsychContext = {
     patient: {
@@ -365,7 +369,7 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
     scaleType: input.type,
     score: input.score,
     queixaPrincipal: queixa,
-    historiaEvolucao: interpretation.trim() || null,
+    historiaEvolucao: historia,
     aiInterpretation,
     savedInterpretation: interpretation.trim() || null,
     cognitiveVrc: aiInterpretation?.cognitiveVrc ?? null,
@@ -662,6 +666,14 @@ export async function generateLaudoJSON(
       })()
     : null
 
+  const anamnesis = aiInterpretation?.anamnesisData
+  const scaleName = aiInterpretation?.scaleName || input.type || 'Avaliação'
+  const queixa =
+    anamnesis?.chiefComplaint ||
+    (interpretation.trim() ? interpretation.trim() : `Avaliação aplicada: ${scaleName}.`)
+  const historia =
+    anamnesis?.developmentalHistory || (interpretation.trim() ? interpretation.trim() : null)
+
   const reportCtx: NeuropsychContext = {
     patient: {
       iniciais,
@@ -678,8 +690,8 @@ export async function generateLaudoJSON(
     assessmentDate: input.startedAt,
     scaleType: input.type,
     score: input.score,
-    queixaPrincipal: interpretation.trim() || `Avaliação aplicada: ${input.type || 'Avaliação'}.`,
-    historiaEvolucao: interpretation.trim() || null,
+    queixaPrincipal: queixa,
+    historiaEvolucao: historia,
     aiInterpretation,
     savedInterpretation: interpretation.trim() || null,
     cognitiveVrc: aiInterpretation?.cognitiveVrc ?? null,

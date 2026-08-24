@@ -36,7 +36,21 @@ export interface DomainAnalysis {
   neurodesenvolvimento: { severity: 'baixa' | 'moderada' | 'alta' | null; descricao: string }
 }
 
+export interface AnamnesisData {
+  chiefComplaint?: string | null
+  developmentalHistory?: string | null
+  familyHistory?: string | null
+  currentInterventions?: string | null
+  additionalNotes?: string | null
+  [key: string]: unknown
+}
+
 export interface InterpretationResult {
+  scaleType?: string
+  scaleName?: string
+  severity?: string
+  interpretation?: string
+  anamnesisData?: AnamnesisData | null
   phq9Score: number
   gad7Score: number
   phq9Severity: Phq9Severity
@@ -93,6 +107,172 @@ function getSingleScore(responses: RawResponse[], key: string): number | null {
   return r ? parseValue(r.response_value) : null
 }
 
+const ANAMNESIS_KEYS = [
+  'chief_complaint',
+  'developmental_history',
+  'family_history',
+  'current_interventions',
+  'additional_notes',
+]
+
+/**
+ * Detecta se os dados/respostas são de uma sessão de Anamnese Clínica
+ * (aceita tanto array de RawResponse/DecryptedSessionResponse quanto Record<string, unknown>).
+ */
+export function isAnamnesisSession(
+  raw: Record<string, unknown> | RawResponse[] | unknown,
+): boolean {
+  if (!raw) return false
+  if (Array.isArray(raw)) {
+    return raw.some(
+      (item) =>
+        item &&
+        typeof item === 'object' &&
+        'question_key' in item &&
+        ANAMNESIS_KEYS.includes((item as RawResponse).question_key),
+    )
+  }
+  if (typeof raw === 'object') {
+    return ANAMNESIS_KEYS.some((k) => k in (raw as Record<string, unknown>))
+  }
+  return false
+}
+
+function extractStringValue(val: unknown): string | null {
+  if (val === null || val === undefined) return null
+  const str = String(val).trim()
+  return str.length > 0 ? str : null
+}
+
+/**
+ * Extrai os dados qualitativos da Anamnese e retorna um objeto de interpretação
+ * compatível com o formato esperado pelo laudo e pelo workspace clínico.
+ */
+export function getAnamnesisInterpretation(
+  raw: Record<string, unknown> | RawResponse[] | unknown,
+  cognitiveVrc: number | null = null,
+): InterpretationResult {
+  const anamnesisData: AnamnesisData = {
+    chiefComplaint: null,
+    developmentalHistory: null,
+    familyHistory: null,
+    currentInterventions: null,
+    additionalNotes: null,
+  }
+
+  if (Array.isArray(raw)) {
+    for (const item of raw as RawResponse[]) {
+      if (!item || typeof item !== 'object') continue
+      const k = item.question_key
+      const v = extractStringValue(item.response_value)
+      if (k === 'chief_complaint') anamnesisData.chiefComplaint = v
+      else if (k === 'developmental_history') anamnesisData.developmentalHistory = v
+      else if (k === 'family_history') anamnesisData.familyHistory = v
+      else if (k === 'current_interventions') anamnesisData.currentInterventions = v
+      else if (k === 'additional_notes') anamnesisData.additionalNotes = v
+      else if (k) {
+        anamnesisData[k] = item.response_value
+      }
+    }
+  } else if (raw && typeof raw === 'object') {
+    const obj = raw as Record<string, unknown>
+    anamnesisData.chiefComplaint = extractStringValue(obj.chief_complaint ?? obj.chiefComplaint)
+    anamnesisData.developmentalHistory = extractStringValue(
+      obj.developmental_history ?? obj.developmentalHistory,
+    )
+    anamnesisData.familyHistory = extractStringValue(obj.family_history ?? obj.familyHistory)
+    anamnesisData.currentInterventions = extractStringValue(
+      obj.current_interventions ?? obj.currentInterventions,
+    )
+    anamnesisData.additionalNotes = extractStringValue(obj.additional_notes ?? obj.additionalNotes)
+  }
+
+  const suggestionParts: string[] = [
+    'Avaliação clínica qualitativa — consulte os dados da anamnese abaixo.',
+  ]
+
+  if (anamnesisData.chiefComplaint) {
+    suggestionParts.push(`Queixa principal: ${anamnesisData.chiefComplaint}`)
+  }
+  if (anamnesisData.developmentalHistory) {
+    suggestionParts.push(`História do desenvolvimento: ${anamnesisData.developmentalHistory}`)
+  }
+  if (anamnesisData.familyHistory) {
+    suggestionParts.push(`Histórico familiar: ${anamnesisData.familyHistory}`)
+  }
+  if (anamnesisData.currentInterventions) {
+    suggestionParts.push(`Intervenções atuais: ${anamnesisData.currentInterventions}`)
+  }
+  if (anamnesisData.additionalNotes) {
+    suggestionParts.push(`Observações adicionais: ${anamnesisData.additionalNotes}`)
+  }
+
+  const suggestion = suggestionParts.join('\n\n')
+
+  const domainAnalysis: DomainAnalysis = {
+    humor: {
+      severity: null,
+      descricao: 'Avaliação de humor obtida por relato qualitativo na Anamnese Clínica.',
+    },
+    ansiedade: {
+      severity: null,
+      descricao: 'Avaliação de ansiedade obtida por relato qualitativo na Anamnese Clínica.',
+    },
+    cognicao: {
+      severity: null,
+      descricao:
+        cognitiveVrc !== null && cognitiveVrc < 0.5
+          ? `VRC ${cognitiveVrc.toFixed(2)} — abaixo do esperado.`
+          : 'Avaliação cognitiva qualitativa via Anamnese Clínica.',
+    },
+    comportamento: {
+      severity: null,
+      descricao: 'Avaliação comportamental obtida por relato qualitativo na Anamnese Clínica.',
+    },
+    neurodesenvolvimento: {
+      severity: null,
+      descricao: anamnesisData.developmentalHistory
+        ? `Histórico de desenvolvimento relatado: ${anamnesisData.developmentalHistory}`
+        : 'Marcos de desenvolvimento registrados via Anamnese Clínica.',
+    },
+  }
+
+  return {
+    scaleType: 'anamnesis',
+    scaleName: 'Anamnese Clínica',
+    hasScaleData: true,
+    anamnesisData,
+    severity: 'Qualitativa',
+    interpretation: 'Avaliação clínica qualitativa — consulte os dados da anamnese abaixo.',
+    phq9Score: 0,
+    gad7Score: 0,
+    phq9Severity: getPhq9Severity(0),
+    gad7Severity: getGad7Severity(0),
+    cognitiveVrc,
+    suggestion,
+    hasComorbidity: false,
+    assqScore: null,
+    snapIvScore: null,
+    asrs18Score: null,
+    mocaScore: null,
+    meemScore: null,
+    hamdScore: null,
+    hamaScore: null,
+    ybocsScore: null,
+    sdsScore: null,
+    snapIvInattention: null,
+    snapIvHyperactivity: null,
+    globalSeverity: 'low',
+    findings: [],
+    comorbidities: [],
+    domainAnalysis,
+    hypotheses: [
+      'Anamnese clínica qualitativa concluída — avaliar hipóteses em conjunto com as escalas aplicadas.',
+    ],
+    gaps: [],
+  }
+}
+
 export async function getSessionInterpretation(
   sessionId: string,
 ): Promise<InterpretationResult | null> {
@@ -103,6 +283,29 @@ export async function getSessionInterpretation(
   if (error || !responses) return null
 
   const raw = responses as RawResponse[]
+
+  const { data: session } = await supabase
+    .from('anamnesis_sessions')
+    .select('user_id')
+    .eq('id', sessionId)
+    .single()
+
+  let cognitiveVrc: number | null = null
+  if (session?.user_id) {
+    const { data: focusSession } = await supabase
+      .from('focus_sessions')
+      .select('vrc')
+      .eq('user_id', session.user_id)
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    cognitiveVrc = focusSession?.vrc ?? null
+  }
+
+  // Verifica se é uma sessão de Anamnese qualitativa antes do loop de escalas quantitativas
+  if (isAnamnesisSession(raw)) {
+    return getAnamnesisInterpretation(raw, cognitiveVrc)
+  }
   const phq9Keys = phq9Questions.map((q: any) => q.key as string)
   const gad7Keys = gad7Questions.map((q: any) => q.key as string)
   const assqKeys = assqQuestions.map((q) => q.key)
@@ -135,24 +338,6 @@ export async function getSessionInterpretation(
   const hamaScore = hasAnyKey(raw, hamaKeys) ? scoreQuestionnaire(raw, hamaKeys) : null
   const ybocsScore = hasAnyKey(raw, ybocsKeys) ? scoreQuestionnaire(raw, ybocsKeys) : null
   const sdsScore = hasAnyKey(raw, sdsKeys) ? scoreQuestionnaire(raw, sdsKeys) : null
-
-  const { data: session } = await supabase
-    .from('anamnesis_sessions')
-    .select('user_id')
-    .eq('id', sessionId)
-    .single()
-
-  let cognitiveVrc: number | null = null
-  if (session?.user_id) {
-    const { data: focusSession } = await supabase
-      .from('focus_sessions')
-      .select('vrc')
-      .eq('user_id', session.user_id)
-      .order('started_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-    cognitiveVrc = focusSession?.vrc ?? null
-  }
 
   const allScores = [
     phq9Score,

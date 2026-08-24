@@ -110,17 +110,19 @@ export function InterpretationEditor({ sessionId }: { sessionId: string }) {
     )
   }
 
+  const isAnamnesis = interpretation.scaleType === 'anamnesis' || !!interpretation.anamnesisData
+
   const allScales: { label: string; score: number | null; badge?: string; badgeClass?: string }[] =
     [
       {
         label: 'PHQ-9',
-        score: interpretation.phq9Score,
+        score: interpretation.phq9Score > 0 ? interpretation.phq9Score : null,
         badge: phq9SeverityLabels[interpretation.phq9Severity],
         badgeClass: severityColors[interpretation.phq9Severity],
       },
       {
         label: 'GAD-7',
-        score: interpretation.gad7Score,
+        score: interpretation.gad7Score > 0 ? interpretation.gad7Score : null,
         badge: gad7SeverityLabels[interpretation.gad7Severity],
         badgeClass: severityColors[interpretation.gad7Severity],
       },
@@ -137,23 +139,73 @@ export function InterpretationEditor({ sessionId }: { sessionId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-        {allScales
-          .filter((s) => s.score !== null)
-          .map((s) => (
-            <Card key={s.label} className="border-slate-200">
-              <CardContent className="p-3">
-                <p className="text-xs font-medium text-slate-600 mb-1">{s.label}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xl font-bold text-slate-900">{s.score}</span>
-                  {s.badge && (
-                    <Badge className={cn('border text-xs', s.badgeClass)}>{s.badge}</Badge>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-      </div>
+      {isAnamnesis ? (
+        <Card className="border-teal-200 bg-teal-50/50">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-bold text-teal-900">Anamnese Clínica Geral</p>
+                <p className="text-xs text-teal-700">Avaliação qualitativa estruturada</p>
+              </div>
+              <Badge className="bg-teal-100 text-teal-800 border-teal-300">Qualitativa</Badge>
+            </div>
+            {interpretation.anamnesisData && (
+              <div className="space-y-2 pt-2 border-t border-teal-200/60 text-xs text-slate-800">
+                {interpretation.anamnesisData.chiefComplaint && (
+                  <div>
+                    <span className="font-semibold text-teal-900">Queixa Principal: </span>
+                    <span>{interpretation.anamnesisData.chiefComplaint}</span>
+                  </div>
+                )}
+                {interpretation.anamnesisData.developmentalHistory && (
+                  <div>
+                    <span className="font-semibold text-teal-900">
+                      Histórico de Desenvolvimento:{' '}
+                    </span>
+                    <span>{interpretation.anamnesisData.developmentalHistory}</span>
+                  </div>
+                )}
+                {interpretation.anamnesisData.familyHistory && (
+                  <div>
+                    <span className="font-semibold text-teal-900">Histórico Familiar: </span>
+                    <span>{interpretation.anamnesisData.familyHistory}</span>
+                  </div>
+                )}
+                {interpretation.anamnesisData.currentInterventions && (
+                  <div>
+                    <span className="font-semibold text-teal-900">Intervenções Atuais: </span>
+                    <span>{interpretation.anamnesisData.currentInterventions}</span>
+                  </div>
+                )}
+                {interpretation.anamnesisData.additionalNotes && (
+                  <div>
+                    <span className="font-semibold text-teal-900">Observações: </span>
+                    <span>{interpretation.anamnesisData.additionalNotes}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {allScales
+            .filter((s) => s.score !== null)
+            .map((s) => (
+              <Card key={s.label} className="border-slate-200">
+                <CardContent className="p-3">
+                  <p className="text-xs font-medium text-slate-600 mb-1">{s.label}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xl font-bold text-slate-900">{s.score}</span>
+                    {s.badge && (
+                      <Badge className={cn('border text-xs', s.badgeClass)}>{s.badge}</Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+        </div>
+      )}
 
       {interpretation.cognitiveVrc !== null && (
         <Card className="border-slate-200">

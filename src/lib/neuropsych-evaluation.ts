@@ -968,6 +968,42 @@ export function generateNeuropsychReport(ctx: NeuropsychContext): NeuropsychRepo
   const queixa = ctx.queixaPrincipal || 'Não fornecida.'
   const historia = ctx.historiaEvolucao || 'Não fornecida.'
 
+  // Monta seção específica de dados da Anamnese se presente
+  const anamnesis = ctx.aiInterpretation?.anamnesisData
+  const anamnesisLines: string[] = []
+  if (anamnesis) {
+    if (anamnesis.chiefComplaint) {
+      anamnesisLines.push(`Queixa principal: ${anamnesis.chiefComplaint}`)
+    }
+    if (anamnesis.developmentalHistory) {
+      anamnesisLines.push(`História do desenvolvimento: ${anamnesis.developmentalHistory}`)
+    }
+    if (anamnesis.familyHistory) {
+      anamnesisLines.push(`Histórico familiar: ${anamnesis.familyHistory}`)
+    }
+    if (anamnesis.currentInterventions) {
+      anamnesisLines.push(`Intervenções atuais: ${anamnesis.currentInterventions}`)
+    }
+    if (anamnesis.additionalNotes) {
+      anamnesisLines.push(`Observações adicionais: ${anamnesis.additionalNotes}`)
+    }
+  }
+
+  // Instrumentos aplicados (inclui Anamnese Clínica se for avaliação qualitativa)
+  const isAnamnesis = !!anamnesis || ctx.scaleType?.toLowerCase().includes('anamnese')
+  let finalInstruments = uniqueInstruments
+  if (isAnamnesis && !uniqueInstruments.some((i) => i.nome === 'Anamnese Clínica')) {
+    finalInstruments = [
+      {
+        nome: 'Anamnese Clínica',
+        data: fmtDate(ctx.assessmentDate),
+        pontuacao: 'Qualitativa',
+        classificacao: 'Questionário clínico estruturado',
+      },
+      ...uniqueInstruments,
+    ]
+  }
+
   // ---- Seções estruturadas (10) ----
   const sections: ReportSection[] = [
     {
@@ -991,8 +1027,12 @@ export function generateNeuropsychReport(ctx: NeuropsychContext): NeuropsychRepo
     },
     {
       index: 4,
-      title: 'SINAIS E SINTOMAS POR DOMÍNIO',
+      title:
+        anamnesisLines.length > 0
+          ? 'DADOS DA ANAMNESE E SINAIS CLÍNICOS'
+          : 'SINAIS E SINTOMAS POR DOMÍNIO',
       lines: [
+        ...(anamnesisLines.length > 0 ? anamnesisLines : []),
         `Humor e afeto: ${humor.descricao}`,
         `Ansiedade: ${ansiedade.descricao}`,
         `Cognição: ${cognicao.descricao}`,
@@ -1004,8 +1044,8 @@ export function generateNeuropsychReport(ctx: NeuropsychContext): NeuropsychRepo
       index: 5,
       title: 'INSTRUMENTOS APLICADOS',
       lines:
-        uniqueInstruments.length > 0
-          ? uniqueInstruments.map(
+        finalInstruments.length > 0
+          ? finalInstruments.map(
               (i) =>
                 `${i.nome} | Data: ${i.data} | Pontuação informada: ${i.pontuacao} | Classificação: ${i.classificacao}`,
             )
@@ -1069,7 +1109,7 @@ export function generateNeuropsychReport(ctx: NeuropsychContext): NeuropsychRepo
         descricao: neurodesenvolvimento.descricao,
       },
     },
-    instrumentos: uniqueInstruments,
+    instrumentos: finalInstruments,
     sintese_clinica: sintese,
     areas_de_atencao: areasAtencao,
     lacunas: lacunas,
