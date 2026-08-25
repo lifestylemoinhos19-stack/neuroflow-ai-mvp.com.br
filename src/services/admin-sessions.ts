@@ -390,7 +390,23 @@ export async function getSessionResponsesDecrypted(
  */
 export async function getPatientTests(guestId: string): Promise<AdminTest[]> {
   const allTests = await getAdminTests()
+  const anamneseInAll = allTests.filter((t) => t.type === 'Anamnese').length
+  console.log(
+    `[getPatientTests] allTests.length: ${allTests.length}, Anamnese count: ${anamneseInAll}`,
+  )
+
   const patientTests = allTests.filter((t) => t.guest_id === guestId)
+  const anamneseInPatient = patientTests.filter((t) => t.type === 'Anamnese').length
+  console.log(
+    `[getPatientTests] patientTests.length: ${patientTests.length}, Anamnese count: ${anamneseInPatient}`,
+  )
+
+  if (patientTests.length === 0 && allTests.length > 0) {
+    console.log(
+      `[getPatientTests] patientTests is empty! Target guestId: ${guestId}, allTests guest_ids:`,
+      allTests.map((t) => ({ id: t.id, type: t.type, guest_id: t.guest_id })),
+    )
+  }
 
   // Coleta os session_ids das avaliações do paciente
   const sessionIds = [...new Set(patientTests.map((t) => t.session_id).filter(Boolean) as string[])]

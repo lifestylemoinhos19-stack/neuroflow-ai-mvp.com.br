@@ -254,6 +254,10 @@ export default function AdminPainel() {
     setLoadingPatientTests(true)
     try {
       const pTests = await getPatientTests(patient.id)
+      console.log(
+        `[handleSelectPatient] Patient ${patient.first_name} ${patient.last_name} (${patient.id}) - pTests count: ${pTests.length}, scale_types:`,
+        pTests.map((t) => t.type),
+      )
       setPatientTestsList(pTests)
     } catch (err) {
       console.error('Erro ao buscar avaliações do paciente:', err)
