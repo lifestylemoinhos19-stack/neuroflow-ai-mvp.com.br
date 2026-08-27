@@ -339,33 +339,135 @@ export async function getSessionInterpretation(
   const ybocsScore = hasAnyKey(raw, ybocsKeys) ? scoreQuestionnaire(raw, ybocsKeys) : null
   const sdsScore = hasAnyKey(raw, sdsKeys) ? scoreQuestionnaire(raw, sdsKeys) : null
 
+  let currentPhq9Score = phq9Score
+  let currentGad7Score = gad7Score
+  let currentAssqScore = assqScore
+  let currentSnapIvScore = snapIvScore
+  let currentAsrs18Score = asrs18Score
+  let currentMocaScore = mocaScore
+  let currentMeemScore = meemScore
+  let currentHamdScore = hamdScore
+  let currentHamaScore = hamaScore
+  let currentYbocsScore = ybocsScore
+  let currentSdsScore = sdsScore
+
   const allScores = [
-    phq9Score,
-    gad7Score,
-    assqScore,
-    snapIvScore,
-    asrs18Score,
-    mocaScore,
-    meemScore,
-    hamdScore,
-    hamaScore,
-    ybocsScore,
-    sdsScore,
+    currentPhq9Score,
+    currentGad7Score,
+    currentAssqScore,
+    currentSnapIvScore,
+    currentAsrs18Score,
+    currentMocaScore,
+    currentMeemScore,
+    currentHamdScore,
+    currentHamaScore,
+    currentYbocsScore,
+    currentSdsScore,
   ]
-  const hasScaleData = allScores.some((s) => s !== null && s !== 0)
+  let hasScaleData = allScores.some((s) => s !== null && s !== 0)
+
+  // Fallback para quando a descriptografia falha (ex: parseValue retorna NaN -> 0)
+  // mas as chaves batem com uma escala conhecida e o metadata da sessão tem scores pré-calculados
+  if (!hasScaleData && raw.length > 0) {
+    const isYbocsPattern = hasAnyKey(raw, ybocsKeys)
+    const isHamdPattern = hasAnyKey(raw, hamdKeys)
+    const isHamaPattern = hasAnyKey(raw, hamaKeys)
+    const isSdsPattern = hasAnyKey(raw, sdsKeys)
+    const isPhq9Pattern = hasAnyKey(raw, phq9Keys)
+    const isGad7Pattern = hasAnyKey(raw, gad7Keys)
+    const isAssqPattern = hasAnyKey(raw, assqKeys)
+    const isSnapPattern = hasSnapData
+    const isAsrsPattern = hasAnyKey(raw, asrs18Keys)
+    const isMocaPattern = hasAnyKey(raw, mocaKeys)
+    const isMeemPattern = hasAnyKey(raw, meemKeys)
+
+    const matchesKnownScalePattern =
+      isYbocsPattern ||
+      isHamdPattern ||
+      isHamaPattern ||
+      isSdsPattern ||
+      isPhq9Pattern ||
+      isGad7Pattern ||
+      isAssqPattern ||
+      isSnapPattern ||
+      isAsrsPattern ||
+      isMocaPattern ||
+      isMeemPattern
+
+    if (matchesKnownScalePattern) {
+      const { data: sessionRow } = await supabase
+        .from('anamnesis_sessions')
+        .select('metadata')
+        .eq('id', sessionId)
+        .single()
+
+      const meta = sessionRow?.metadata as Record<string, unknown> | null
+      if (meta) {
+        const rawScore = meta.totalScore ?? meta.total_score ?? meta.score
+        const metaScore =
+          rawScore !== undefined && rawScore !== null && rawScore !== '' ? Number(rawScore) : NaN
+        const validTotalScore = !isNaN(metaScore) ? metaScore : null
+
+        const rawScaleType = ((meta.scaleType ?? meta.scale_type ?? meta.type ?? '') as string)
+          .toLowerCase()
+          .trim()
+
+        if (validTotalScore !== null) {
+          if (rawScaleType.includes('ybocs') || isYbocsPattern) {
+            currentYbocsScore = validTotalScore
+          } else if (rawScaleType.includes('hamd') || isHamdPattern) {
+            currentHamdScore = validTotalScore
+          } else if (rawScaleType.includes('hama') || isHamaPattern) {
+            currentHamaScore = validTotalScore
+          } else if (rawScaleType.includes('sds') || isSdsPattern) {
+            currentSdsScore = validTotalScore
+          } else if (rawScaleType.includes('phq') || isPhq9Pattern) {
+            currentPhq9Score = validTotalScore
+          } else if (rawScaleType.includes('gad') || isGad7Pattern) {
+            currentGad7Score = validTotalScore
+          } else if (rawScaleType.includes('assq') || isAssqPattern) {
+            currentAssqScore = validTotalScore
+          } else if (rawScaleType.includes('snap') || isSnapPattern) {
+            currentSnapIvScore = validTotalScore
+          } else if (rawScaleType.includes('asrs') || isAsrsPattern) {
+            currentAsrs18Score = validTotalScore
+          } else if (rawScaleType.includes('moca') || isMocaPattern) {
+            currentMocaScore = validTotalScore
+          } else if (rawScaleType.includes('meem') || isMeemPattern) {
+            currentMeemScore = validTotalScore
+          }
+        }
+
+        const fallbackScores = [
+          currentPhq9Score,
+          currentGad7Score,
+          currentAssqScore,
+          currentSnapIvScore,
+          currentAsrs18Score,
+          currentMocaScore,
+          currentMeemScore,
+          currentHamdScore,
+          currentHamaScore,
+          currentYbocsScore,
+          currentSdsScore,
+        ]
+        hasScaleData = fallbackScores.some((s) => s !== null && s !== 0)
+      }
+    }
+  }
 
   const screening = generateScreening({
-    phq9: phq9Score,
-    gad7: gad7Score,
-    assq: assqScore || null,
-    snapIv: snapIvScore || null,
-    asrs18: asrs18Score || null,
-    moca: mocaScore,
-    meem: meemScore,
-    hamd: hamdScore,
-    hama: hamaScore,
-    ybocs: ybocsScore || null,
-    sds: sdsScore || null,
+    phq9: currentPhq9Score,
+    gad7: currentGad7Score,
+    assq: currentAssqScore || null,
+    snapIv: currentSnapIvScore || null,
+    asrs18: currentAsrs18Score || null,
+    moca: currentMocaScore,
+    meem: currentMeemScore,
+    hamd: currentHamdScore,
+    hama: currentHamaScore,
+    ybocs: currentYbocsScore || null,
+    sds: currentSdsScore || null,
   })
 
   let suggestion = screening.fullSuggestion
@@ -375,32 +477,32 @@ export async function getSessionInterpretation(
 
   // Análise por domínios + hipóteses + lacunas (linguagem cautelosa).
   const domainAnalysis = buildDomainAnalysis({
-    phq9Score,
-    gad7Score,
-    assqScore: assqScore || null,
-    snapIvScore: snapIvScore || null,
-    asrs18Score: asrs18Score || null,
-    mocaScore,
-    meemScore,
-    hamdScore,
-    hamaScore,
-    ybocsScore: ybocsScore || null,
-    sdsScore: sdsScore || null,
+    phq9Score: currentPhq9Score,
+    gad7Score: currentGad7Score,
+    assqScore: currentAssqScore || null,
+    snapIvScore: currentSnapIvScore || null,
+    asrs18Score: currentAsrs18Score || null,
+    mocaScore: currentMocaScore,
+    meemScore: currentMeemScore,
+    hamdScore: currentHamdScore,
+    hamaScore: currentHamaScore,
+    ybocsScore: currentYbocsScore || null,
+    sdsScore: currentSdsScore || null,
     cognitiveVrc,
   })
   const hypotheses = buildHypotheses(screening.findings)
   const gaps = buildGaps({
-    phq9Score,
-    gad7Score,
-    assqScore: assqScore || null,
-    snapIvScore: snapIvScore || null,
-    asrs18Score: asrs18Score || null,
-    mocaScore,
-    meemScore,
-    hamdScore,
-    hamaScore,
-    ybocsScore: ybocsScore || null,
-    sdsScore: sdsScore || null,
+    phq9Score: currentPhq9Score,
+    gad7Score: currentGad7Score,
+    assqScore: currentAssqScore || null,
+    snapIvScore: currentSnapIvScore || null,
+    asrs18Score: currentAsrs18Score || null,
+    mocaScore: currentMocaScore,
+    meemScore: currentMeemScore,
+    hamdScore: currentHamdScore,
+    hamaScore: currentHamaScore,
+    ybocsScore: currentYbocsScore || null,
+    sdsScore: currentSdsScore || null,
     cognitiveVrc,
   })
   suggestion += `\n\n${hypotheses.join('\n')}`
@@ -453,37 +555,37 @@ export async function getSessionInterpretation(
   }
 
   return {
-    phq9Score,
-    gad7Score,
-    phq9Severity: getPhq9Severity(phq9Score),
-    gad7Severity: getGad7Severity(gad7Score),
+    phq9Score: currentPhq9Score,
+    gad7Score: currentGad7Score,
+    phq9Severity: getPhq9Severity(currentPhq9Score),
+    gad7Severity: getGad7Severity(currentGad7Score),
     cognitiveVrc,
     suggestion,
     hasComorbidity: screening.comorbidities.length > 0,
     hasScaleData: true,
-    assqScore: assqScore || null,
-    snapIvScore: snapIvScore || null,
-    asrs18Score: asrs18Score || null,
-    mocaScore,
-    meemScore,
-    hamdScore,
-    hamaScore,
-    ybocsScore: ybocsScore || null,
-    sdsScore: sdsScore || null,
+    assqScore: currentAssqScore || null,
+    snapIvScore: currentSnapIvScore || null,
+    asrs18Score: currentAsrs18Score || null,
+    mocaScore: currentMocaScore,
+    meemScore: currentMeemScore,
+    hamdScore: currentHamdScore,
+    hamaScore: currentHamaScore,
+    ybocsScore: currentYbocsScore || null,
+    sdsScore: currentSdsScore || null,
     snapIvInattention: snapResult.inattentionAvg || null,
     snapIvHyperactivity: snapResult.hyperactivityAvg || null,
     globalSeverity: computeGlobalSeverity({
-      phq9: phq9Score,
-      gad7: gad7Score,
-      assq: assqScore || null,
-      snapIv: snapIvScore || null,
-      asrs18: asrs18Score || null,
-      moca: mocaScore,
-      meem: meemScore,
-      hamd: hamdScore,
-      hama: hamaScore,
-      ybocs: ybocsScore || null,
-      sds: sdsScore || null,
+      phq9: currentPhq9Score,
+      gad7: currentGad7Score,
+      assq: currentAssqScore || null,
+      snapIv: currentSnapIvScore || null,
+      asrs18: currentAsrs18Score || null,
+      moca: currentMocaScore,
+      meem: currentMeemScore,
+      hamd: currentHamdScore,
+      hama: currentHamaScore,
+      ybocs: currentYbocsScore || null,
+      sds: currentSdsScore || null,
     }),
     findings: screening.findings,
     comorbidities: screening.comorbidities,
