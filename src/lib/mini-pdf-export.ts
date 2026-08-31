@@ -158,13 +158,15 @@ export async function exportMiniPdf(report: MiniReportData): Promise<void> {
     doc.text(lines, indent, y)
     y += lines.length * 5 + 1
   }
-  const writeLabel = (label: string, value: string) => {
+  const writeLabel = (label: string, value: string, valueIndent = 42) => {
     ensureSpace(6)
     doc.setFont('helvetica', 'bold')
     doc.text(label, marginX, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(value, marginX + 42, y)
-    y += 6
+    const maxValW = pageWidth - marginX * 2 - valueIndent
+    const valLines = doc.splitTextToSize(value, maxValW)
+    doc.text(valLines, marginX + valueIndent, y)
+    y += Math.max(6, valLines.length * 4.5 + 1.5)
   }
   const writeVisualSeparator = (label: string) => {
     ensureSpace(10)
@@ -191,29 +193,18 @@ export async function exportMiniPdf(report: MiniReportData): Promise<void> {
       details: r.details,
     }))
 
-  // Módulos do MINI não geram interpretação rica de escalas, mas o resumo
-  // clínico do MINI e a interpretação salva entram como história/queixa.
   const queixa =
-    report.clinicalSummary ||
-    `Avaliação MINI 5.0.0 aplicada. ${
-      miniResults.length > 0
-        ? `${miniResults.length} módulo(s) com resultado positivo.`
-        : 'Nenhum módulo positivo identificado.'
-    }`
+    report.clinicalFeedback?.comments ||
+    (report.clinicalSummary ? report.clinicalSummary : 'Não relatada.')
 
-  const historia = [
-    `Protocolo: ${report.protocol || '—'}`,
-    `Entrevistador: ${report.interviewerName || '—'}`,
-    `Início: ${fmtTime(report.session.started_at)} | Fim: ${fmtTime(report.session.completed_at)} | Duração: ${fmtDuration(report.session.started_at, report.session.completed_at)}`,
-    report.clinicalFeedback?.admin_edited_interpretation
-      ? `Interpretação do profissional: ${report.clinicalFeedback.admin_edited_interpretation}`
-      : null,
-    report.clinicalFeedback?.system_suggestion
-      ? `Sugestão do sistema: ${report.clinicalFeedback.system_suggestion}`
-      : null,
-  ]
-    .filter(Boolean)
-    .join('\n')
+  const historia =
+    [
+      report.clinicalFeedback?.admin_edited_interpretation
+        ? `Interpretação clínica do profissional: ${report.clinicalFeedback.admin_edited_interpretation}`
+        : null,
+    ]
+      .filter(Boolean)
+      .join('\n') || 'Sem histórico prévio adicional informado.'
 
   const ctx: NeuropsychContext = {
     patient: {
@@ -260,32 +251,34 @@ export async function exportMiniPdf(report: MiniReportData): Promise<void> {
   // Seção 1: IDENTIFICAÇÃO — substitui nome completo por iniciais.
   const sec1 = neuropsych.sections[0]
   writeSectionHeader(sec1.index, sec1.title)
-  writeLabel('Paciente (iniciais):', computeInitials(report.patient?.fullName))
+  writeLabel('Paciente (iniciais):', computeInitials(report.patient?.fullName), 46)
   if (report.patient?.birthDate) {
-    writeLabel('Data de nascimento:', fmtDate(report.patient.birthDate))
+    writeLabel('Data de nascimento:', fmtDate(report.patient.birthDate), 46)
   }
-  writeLabel('Protocolo:', report.protocol || '—')
-  writeLabel('Entrevistador:', report.interviewerName || '—')
-  writeLabel('Data da avaliação:', fmtDate(report.session.started_at))
+  writeLabel('Protocolo:', report.protocol || '—', 46)
+  writeLabel('Entrevistador:', report.interviewerName || '—', 46)
+  writeLabel('Data da avaliação:', fmtDate(report.session.started_at), 46)
   writeLabel(
     'Horário:',
     `Início: ${fmtTime(report.session.started_at)} | Fim: ${fmtTime(report.session.completed_at)} | Duração: ${fmtDuration(report.session.started_at, report.session.completed_at)}`,
+    46,
   )
   writeLabel(
     'Profissional responsável:',
     `${CLINICIAN_CREDENTIALS.name} — ${CLINICIAN_CREDENTIALS.crm} / ${CLINICIAN_CREDENTIALS.rqe}`,
+    46,
   )
   y += 2
 
-  // Seções 2-5
-  for (let i = 1; i < 5; i++) {
+  // Seções 2-4
+  for (let i = 1; i < 4; i++) {
     const section = neuropsych.sections[i]
     writeSectionHeader(section.index, section.title)
     for (const line of section.lines) writeParagraph(line)
     y += 2
   }
 
-  // --- Tabela de módulos (resultado detalhado do MINI) ---
+  // --- Seção 5: Tabela de módulos (resultado detalhado do MINI) ---
   writeSectionHeader(5, 'INSTRUMENTOS APLICADOS (MÓDULOS MINI 5.0.0)')
   const colX = [marginX, marginX + 14, marginX + 65, marginX + 105, pageWidth - marginX]
   const rowH = 6.5
@@ -461,23 +454,17 @@ export async function exportMiniJson(report: MiniReportData) {
     }))
 
   const queixa =
-    report.clinicalSummary ||
-    `Avaliação MINI 5.0.0 aplicada. ${
-      miniResults.length > 0
-        ? `${miniResults.length} módulo(s) com resultado positivo.`
-        : 'Nenhum módulo positivo identificado.'
-    }`
+    report.clinicalFeedback?.comments ||
+    (report.clinicalSummary ? report.clinicalSummary : 'Não relatada.')
 
-  const historia = [
-    `Protocolo: ${report.protocol || '—'}`,
-    `Entrevistador: ${report.interviewerName || '—'}`,
-    `Início: ${fmtTime(report.session.started_at)} | Fim: ${fmtTime(report.session.completed_at)}`,
-    report.clinicalFeedback?.admin_edited_interpretation
-      ? `Interpretação do profissional: ${report.clinicalFeedback.admin_edited_interpretation}`
-      : null,
-  ]
-    .filter(Boolean)
-    .join('\n')
+  const historia =
+    [
+      report.clinicalFeedback?.admin_edited_interpretation
+        ? `Interpretação clínica do profissional: ${report.clinicalFeedback.admin_edited_interpretation}`
+        : null,
+    ]
+      .filter(Boolean)
+      .join('\n') || 'Sem histórico prévio adicional informado.'
 
   const ctx: NeuropsychContext = {
     patient: {

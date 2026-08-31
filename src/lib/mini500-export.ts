@@ -90,27 +90,9 @@ function buildNeuropsychContext(data: Mini500ExportData): NeuropsychContext {
       details: r.details,
     }))
 
-  const positiveCount = miniResults.length
-  const queixa =
-    data.summary ||
-    `Avaliação MINI 5.0.0 aplicada. ${
-      positiveCount > 0
-        ? `${positiveCount} módulo(s) com resultado positivo ou de risco.`
-        : 'Nenhum módulo positivo identificado.'
-    }`
+  const queixa = data.summary || 'Não relatada.'
 
-  const historia = [
-    `Protocolo: ${data.patientInfo.protocol || '—'}`,
-    `Entrevistador: ${data.patientInfo.interviewerName || '—'}`,
-    `Data da entrevista: ${data.patientInfo.interviewDate || '—'}`,
-    `Início: ${data.patientInfo.startTime || '—'} | Fim: ${data.patientInfo.endTime || '—'}`,
-    data.summary ? `Resumo clínico: ${data.summary}` : null,
-    ...data.interpretations.map(
-      (i) => `[${i.moduleLetter}] ${i.title} (${i.status}): ${i.interpretation}`,
-    ),
-  ]
-    .filter(Boolean)
-    .join('\n')
+  const historia = 'Sem histórico prévio adicional informado.'
 
   return {
     patient: {
@@ -209,13 +191,15 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
     doc.text(lines, indent, y)
     y += lines.length * 5 + 1
   }
-  const writeLabel = (label: string, value: string) => {
+  const writeLabel = (label: string, value: string, valueIndent = 42) => {
     ensureSpace(6)
     doc.setFont('helvetica', 'bold')
     doc.text(label, marginX, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(value, marginX + 42, y)
-    y += 6
+    const maxValW = pageWidth - marginX * 2 - valueIndent
+    const valLines = doc.splitTextToSize(value, maxValW)
+    doc.text(valLines, marginX + valueIndent, y)
+    y += Math.max(6, valLines.length * 4.5 + 1.5)
   }
   const writeVisualSeparator = (label: string) => {
     ensureSpace(10)
@@ -259,19 +243,21 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
   // Seção 1: IDENTIFICAÇÃO
   const sec1 = neuropsych.sections[0]
   writeSectionHeader(sec1.index, sec1.title)
-  writeLabel('Paciente (iniciais):', computeInitials(data.patientInfo.name))
-  writeLabel('Protocolo:', data.patientInfo.protocol || '—')
-  writeLabel('Entrevistador:', data.patientInfo.interviewerName || '—')
-  writeLabel('Data da avaliação:', data.patientInfo.interviewDate || '—')
+  writeLabel('Paciente (iniciais):', computeInitials(data.patientInfo.name), 46)
+  writeLabel('Protocolo:', data.patientInfo.protocol || '—', 46)
+  writeLabel('Entrevistador:', data.patientInfo.interviewerName || '—', 46)
+  writeLabel('Data da avaliação:', data.patientInfo.interviewDate || '—', 46)
   if (data.patientInfo.startTime || data.patientInfo.endTime) {
     writeLabel(
       'Horário:',
       `Início: ${data.patientInfo.startTime || '—'} | Fim: ${data.patientInfo.endTime || '—'}`,
+      46,
     )
   }
   writeLabel(
     'Profissional responsável:',
     `${CLINICIAN_CREDENTIALS.name} — ${CLINICIAN_CREDENTIALS.crm} / ${CLINICIAN_CREDENTIALS.rqe}`,
+    46,
   )
   y += 2
 

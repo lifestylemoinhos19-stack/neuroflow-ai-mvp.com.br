@@ -435,13 +435,15 @@ export async function generateAssistedRecordPDF(ctx: AssistedRecordContext): Pro
     doc.text(l, indent, y)
     y += l.length * 5 + 1
   }
-  const writeLabel = (label: string, value: string) => {
+  const writeLabel = (label: string, value: string, valueIndent = 46) => {
     ensureSpace(6)
     doc.setFont('helvetica', 'bold')
     doc.text(label, marginX, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(value, marginX + 52, y)
-    y += 6
+    const maxValW = pageWidth - marginX * 2 - valueIndent
+    const valLines = doc.splitTextToSize(value, maxValW)
+    doc.text(valLines, marginX + valueIndent, y)
+    y += Math.max(6, valLines.length * 4.5 + 1.5)
   }
 
   // --- Disclaimer no INÍCIO ---
@@ -458,19 +460,19 @@ export async function generateAssistedRecordPDF(ctx: AssistedRecordContext): Pro
 
   // --- 1. IDENTIFICAÇÃO ---
   writeSectionHeader(1, 'IDENTIFICAÇÃO')
-  writeLabel('Iniciais:', ctx.iniciais)
-  writeLabel('Idade:', ctx.idade !== null ? `${ctx.idade} anos` : '—')
-  writeLabel('Escolaridade:', ctx.escolaridade)
+  writeLabel('Iniciais:', ctx.iniciais, 46)
+  writeLabel('Idade:', ctx.idade !== null ? `${ctx.idade} anos` : '—', 46)
+  writeLabel('Escolaridade:', ctx.escolaridade, 46)
   y += 2
 
   // --- 2. INSTRUMENTO ---
   writeSectionHeader(2, 'INSTRUMENTO')
-  writeLabel('Nome:', ctx.scale.name)
-  writeLabel('Versão:', ctx.scale.version)
-  writeLabel('Modo de aplicação:', ctx.scale.applicationMode)
-  writeLabel('Alvo:', ctx.scale.target === 'responsavel' ? 'Responsável' : 'Paciente')
-  writeLabel('Data:', new Date(ctx.appliedAt).toLocaleString('pt-BR'))
-  writeLabel('Profissional:', ctx.professionalName)
+  writeLabel('Nome:', ctx.scale.name, 46)
+  writeLabel('Versão:', ctx.scale.version, 46)
+  writeLabel('Modo de aplicação:', ctx.scale.applicationMode, 46)
+  writeLabel('Alvo:', ctx.scale.target === 'responsavel' ? 'Responsável' : 'Paciente', 46)
+  writeLabel('Data:', new Date(ctx.appliedAt).toLocaleString('pt-BR'), 46)
+  writeLabel('Profissional:', ctx.professionalName, 46)
   y += 2
 
   // --- 3. ITENS E RESPOSTAS ---

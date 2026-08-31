@@ -213,7 +213,8 @@ function assessHumor(ctx: NeuropsychContext): DomainAssessment {
     if (
       ai.phq9Score !== undefined &&
       ai.phq9Score !== null &&
-      (scaleTypeNormalized.includes('PHQ') || ai.phq9Score > 0)
+      (scaleTypeNormalized.includes('PHQ') ||
+        (ai.phq9Score > 0 && !scaleTypeNormalized.includes('MINI')))
     ) {
       hasScore = true
       const s = ai.phq9Score
@@ -244,7 +245,8 @@ function assessHumor(ctx: NeuropsychContext): DomainAssessment {
     if (
       ai.hamdScore !== null &&
       ai.hamdScore !== undefined &&
-      (scaleTypeNormalized.includes('HAM-D') || ai.hamdScore > 0)
+      (scaleTypeNormalized.includes('HAM-D') ||
+        (ai.hamdScore > 0 && !scaleTypeNormalized.includes('MINI')))
     ) {
       hasScore = true
       const s = ai.hamdScore
@@ -314,7 +316,8 @@ function assessAnsiedade(ctx: NeuropsychContext): DomainAssessment {
     if (
       ai.gad7Score !== undefined &&
       ai.gad7Score !== null &&
-      (scaleTypeNormalized.includes('GAD') || ai.gad7Score > 0)
+      (scaleTypeNormalized.includes('GAD') ||
+        (ai.gad7Score > 0 && !scaleTypeNormalized.includes('MINI')))
     ) {
       hasScore = true
       const s = ai.gad7Score
@@ -342,7 +345,8 @@ function assessAnsiedade(ctx: NeuropsychContext): DomainAssessment {
     if (
       ai.hamaScore !== null &&
       ai.hamaScore !== undefined &&
-      (scaleTypeNormalized.includes('HAM-A') || ai.hamaScore > 0)
+      (scaleTypeNormalized.includes('HAM-A') ||
+        (ai.hamaScore > 0 && !scaleTypeNormalized.includes('MINI')))
     ) {
       hasScore = true
       const s = ai.hamaScore
@@ -400,7 +404,9 @@ function assessCognicao(ctx: NeuropsychContext): DomainAssessment {
   let severity: DomainSeverity = null
   let hasScore = false
 
-  if (ai) {
+  const scaleTypeNormalized = (ctx.scaleType || '').toUpperCase().trim()
+
+  if (ai && !scaleTypeNormalized.includes('MINI')) {
     if (ai.mocaScore !== null && ai.mocaScore !== undefined) {
       hasScore = true
       const s = ai.mocaScore
@@ -444,7 +450,9 @@ function assessCognicao(ctx: NeuropsychContext): DomainAssessment {
   }
 
   // VRC (performance cognitiva em sessão de foco)
-  const vrc = ctx.cognitiveVrc ?? ai?.cognitiveVrc ?? null
+  const vrc = !scaleTypeNormalized.includes('MINI')
+    ? (ctx.cognitiveVrc ?? ai?.cognitiveVrc ?? null)
+    : null
   if (vrc !== null && vrc !== undefined) {
     hasScore = true
     if (vrc < 0.5) {
@@ -482,11 +490,15 @@ function assessComportamento(ctx: NeuropsychContext): DomainAssessment {
 
   const ai = ctx.aiInterpretation
 
-  // Y-BOCS via score bruto do input ou aiInterpretation
-  const ybocsScore =
-    (ctx.scaleType && ctx.scaleType.toUpperCase().trim() === 'Y-BOCS' ? ctx.score : null) ??
-    (ai as any)?.ybocsScore ??
-    null
+  const scaleTypeNormalized = (ctx.scaleType || '').toUpperCase().trim()
+  const isMini = scaleTypeNormalized.includes('MINI')
+
+  // Y-BOCS via score bruto do input ou aiInterpretation (ignorado se for MINI)
+  const ybocsScore = !isMini
+    ? ((ctx.scaleType && ctx.scaleType.toUpperCase().trim() === 'Y-BOCS' ? ctx.score : null) ??
+      (ai as any)?.ybocsScore ??
+      null)
+    : null
   if (ybocsScore !== null) {
     hasScore = true
     const s = ybocsScore
@@ -512,15 +524,16 @@ function assessComportamento(ctx: NeuropsychContext): DomainAssessment {
     })
   }
 
-  // SDS via score bruto do input ou aiInterpretation
-  const sdsScore =
-    (ctx.scaleType &&
-    (ctx.scaleType.toUpperCase().trim() === 'SDS' ||
-      ctx.scaleType.toLowerCase().includes('sheehan'))
-      ? ctx.score
-      : null) ??
-    ai?.sdsScore ??
-    null
+  // SDS via score bruto do input ou aiInterpretation (ignorado se for MINI)
+  const sdsScore = !isMini
+    ? ((ctx.scaleType &&
+      (ctx.scaleType.toUpperCase().trim() === 'SDS' ||
+        ctx.scaleType.toLowerCase().includes('sheehan'))
+        ? ctx.score
+        : null) ??
+      ai?.sdsScore ??
+      null)
+    : null
   if (sdsScore !== null) {
     hasScore = true
     const s = sdsScore
@@ -578,7 +591,9 @@ function assessNeurodesenvolvimento(ctx: NeuropsychContext): DomainAssessment {
   let severity: DomainSeverity = null
   let hasScore = false
 
-  if (ai) {
+  const scaleTypeNormalized = (ctx.scaleType || '').toUpperCase().trim()
+
+  if (ai && !scaleTypeNormalized.includes('MINI')) {
     if (ai.assqScore !== null && ai.assqScore !== undefined && ai.assqScore > 0) {
       hasScore = true
       const s = ai.assqScore

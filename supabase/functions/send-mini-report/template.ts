@@ -102,23 +102,29 @@ export function generateReportHtml(data: ReportData): string {
   const fb = data.feedback
   const hasInterpretation = fb?.system_suggestion || fb?.admin_edited_interpretation
 
-  const moduleRows = MINI_MODULES.map((m) => {
-    const responses = data.moduleMap[m.letter] || []
-    const responsesHtml =
-      responses.length > 0
-        ? responses
-            .map(
-              (r) =>
-                `<tr><td style="padding:4px 8px;color:${C.medium};font-size:12px;">${esc(r.label)}</td><td style="padding:4px 8px;font-weight:600;font-size:12px;">${esc(r.response)}</td></tr>`,
-            )
-            .join('')
-        : '<tr><td colspan="2" style="padding:4px 8px;color:#94a3b8;font-size:12px;">Sem respostas registradas</td></tr>'
-    return `<tr>
-<td style="padding:8px;border-bottom:1px solid #e2e8f0;"><strong>${m.letter}</strong></td>
-<td style="padding:8px;border-bottom:1px solid #e2e8f0;">${esc(m.title)}</td>
+  // Mostra apenas os módulos que realmente possuem respostas
+  const appliedModules = MINI_MODULES.filter((m) => (data.moduleMap[m.letter] || []).length > 0)
+  const modulesToRender = appliedModules.length > 0 ? appliedModules : MINI_MODULES
+
+  const moduleRows = modulesToRender
+    .map((m) => {
+      const responses = data.moduleMap[m.letter] || []
+      const responsesHtml =
+        responses.length > 0
+          ? responses
+              .map(
+                (r) =>
+                  `<tr><td style="padding:4px 8px;color:${C.medium};font-size:12px;">${esc(r.label)}</td><td style="padding:4px 8px;font-weight:600;font-size:12px;color:${C.dark};">${esc(r.response)}</td></tr>`,
+              )
+              .join('')
+          : '<tr><td colspan="2" style="padding:4px 8px;color:#94a3b8;font-size:12px;">Sem respostas registradas</td></tr>'
+      return `<tr>
+<td style="padding:8px;border-bottom:1px solid #e2e8f0;color:${C.primary};"><strong>${m.letter}</strong></td>
+<td style="padding:8px;border-bottom:1px solid #e2e8f0;color:${C.dark};font-weight:600;">${esc(m.title)}</td>
 <td style="padding:8px;border-bottom:1px solid #e2e8f0;"><table style="width:100%;border-collapse:collapse;">${responsesHtml}</table></td>
 </tr>`
-  }).join('')
+    })
+    .join('')
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -127,26 +133,26 @@ export function generateReportHtml(data: ReportData): string {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relatório MINI 5.0.0 - ${CLINIC_NAME}</title>
 <style>
-  body{font-family:'Segoe UI',Arial,sans-serif;padding:0;margin:0;background:#f1f5f9;color:${C.dark}}
-  .container{max-width:700px;margin:0 auto;background:#fff;padding:32px}
+  body{font-family:'Segoe UI',Arial,sans-serif;padding:0;margin:0;background:#f8fafc;color:${C.dark}}
+  .container{max-width:720px;margin:0 auto;background:#fff;padding:32px;border:1px solid #e2e8f0;border-radius:8px}
   .brand-header{display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:3px solid ${C.primary};margin-bottom:24px}
-  .brand-header .logo-wrap{width:56px;height:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .brand-header .logo-wrap{width:64px;height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
   .brand-header .logo-wrap img{max-width:100%;max-height:100%;object-fit:contain}
   .brand-header .clinic-name{font-size:20px;font-weight:700;color:${C.primary}}
   .brand-header .clinic-tagline{font-size:12px;color:${C.medium}}
-  h1{color:${C.primary};margin:0;font-size:22px}
+  h1{color:${C.primary};margin:0;font-size:22px;letter-spacing:-0.2px}
   .sub{color:${C.medium};margin:4px 0 24px;font-size:13px}
   .sec{margin-bottom:24px}
-  .sec-t{font-size:15px;font-weight:700;color:${C.primary};border-bottom:2px solid ${C.secondary};padding-bottom:4px;margin-bottom:12px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;font-size:13px}
+  .sec-t{font-size:14px;font-weight:700;color:${C.primary};border-bottom:2px solid ${C.secondary};padding-bottom:4px;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:13px}
   .grid .l{color:${C.medium}}
-  .grid .v{font-weight:600}
+  .grid .v{font-weight:600;color:${C.dark}}
   table.mt{width:100%;border-collapse:collapse;font-size:12px}
-  table.mt th{background:${C.accent};padding:8px;text-align:left;border-bottom:2px solid ${C.primary}}
+  table.mt th{background:${C.accent};padding:8px;text-align:left;border-bottom:2px solid ${C.primary};color:${C.primary};font-weight:700}
   table.mt td{padding:8px;border-bottom:1px solid #e2e8f0;vertical-align:top}
-  .fb{background:${C.accent};border:1px solid #bfdbfe;border-radius:6px;padding:14px;font-size:13px;margin-bottom:10px}
-  .warn{background:${C.accent};border:1px solid #bfdbfe;border-radius:6px;padding:12px;font-size:11px;color:${C.primary};margin-top:16px}
-  .brand-footer{margin-top:24px;padding:12px 0;border-top:2px solid ${C.primary};text-align:center}
+  .fb{background:${C.accent};border-left:4px solid ${C.secondary};border-radius:4px;padding:14px;font-size:13px;margin-bottom:10px;color:${C.dark}}
+  .warn{background:${C.accent};border:1px solid ${C.secondary};border-radius:6px;padding:12px;font-size:11px;color:${C.primary};margin-top:16px;line-height:1.4}
+  .brand-footer{margin-top:28px;padding:12px 0;border-top:2px solid ${C.primary};text-align:center}
   .brand-footer p{margin:2px 0;font-size:12px;color:${C.medium}}
   .brand-footer .fn{font-weight:700;color:${C.dark}}
 </style>

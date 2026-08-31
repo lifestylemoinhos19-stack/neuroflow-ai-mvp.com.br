@@ -452,13 +452,15 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
     y += lines.length * 5 + 1
   }
 
-  const writeLabel = (label: string, value: string) => {
+  const writeLabel = (label: string, value: string, valueIndent = 42) => {
     ensureSpace(6)
     doc.setFont('helvetica', 'bold')
     doc.text(label, marginX, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(value, marginX + 42, y)
-    y += 6
+    const maxValW = pageWidth - marginX * 2 - valueIndent
+    const valLines = doc.splitTextToSize(value, maxValW)
+    doc.text(valLines, marginX + valueIndent, y)
+    y += Math.max(6, valLines.length * 4.5 + 1.5)
   }
 
   // --- Disclaimer no INÍCIO ---
@@ -479,13 +481,14 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   // Seção 1: IDENTIFICAÇÃO
   const sec1 = report.sections[0]
   writeSectionHeader(sec1.index, sec1.title)
-  writeLabel('Paciente (iniciais):', iniciais)
-  if (idade !== null) writeLabel('Idade:', `${idade} anos`)
-  writeLabel('Protocolo / Registro:', input.testId)
-  writeLabel('Data da avaliação:', new Date(input.startedAt).toLocaleDateString('pt-BR'))
+  writeLabel('Paciente (iniciais):', iniciais, 46)
+  if (idade !== null) writeLabel('Idade:', `${idade} anos`, 46)
+  writeLabel('Protocolo / Registro:', input.testId, 46)
+  writeLabel('Data da avaliação:', new Date(input.startedAt).toLocaleDateString('pt-BR'), 46)
   writeLabel(
     'Profissional responsável:',
     `${CLINICIAN_CREDENTIALS.name} — ${CLINICIAN_CREDENTIALS.crm} / ${CLINICIAN_CREDENTIALS.rqe}`,
+    46,
   )
   y += 2
 
