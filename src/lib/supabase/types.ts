@@ -1,11 +1,17 @@
 // AVOID UPDATING THIS FILE DIRECTLY. It is automatically generated.
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.17'
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -39,11 +45,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'anamnesis_responses_session_id_fkey'
-            columns: ['session_id']
+            foreignKeyName: "anamnesis_responses_session_id_fkey"
+            columns: ["session_id"]
             isOneToOne: false
-            referencedRelation: 'anamnesis_sessions'
-            referencedColumns: ['id']
+            referencedRelation: "anamnesis_sessions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -86,11 +92,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'anamnesis_sessions_profile_id_fkey'
-            columns: ['profile_id']
+            foreignKeyName: "anamnesis_sessions_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -118,18 +124,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'assessment_scales_assessment_id_fkey'
-            columns: ['assessment_id']
+            foreignKeyName: "assessment_scales_assessment_id_fkey"
+            columns: ["assessment_id"]
             isOneToOne: false
-            referencedRelation: 'assessments'
-            referencedColumns: ['id']
+            referencedRelation: "assessments"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'assessment_scales_scale_id_fkey'
-            columns: ['scale_id']
+            foreignKeyName: "assessment_scales_scale_id_fkey"
+            columns: ["scale_id"]
             isOneToOne: false
-            referencedRelation: 'scales'
-            referencedColumns: ['id']
+            referencedRelation: "scales"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -157,18 +163,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'assessments_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "assessments_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'patients'
-            referencedColumns: ['id']
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'assessments_profissional_id_fkey'
-            columns: ['profissional_id']
+            foreignKeyName: "assessments_profissional_id_fkey"
+            columns: ["profissional_id"]
             isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -223,32 +229,32 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'assisted_applications_assignment_id_fkey'
-            columns: ['assignment_id']
+            foreignKeyName: "assisted_applications_assignment_id_fkey"
+            columns: ["assignment_id"]
             isOneToOne: false
-            referencedRelation: 'scale_assignments'
-            referencedColumns: ['id']
+            referencedRelation: "scale_assignments"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'assisted_applications_guest_id_fkey'
-            columns: ['guest_id']
+            foreignKeyName: "assisted_applications_guest_id_fkey"
+            columns: ["guest_id"]
             isOneToOne: false
-            referencedRelation: 'guests'
-            referencedColumns: ['id']
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'assisted_applications_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "assisted_applications_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'assisted_applications_session_id_fkey'
-            columns: ['session_id']
+            foreignKeyName: "assisted_applications_session_id_fkey"
+            columns: ["session_id"]
             isOneToOne: false
-            referencedRelation: 'anamnesis_sessions'
-            referencedColumns: ['id']
+            referencedRelation: "anamnesis_sessions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -312,11 +318,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'beta_feedback_session_id_fkey'
-            columns: ['session_id']
+            foreignKeyName: "beta_feedback_session_id_fkey"
+            columns: ["session_id"]
             isOneToOne: false
-            referencedRelation: 'focus_sessions'
-            referencedColumns: ['id']
+            referencedRelation: "focus_sessions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -365,11 +371,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'calibration_logs_session_id_fkey'
-            columns: ['session_id']
+            foreignKeyName: "calibration_logs_session_id_fkey"
+            columns: ["session_id"]
             isOneToOne: false
-            referencedRelation: 'focus_sessions'
-            referencedColumns: ['id']
+            referencedRelation: "focus_sessions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -415,11 +421,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'checkout_sessions_suite_id_fkey'
-            columns: ['suite_id']
+            foreignKeyName: "checkout_sessions_suite_id_fkey"
+            columns: ["suite_id"]
             isOneToOne: false
-            referencedRelation: 'suites'
-            referencedColumns: ['id']
+            referencedRelation: "suites"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -504,11 +510,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'clinical_feedback_session_id_fkey'
-            columns: ['session_id']
+            foreignKeyName: "clinical_feedback_session_id_fkey"
+            columns: ["session_id"]
             isOneToOne: false
-            referencedRelation: 'anamnesis_sessions'
-            referencedColumns: ['id']
+            referencedRelation: "anamnesis_sessions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -590,18 +596,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'clinical_reports_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "clinical_reports_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'patients'
-            referencedColumns: ['id']
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'clinical_reports_validated_by_fkey'
-            columns: ['validated_by']
+            foreignKeyName: "clinical_reports_validated_by_fkey"
+            columns: ["validated_by"]
             isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -641,11 +647,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'disponibilidade_suite_id_fkey'
-            columns: ['suite_id']
+            foreignKeyName: "disponibilidade_suite_id_fkey"
+            columns: ["suite_id"]
             isOneToOne: false
-            referencedRelation: 'suites'
-            referencedColumns: ['id']
+            referencedRelation: "suites"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -682,18 +688,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'email_logs_reservation_id_fkey'
-            columns: ['reservation_id']
+            foreignKeyName: "email_logs_reservation_id_fkey"
+            columns: ["reservation_id"]
             isOneToOne: false
-            referencedRelation: 'reservations'
-            referencedColumns: ['id']
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'email_logs_session_id_fkey'
-            columns: ['session_id']
+            foreignKeyName: "email_logs_session_id_fkey"
+            columns: ["session_id"]
             isOneToOne: false
-            referencedRelation: 'anamnesis_sessions'
-            referencedColumns: ['id']
+            referencedRelation: "anamnesis_sessions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -754,11 +760,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'focus_biofeedback_logs_session_id_fkey'
-            columns: ['session_id']
+            foreignKeyName: "focus_biofeedback_logs_session_id_fkey"
+            columns: ["session_id"]
             isOneToOne: false
-            referencedRelation: 'focus_sessions'
-            referencedColumns: ['id']
+            referencedRelation: "focus_sessions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -861,11 +867,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'guests_preferred_suite_id_fkey'
-            columns: ['preferred_suite_id']
+            foreignKeyName: "guests_preferred_suite_id_fkey"
+            columns: ["preferred_suite_id"]
             isOneToOne: false
-            referencedRelation: 'suites'
-            referencedColumns: ['id']
+            referencedRelation: "suites"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1034,18 +1040,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'pagamentos_checkout_session_id_fkey'
-            columns: ['checkout_session_id']
+            foreignKeyName: "pagamentos_checkout_session_id_fkey"
+            columns: ["checkout_session_id"]
             isOneToOne: false
-            referencedRelation: 'checkout_sessions'
-            referencedColumns: ['id']
+            referencedRelation: "checkout_sessions"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'pagamentos_reserva_id_fkey'
-            columns: ['reserva_id']
+            foreignKeyName: "pagamentos_reserva_id_fkey"
+            columns: ["reserva_id"]
             isOneToOne: false
-            referencedRelation: 'reservations'
-            referencedColumns: ['id']
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1094,11 +1100,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'patient_materials_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "patient_materials_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'patients'
-            referencedColumns: ['id']
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1141,11 +1147,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'patients_profissional_id_fkey'
-            columns: ['profissional_id']
+            foreignKeyName: "patients_profissional_id_fkey"
+            columns: ["profissional_id"]
             isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1197,11 +1203,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'profiles_guest_id_fkey'
-            columns: ['guest_id']
+            foreignKeyName: "profiles_guest_id_fkey"
+            columns: ["guest_id"]
             isOneToOne: false
-            referencedRelation: 'guests'
-            referencedColumns: ['id']
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1235,11 +1241,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'regras_reserva_suite_id_fkey'
-            columns: ['suite_id']
+            foreignKeyName: "regras_reserva_suite_id_fkey"
+            columns: ["suite_id"]
             isOneToOne: false
-            referencedRelation: 'suites'
-            referencedColumns: ['id']
+            referencedRelation: "suites"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1294,18 +1300,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'reservations_guest_id_fkey'
-            columns: ['guest_id']
+            foreignKeyName: "reservations_guest_id_fkey"
+            columns: ["guest_id"]
             isOneToOne: false
-            referencedRelation: 'guests'
-            referencedColumns: ['id']
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'reservations_suite_id_fkey'
-            columns: ['suite_id']
+            foreignKeyName: "reservations_suite_id_fkey"
+            columns: ["suite_id"]
             isOneToOne: false
-            referencedRelation: 'suites'
-            referencedColumns: ['id']
+            referencedRelation: "suites"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1333,11 +1339,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'responses_assessment_scale_id_fkey'
-            columns: ['assessment_scale_id']
+            foreignKeyName: "responses_assessment_scale_id_fkey"
+            columns: ["assessment_scale_id"]
             isOneToOne: false
-            referencedRelation: 'assessment_scales'
-            referencedColumns: ['id']
+            referencedRelation: "assessment_scales"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1374,18 +1380,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'reviews_guest_id_fkey'
-            columns: ['guest_id']
+            foreignKeyName: "reviews_guest_id_fkey"
+            columns: ["guest_id"]
             isOneToOne: false
-            referencedRelation: 'guests'
-            referencedColumns: ['id']
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'reviews_reservation_id_fkey'
-            columns: ['reservation_id']
+            foreignKeyName: "reviews_reservation_id_fkey"
+            columns: ["reservation_id"]
             isOneToOne: false
-            referencedRelation: 'reservations'
-            referencedColumns: ['id']
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1431,25 +1437,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'scale_assignments_guest_id_fkey'
-            columns: ['guest_id']
+            foreignKeyName: "scale_assignments_guest_id_fkey"
+            columns: ["guest_id"]
             isOneToOne: false
-            referencedRelation: 'guests'
-            referencedColumns: ['id']
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'scale_assignments_patient_id_fkey'
-            columns: ['patient_id']
+            foreignKeyName: "scale_assignments_patient_id_fkey"
+            columns: ["patient_id"]
             isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'scale_assignments_session_id_fkey'
-            columns: ['session_id']
+            foreignKeyName: "scale_assignments_session_id_fkey"
+            columns: ["session_id"]
             isOneToOne: false
-            referencedRelation: 'anamnesis_sessions'
-            referencedColumns: ['id']
+            referencedRelation: "anamnesis_sessions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1558,25 +1564,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'spa_appointments_guest_id_fkey'
-            columns: ['guest_id']
+            foreignKeyName: "spa_appointments_guest_id_fkey"
+            columns: ["guest_id"]
             isOneToOne: false
-            referencedRelation: 'guests'
-            referencedColumns: ['id']
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'spa_appointments_service_id_fkey'
-            columns: ['service_id']
+            foreignKeyName: "spa_appointments_service_id_fkey"
+            columns: ["service_id"]
             isOneToOne: false
-            referencedRelation: 'spa_services'
-            referencedColumns: ['id']
+            referencedRelation: "spa_services"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'spa_appointments_therapist_id_fkey'
-            columns: ['therapist_id']
+            foreignKeyName: "spa_appointments_therapist_id_fkey"
+            columns: ["therapist_id"]
             isOneToOne: false
-            referencedRelation: 'therapists'
-            referencedColumns: ['id']
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1604,18 +1610,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'spa_service_consumables_item_id_fkey'
-            columns: ['item_id']
+            foreignKeyName: "spa_service_consumables_item_id_fkey"
+            columns: ["item_id"]
             isOneToOne: false
-            referencedRelation: 'inventory_items'
-            referencedColumns: ['id']
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'spa_service_consumables_service_id_fkey'
-            columns: ['service_id']
+            foreignKeyName: "spa_service_consumables_service_id_fkey"
+            columns: ["service_id"]
             isOneToOne: false
-            referencedRelation: 'spa_services'
-            referencedColumns: ['id']
+            referencedRelation: "spa_services"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1841,11 +1847,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'tarifas_suite_id_fkey'
-            columns: ['suite_id']
+            foreignKeyName: "tarifas_suite_id_fkey"
+            columns: ["suite_id"]
             isOneToOne: false
-            referencedRelation: 'suites'
-            referencedColumns: ['id']
+            referencedRelation: "suites"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1915,11 +1921,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'transactions_reservation_id_fkey'
-            columns: ['reservation_id']
+            foreignKeyName: "transactions_reservation_id_fkey"
+            columns: ["reservation_id"]
             isOneToOne: false
-            referencedRelation: 'reservations'
-            referencedColumns: ['id']
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2183,31 +2189,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -2216,23 +2224,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -2241,23 +2249,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -2266,36 +2274,36 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
@@ -2303,3 +2311,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
