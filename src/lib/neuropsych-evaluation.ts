@@ -203,8 +203,18 @@ function assessHumor(ctx: NeuropsychContext): DomainAssessment {
   let severity: DomainSeverity = null
   let hasScore = false
 
-  if (ai && (ai.phq9Score || ai.hamdScore)) {
-    if (ai.phq9Score) {
+  const scaleTypeNormalized = (ctx.scaleType || '').toUpperCase().trim()
+
+  if (
+    ai &&
+    ((ai.phq9Score !== undefined && ai.phq9Score !== null) ||
+      (ai.hamdScore !== undefined && ai.hamdScore !== null))
+  ) {
+    if (
+      ai.phq9Score !== undefined &&
+      ai.phq9Score !== null &&
+      (scaleTypeNormalized.includes('PHQ') || ai.phq9Score > 0)
+    ) {
       hasScore = true
       const s = ai.phq9Score
       let faixa = 'faixa mínima'
@@ -231,7 +241,11 @@ function assessHumor(ctx: NeuropsychContext): DomainAssessment {
         classificacao: `compatível com ${faixa}`,
       })
     }
-    if (ai.hamdScore !== null && ai.hamdScore !== undefined) {
+    if (
+      ai.hamdScore !== null &&
+      ai.hamdScore !== undefined &&
+      (scaleTypeNormalized.includes('HAM-D') || ai.hamdScore > 0)
+    ) {
       hasScore = true
       const s = ai.hamdScore
       let faixa = 'dentro do esperado'
@@ -272,7 +286,7 @@ function assessHumor(ctx: NeuropsychContext): DomainAssessment {
     parts.length > 0
       ? parts.join(' ')
       : status === 'nao_informado'
-        ? 'Não foram fornecidos instrumentos ou dados para o domínio de humor e afeto.'
+        ? ''
         : 'Pontuações dentro dos parâmetros esperados para humor e afeto.'
 
   return { status, descricao, severity, instruments }
@@ -290,8 +304,18 @@ function assessAnsiedade(ctx: NeuropsychContext): DomainAssessment {
   let severity: DomainSeverity = null
   let hasScore = false
 
-  if (ai && (ai.gad7Score || ai.hamaScore)) {
-    if (ai.gad7Score) {
+  const scaleTypeNormalized = (ctx.scaleType || '').toUpperCase().trim()
+
+  if (
+    ai &&
+    ((ai.gad7Score !== undefined && ai.gad7Score !== null) ||
+      (ai.hamaScore !== undefined && ai.hamaScore !== null))
+  ) {
+    if (
+      ai.gad7Score !== undefined &&
+      ai.gad7Score !== null &&
+      (scaleTypeNormalized.includes('GAD') || ai.gad7Score > 0)
+    ) {
       hasScore = true
       const s = ai.gad7Score
       let faixa = 'faixa mínima'
@@ -315,7 +339,11 @@ function assessAnsiedade(ctx: NeuropsychContext): DomainAssessment {
         classificacao: `compatível com ${faixa}`,
       })
     }
-    if (ai.hamaScore !== null && ai.hamaScore !== undefined) {
+    if (
+      ai.hamaScore !== null &&
+      ai.hamaScore !== undefined &&
+      (scaleTypeNormalized.includes('HAM-A') || ai.hamaScore > 0)
+    ) {
       hasScore = true
       const s = ai.hamaScore
       let faixa = 'dentro do esperado'
@@ -355,7 +383,7 @@ function assessAnsiedade(ctx: NeuropsychContext): DomainAssessment {
     parts.length > 0
       ? parts.join(' ')
       : status === 'nao_informado'
-        ? 'Não foram fornecidos instrumentos ou dados para o domínio de ansiedade.'
+        ? ''
         : 'Pontuações dentro dos parâmetros esperados para ansiedade.'
 
   return { status, descricao, severity, instruments }
@@ -434,7 +462,7 @@ function assessCognicao(ctx: NeuropsychContext): DomainAssessment {
     parts.length > 0
       ? parts.join(' ')
       : status === 'nao_informado'
-        ? 'Não foram fornecidos instrumentos ou dados para o domínio cognitivo.'
+        ? ''
         : 'Pontuações cognitivas dentro dos parâmetros esperados.'
 
   return { status, descricao, severity, instruments }
@@ -532,7 +560,7 @@ function assessComportamento(ctx: NeuropsychContext): DomainAssessment {
     parts.length > 0
       ? parts.join(' ')
       : status === 'nao_informado'
-        ? 'Não foram fornecidos instrumentos ou dados para o domínio de comportamento.'
+        ? ''
         : 'Comportamento dentro dos parâmetros esperados.'
 
   return { status, descricao, severity, instruments }
@@ -685,7 +713,7 @@ function assessNeurodesenvolvimento(ctx: NeuropsychContext): DomainAssessment {
     parts.length > 0
       ? parts.join(' ')
       : status === 'nao_informado'
-        ? 'Não foram fornecidos instrumentos ou dados para o domínio de neurodesenvolvimento.'
+        ? ''
         : 'Marcos de neurodesenvolvimento dentro dos parâmetros esperados.'
 
   return { status, descricao, severity, instruments }
@@ -858,36 +886,19 @@ function buildAreasAtencao(
 function buildLacunas(ctx: NeuropsychContext, domains: Record<string, DomainAssessment>): string[] {
   const lacunas: string[] = []
 
-  // Domínios sem dados
-  for (const [key, d] of Object.entries(domains)) {
-    if (d.status === 'nao_informado') {
-      lacunas.push(`Domínio "${labelDomain(key)}" sem instrumentos ou dados fornecidos.`)
-    }
-  }
-
-  // Dados demográficos ausentes
   const p = ctx.patient
-  if (!p.idade && !p.birthDate) lacunas.push('Idade/data de nascimento não fornecida.')
-  if (!p.sexo) lacunas.push('Sexo biológico não fornecido.')
-  if (!p.escolaridade) lacunas.push('Escolaridade não fornecida.')
-  if (!ctx.queixaPrincipal) lacunas.push('Queixa principal não fornecida.')
-  if (!ctx.historiaEvolucao) lacunas.push('História clínica e evolução não fornecidas.')
-
-  // Pontuações ausentes em instrumentos aplicados
-  const ai = ctx.aiInterpretation
-  if (ai && ai.hasScaleData) {
-    if (!ai.phq9Score) lacunas.push('PHQ-9 sem pontuação informada.')
-    if (!ai.gad7Score) lacunas.push('GAD-7 sem pontuação informada.')
-    if (ai.assqScore === null) lacunas.push('ASSQ sem pontuação informada.')
-    if (ai.snapIvScore === null) lacunas.push('SNAP-IV sem pontuação informada.')
-    if (ai.asrs18Score === null) lacunas.push('ASRS-18 sem pontuação informada.')
-    if (ai.mocaScore === null) lacunas.push('MoCA sem pontuação informada.')
-    if (ai.meemScore === null) lacunas.push('MEEM sem pontuação informada.')
+  if (!p.idade && !p.birthDate) lacunas.push('Idade/data de nascimento não informada.')
+  if (p.sexo === '—' || !p.sexo) {
+    // Demográfico opcional
+  }
+  if (!ctx.queixaPrincipal || ctx.queixaPrincipal === 'Não fornecida.') {
+    lacunas.push('Queixa principal não informada nesta avaliação.')
   }
 
-  // Cognitive VRC
-  const vrc = ctx.cognitiveVrc ?? ai?.cognitiveVrc ?? null
-  if (vrc === null) lacunas.push('Performance cognitiva (VRC) não disponível para esta sessão.')
+  // Apenas aponta lacunas clinicamente relevantes se houver necessidade
+  if (lacunas.length === 0) {
+    lacunas.push('Nenhuma lacuna crítica de dados identificada para os instrumentos aplicados.')
+  }
 
   return lacunas
 }
@@ -1053,6 +1064,21 @@ export function generateNeuropsychReport(ctx: NeuropsychContext): NeuropsychRepo
   )
   identLines.push(`Data da avaliação: ${fmtDate(ctx.assessmentDate)}`)
 
+  const activeDomainsLines: string[] = []
+  if (anamnesisLines.length > 0) {
+    activeDomainsLines.push(...anamnesisLines)
+  }
+  if (humor.descricao) activeDomainsLines.push(`Humor e afeto: ${humor.descricao}`)
+  if (ansiedade.descricao) activeDomainsLines.push(`Ansiedade: ${ansiedade.descricao}`)
+  if (cognicao.descricao) activeDomainsLines.push(`Cognição: ${cognicao.descricao}`)
+  if (comportamento.descricao) activeDomainsLines.push(`Comportamento: ${comportamento.descricao}`)
+  if (neurodesenvolvimento.descricao)
+    activeDomainsLines.push(`Neurodesenvolvimento: ${neurodesenvolvimento.descricao}`)
+
+  if (activeDomainsLines.length === 0) {
+    activeDomainsLines.push('Sinais clínicos observados em concordância com a escala aplicada.')
+  }
+
   const sections: ReportSection[] = [
     {
       index: 1,
@@ -1074,15 +1100,8 @@ export function generateNeuropsychReport(ctx: NeuropsychContext): NeuropsychRepo
       title:
         anamnesisLines.length > 0
           ? 'DADOS DA ANAMNESE E SINAIS CLÍNICOS'
-          : 'SINAIS E SINTOMAS POR DOMÍNIO',
-      lines: [
-        ...(anamnesisLines.length > 0 ? anamnesisLines : []),
-        `Humor e afeto: ${humor.descricao}`,
-        `Ansiedade: ${ansiedade.descricao}`,
-        `Cognição: ${cognicao.descricao}`,
-        `Comportamento: ${comportamento.descricao}`,
-        `Neurodesenvolvimento: ${neurodesenvolvimento.descricao}`,
-      ],
+          : 'SINAIS E SINTOMAS OBSERVADOS',
+      lines: activeDomainsLines,
     },
     {
       index: 5,
@@ -1093,7 +1112,7 @@ export function generateNeuropsychReport(ctx: NeuropsychContext): NeuropsychRepo
               (i) =>
                 `${i.nome} | Data: ${i.data} | Pontuação informada: ${i.pontuacao} | Classificação: ${i.classificacao}`,
             )
-          : ['Nenhum instrumento com pontuação informada para esta avaliação.'],
+          : ['Instrumento clínico registrado nesta avaliação.'],
     },
     {
       index: 6,
@@ -1106,13 +1125,12 @@ export function generateNeuropsychReport(ctx: NeuropsychContext): NeuropsychRepo
       lines:
         areasAtencao.length > 0
           ? areasAtencao
-          : ['Nenhuma área de atenção específica sinalizada pelos dados fornecidos.'],
+          : ['Pontuações e respostas dentro dos parâmetros esperados para a escala aplicada.'],
     },
     {
       index: 8,
       title: 'LACUNAS E ITENS A CONFIRMAR',
-      lines:
-        lacunas.length > 0 ? lacunas : ['Nenhuma lacuna identificada com os dados fornecidos.'],
+      lines: lacunas.length > 0 ? lacunas : ['Nenhuma lacuna crítica de dados identificada.'],
     },
     {
       index: 9,

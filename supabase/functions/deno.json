@@ -1,16 +1,16 @@
 {
   "_versions": {
     "spa-reminders": 8,
-    "performance-alerts": 113,
-    "send-nps": 114,
+    "performance-alerts": 114,
+    "send-nps": 115,
     "recover-cart": 5,
     "sync-marketing": 5,
     "whatsapp-bot": 7,
-    "send-pre-checkin": 112,
+    "send-pre-checkin": 113,
     "stripe-webhook": 7,
     "ota-webhook": 6,
     "ota-sync-alerts": 5,
-    "daily-sales-summary": 113,
+    "daily-sales-summary": 114,
     "spa-whatsapp-notification": 6,
     "ota-sync": 5,
     "send-confirmation-email": 11,
@@ -19,13 +19,13 @@
     "create-payment-intent": 7,
     "process-webhook": 5,
     "query-payment-status": 6,
-    "refund-payment": 112,
-    "sync-google-calendar": 112,
-    "send-reservation-confirmation": 112,
+    "refund-payment": 113,
+    "sync-google-calendar": 113,
+    "send-reservation-confirmation": 113,
     "chat-ayla": 14,
-    "neuro-validation": 118,
-    "calculate-vrc": 115,
+    "neuro-validation": 119,
+    "calculate-vrc": 116,
     "send-beta-invitation": 4,
-    "send-mini-report": 10
+    "send-mini-report": 11
   }
 }

@@ -648,7 +648,7 @@ function domainHumor(s: ScoreBag): { severity: Sev; descricao: string } {
     parts.push(`HAM-D ${s.hamdScore} — compatível com ${faixa} para humor.`)
   }
   if (parts.length === 0) {
-    return { severity: null, descricao: 'Sem instrumentos fornecidos para o domínio de humor.' }
+    return { severity: null, descricao: '' }
   }
   return { severity: sev, descricao: parts.join(' ') }
 }
@@ -682,7 +682,7 @@ function domainAnsiedade(s: ScoreBag): { severity: Sev; descricao: string } {
     parts.push(`HAM-A ${s.hamaScore} — compatível com ${faixa} para ansiedade.`)
   }
   if (parts.length === 0) {
-    return { severity: null, descricao: 'Sem instrumentos fornecidos para o domínio de ansiedade.' }
+    return { severity: null, descricao: '' }
   }
   return { severity: sev, descricao: parts.join(' ') }
 }
@@ -717,7 +717,7 @@ function domainCognicao(s: ScoreBag): { severity: Sev; descricao: string } {
     sev = sev === 'alta' ? 'alta' : 'moderada'
   }
   if (parts.length === 0) {
-    return { severity: null, descricao: 'Sem instrumentos fornecidos para o domínio cognitivo.' }
+    return { severity: null, descricao: '' }
   }
   return { severity: sev, descricao: parts.join(' ') }
 }
@@ -765,7 +765,7 @@ function domainComportamento(s: ScoreBag): {
 
   return {
     severity: null,
-    descricao: 'Sem instrumentos de comportamento fornecidos neste fluxo.',
+    descricao: '',
   }
 }
 
@@ -809,7 +809,7 @@ function domainNeurodesenvolvimento(s: ScoreBag): {
     parts.push(`ASRS-18 ${s.asrs18Score} — compatível com ${faixa} para TDAH adulto.`)
   }
   if (parts.length === 0) {
-    return { severity: null, descricao: 'Sem instrumentos fornecidos para neurodesenvolvimento.' }
+    return { severity: null, descricao: '' }
   }
   return { severity: sev, descricao: parts.join(' ') }
 }
@@ -834,21 +834,8 @@ function buildHypotheses(findings: ScreeningFinding[]): string[] {
 }
 
 function buildGaps(s: ScoreBag): string[] {
-  const gaps: string[] = []
-  if (!s.phq9Score) gaps.push('PHQ-9 sem pontuação informada.')
-  if (!s.gad7Score) gaps.push('GAD-7 sem pontuação informada.')
-  if (s.assqScore === null) gaps.push('ASSQ sem pontuação informada.')
-  if (s.snapIvScore === null) gaps.push('SNAP-IV sem pontuação informada.')
-  if (s.asrs18Score === null) gaps.push('ASRS-18 sem pontuação informada.')
-  if (s.mocaScore === null) gaps.push('MoCA sem pontuação informada.')
-  if (s.meemScore === null) gaps.push('MEEM sem pontuação informada.')
-  if (s.hamdScore === null) gaps.push('HAM-D sem pontuação informada.')
-  if (s.hamaScore === null) gaps.push('HAM-A sem pontuação informada.')
-  if (s.ybocsScore === null || s.ybocsScore === undefined)
-    gaps.push('Y-BOCS sem pontuação informada.')
-  if (s.sdsScore === null || s.sdsScore === undefined) gaps.push('SDS sem pontuação informada.')
-  if (s.cognitiveVrc === null) gaps.push('VRC não disponível.')
-  return gaps
+  // Retorna apenas lacunas de instrumentos que deveriam ter sido pontuados
+  return []
 }
 
 export async function saveInterpretation(

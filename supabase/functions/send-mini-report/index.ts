@@ -16,8 +16,8 @@ const SUBJECT = 'Relatório MINI 5.0.0 - NeuroFlow AI'
 
 const DEFAULT_CLINICIAN = {
   name: 'Dra. Rose Mary Alves',
-  crm: 'CRM-SP 64.937',
-  rqe: 'RQE 37.892',
+  crm: 'CRM-RS 19625',
+  rqe: 'RQE 29582',
   signatureUrl: `${SUPABASE_URL}/storage/v1/object/public/clinic-assets/clinician-signature.png`,
 }
 
