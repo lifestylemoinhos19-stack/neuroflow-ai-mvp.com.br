@@ -1,13 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import {
-  addDays,
-  nextFriday,
-  nextSaturday,
-  format,
-  startOfDay,
-  parseISO,
-} from 'npm:date-fns@4.1.0'
+import { addDays, nextFriday, nextSaturday, format, startOfDay, parseISO } from 'npm:date-fns@4.1.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -173,7 +166,8 @@ export function extractDates(message: string): { start: Date; end: Date } | null
   }
 
   // 6. Bare numerical range: "12 a 14", "12 ate 14", "de 12 a 15" (implies current month or next if passed)
-  const bareRangeRegex = /(?:de\s*|dia\s*)?(\d{1,2})\s*(?:a|ate|-)\s*(?:dia\s*)?(\d{1,2})(?!\s*(?:hospedes|pessoas|adultos|casais|noites|dias))/i
+  const bareRangeRegex =
+    /(?:de\s*|dia\s*)?(\d{1,2})\s*(?:a|ate|-)\s*(?:dia\s*)?(\d{1,2})(?!\s*(?:hospedes|pessoas|adultos|casais|noites|dias))/i
   const matchBareRange = norm.match(bareRangeRegex)
   if (
     matchBareRange &&
@@ -402,7 +396,8 @@ export function extractCategory(message: string): string | null {
   const norm = normalizeText(message)
   if (norm.includes('presidencial') || norm.includes('loubath')) return 'Presidencial'
   if (norm.includes('luxo') || norm.includes('patiet') || norm.includes('terrus')) return 'Luxo'
-  if (norm.includes('especial') || norm.includes('bonnard') || norm.includes('cezanne')) return 'Especial'
+  if (norm.includes('especial') || norm.includes('bonnard') || norm.includes('cezanne'))
+    return 'Especial'
   if (norm.includes('superior') || norm.includes('forain')) return 'Superior'
   if (
     norm.includes('standard') ||
@@ -594,7 +589,10 @@ Deno.serve(async (req) => {
 
     // 1. Rebuild and maintain state across conversation turns
     const historyList: ChatMessage[] = Array.isArray(messages) ? messages : []
-    const { state: historyState, lastAssistantQuestion } = buildStateFromHistory(historyList, message)
+    const { state: historyState, lastAssistantQuestion } = buildStateFromHistory(
+      historyList,
+      message,
+    )
 
     const currentState: BookingState = {
       guests: 2,
