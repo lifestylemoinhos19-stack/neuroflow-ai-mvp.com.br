@@ -121,11 +121,16 @@ function buildNeuropsychContext(data: Mini500ExportData): NeuropsychContext {
     },
     professional: {
       nome: CLINICIAN_CREDENTIALS.name,
-      registro: `${CLINICIAN_CREDENTIALS.crm} · ${CLINICIAN_CREDENTIALS.rqe}`,
+      registro: `${CLINICIAN_CREDENTIALS.crm} / ${CLINICIAN_CREDENTIALS.rqe}`,
       especialidade: 'Psiquiatria',
     },
+    protocol: data.patientInfo.protocol || null,
+    interviewerName: data.patientInfo.interviewerName || null,
+    startTime: data.patientInfo.startTime || null,
+    endTime: data.patientInfo.endTime || null,
     assessmentDate: data.patientInfo.interviewDate || null,
     scaleType: 'MINI 5.0.0',
+    alerts: data.alerts,
     queixaPrincipal: queixa,
     historiaEvolucao: historia,
     miniResults,
@@ -258,9 +263,15 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
   writeLabel('Protocolo:', data.patientInfo.protocol || '—')
   writeLabel('Entrevistador:', data.patientInfo.interviewerName || '—')
   writeLabel('Data da avaliação:', data.patientInfo.interviewDate || '—')
+  if (data.patientInfo.startTime || data.patientInfo.endTime) {
+    writeLabel(
+      'Horário:',
+      `Início: ${data.patientInfo.startTime || '—'} | Fim: ${data.patientInfo.endTime || '—'}`,
+    )
+  }
   writeLabel(
     'Profissional responsável:',
-    `${CLINICIAN_CREDENTIALS.name} — ${CLINICIAN_CREDENTIALS.crm} · ${CLINICIAN_CREDENTIALS.rqe}`,
+    `${CLINICIAN_CREDENTIALS.name} — ${CLINICIAN_CREDENTIALS.crm} / ${CLINICIAN_CREDENTIALS.rqe}`,
   )
   y += 2
 
@@ -273,26 +284,35 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
   }
 
   // Seção 5: tabela de módulos do MINI (instrumentos aplicados)
-  writeSectionHeader(5, 'INSTRUMENTOS APLICADOS (MÓDULOS MINI)')
-  const colX = [marginX, marginX + 12, marginX + 28, marginX + 90, pageWidth - marginX]
-  const rowH = 6
-  const drawTableRow = (cells: string[], bold = false) => {
-    ensureSpace(rowH)
-    doc.setFont('helvetica', bold ? 'bold' : 'normal')
-    doc.setFontSize(9)
+  writeSectionHeader(5, 'INSTRUMENTOS APLICADOS (MÓDULOS MINI 5.0.0)')
+  const colX = [marginX, marginX + 14, marginX + 65, marginX + 105, pageWidth - marginX]
+  const rowH = 6.5
+  const drawTableRow = (cells: string[], isHeader = false) => {
+    ensureSpace(rowH + 1)
+    if (isHeader) {
+      doc.setFillColor(accent[0], accent[1], accent[2])
+      doc.rect(marginX, y, pageWidth - marginX * 2, rowH, 'F')
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(8.5)
+      doc.setTextColor(primary[0], primary[1], primary[2])
+    } else {
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8)
+      doc.setTextColor(dark[0], dark[1], dark[2])
+    }
     cells.forEach((cell, i) => {
       const maxW = colX[i + 1] - colX[i] - 2
       const lines = doc.splitTextToSize(cell, maxW)
-      doc.text(lines.slice(0, 2), colX[i] + 1, y + 4)
+      doc.text(lines.slice(0, 2), colX[i] + 1.5, y + 4.2)
     })
-    doc.setDrawColor(0xe2, 0xe8, 0xf0)
-    doc.setLineWidth(0.1)
+    doc.setDrawColor(secondary[0], secondary[1], secondary[2])
+    doc.setLineWidth(isHeader ? 0.3 : 0.1)
     doc.line(marginX, y + rowH, pageWidth - marginX, y + rowH)
     y += rowH
   }
-  drawTableRow(['Mód', 'Descrição', 'Resultado', 'Detalhes'], true)
+  drawTableRow(['Mód', 'Descrição', 'Resultado', 'Detalhes / Critérios'], true)
   for (const r of data.results) {
-    drawTableRow([r.letter, r.title, r.label, r.details])
+    drawTableRow([r.letter, r.title, r.label, r.details || '—'])
   }
   y += 4
 
@@ -397,7 +417,7 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9)
   doc.setTextColor(medium[0], medium[1], medium[2])
-  doc.text(`${CLINICIAN_CREDENTIALS.crm} · ${CLINICIAN_CREDENTIALS.rqe}`, sigBlockX, y + 28)
+  doc.text(`${CLINICIAN_CREDENTIALS.crm} / ${CLINICIAN_CREDENTIALS.rqe}`, sigBlockX, y + 28)
   // Abaixo: "Assinado digitalmente em [data] às [hora]"
   const sigNow = new Date()
   const sigDate = sigNow.toLocaleDateString('pt-BR')
@@ -461,7 +481,7 @@ export function exportMini500Txt(data: Mini500ExportData): void {
 
   lines.push('PROFISSIONAL RESPONSÁVEL', '-'.repeat(40))
   lines.push(
-    `${CLINICIAN_CREDENTIALS.name} — ${CLINICIAN_CREDENTIALS.crm} · ${CLINICIAN_CREDENTIALS.rqe}`,
+    `${CLINICIAN_CREDENTIALS.name} — ${CLINICIAN_CREDENTIALS.crm} / ${CLINICIAN_CREDENTIALS.rqe}`,
   )
 
   const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' })

@@ -42,6 +42,7 @@ export interface InstrumentRecord {
   data: string
   pontuacao: string
   classificacao: string
+  detalhes?: string
 }
 
 /** Resumo de um módulo MINI positivo (para mapear em domínios). */
@@ -74,12 +75,18 @@ export interface NeuropsychContext {
   assessmentDate?: string | null
   scaleType?: string | null
   score?: number | null
+  protocol?: string | null
+  interviewerName?: string | null
+  startTime?: string | null
+  endTime?: string | null
   queixaPrincipal?: string | null
   historiaEvolucao?: string | null
   /** Interpretação rica da sessão (PHQ-9, GAD-7, etc.). */
   aiInterpretation?: InterpretationResult | null
-  /** Módulos MINI 5.0.0 positivos. */
+  /** Módulos MINI 5.0.0 positivos ou avaliados. */
   miniResults?: MiniModuleSummary[] | null
+  /** Alertas clínicos explícitos. */
+  alerts?: string[] | null
   /** Interpretação salva pelo profissional (clinical_feedback). */
   savedInterpretation?: string | null
   /** Performance cognitiva (VRC) de sessão de foco, se houver. */
@@ -445,10 +452,16 @@ function assessComportamento(ctx: NeuropsychContext): DomainAssessment {
   let severity: DomainSeverity = null
   let hasScore = false
 
-  // Y-BOCS via score bruto do input (quando a escala for Y-BOCS)
-  if (ctx.scaleType && ctx.scaleType.toUpperCase().trim() === 'Y-BOCS' && ctx.score !== null) {
+  const ai = ctx.aiInterpretation
+
+  // Y-BOCS via score bruto do input ou aiInterpretation
+  const ybocsScore =
+    (ctx.scaleType && ctx.scaleType.toUpperCase().trim() === 'Y-BOCS' ? ctx.score : null) ??
+    (ai as any)?.ybocsScore ??
+    null
+  if (ybocsScore !== null) {
     hasScore = true
-    const s = ctx.score
+    const s = ybocsScore
     let faixa = 'sintomas subclínicos'
     if (s >= 24) {
       faixa = 'faixa grave'
@@ -471,10 +484,18 @@ function assessComportamento(ctx: NeuropsychContext): DomainAssessment {
     })
   }
 
-  // SDS
-  if (ctx.scaleType && ctx.scaleType.toUpperCase().trim() === 'SDS' && ctx.score !== null) {
+  // SDS via score bruto do input ou aiInterpretation
+  const sdsScore =
+    (ctx.scaleType &&
+    (ctx.scaleType.toUpperCase().trim() === 'SDS' ||
+      ctx.scaleType.toLowerCase().includes('sheehan'))
+      ? ctx.score
+      : null) ??
+    ai?.sdsScore ??
+    null
+  if (sdsScore !== null) {
     hasScore = true
-    const s = ctx.score
+    const s = sdsScore
     let faixa = 'incapacidade normal/leve'
     if (s >= 8) {
       faixa = 'faixa de incapacidade severa'
@@ -483,15 +504,14 @@ function assessComportamento(ctx: NeuropsychContext): DomainAssessment {
       faixa = 'faixa de incapacidade moderada'
       severity = 'moderada'
     }
-    parts.push(`SDS: pontuação informada ${s}/30, compatível com ${faixa}.`)
+    parts.push(`SDS / Sheehan: pontuação informada ${s}/30, compatível com ${faixa}.`)
     instruments.push({
-      nome: 'SDS',
+      nome: 'SDS (Escala de Incapacidade de Sheehan)',
       data: dataStr,
       pontuacao: fmtScore(s, 30),
       classificacao: `compatível com ${faixa}`,
     })
   }
-
   const miniComp = (ctx.miniResults || []).filter((m) =>
     ['H', 'J', 'K', 'L', 'M', 'N', 'P', 'C'].includes(m.letter),
   )
@@ -686,6 +706,13 @@ function assessNeurodesenvolvimento(ctx: NeuropsychContext): DomainAssessment {
  */
 function detectImminentRisk(ctx: NeuropsychContext): string | null {
   const alerts: string[] = []
+
+  // Alertas explícitos passados no contexto
+  if (ctx.alerts && ctx.alerts.length > 0) {
+    for (const a of ctx.alerts) {
+      alerts.push(a)
+    }
+  }
 
   // MINI módulo C (risco de suicídio)
   const modC = (ctx.miniResults || []).find((m) => m.letter === 'C')
@@ -1005,15 +1032,32 @@ export function generateNeuropsychReport(ctx: NeuropsychContext): NeuropsychRepo
   }
 
   // ---- Seções estruturadas (10) ----
+  // Dados de identificação completos
+  const identLines: string[] = [
+    `Paciente: ${iniciais} | Idade: ${fmtNumber(ctx.patient.idade)} | Sexo: ${ctx.patient.sexo || '—'} | Escolaridade: ${ctx.patient.escolaridade || '—'}`,
+  ]
+  if (ctx.protocol) {
+    identLines.push(`Protocolo: ${ctx.protocol}`)
+  }
+  if (ctx.interviewerName) {
+    identLines.push(`Entrevistador(a): ${ctx.interviewerName}`)
+  }
+  const timeInfo: string[] = []
+  if (ctx.startTime) timeInfo.push(`Início: ${ctx.startTime}`)
+  if (ctx.endTime) timeInfo.push(`Fim: ${ctx.endTime}`)
+  if (timeInfo.length > 0) {
+    identLines.push(timeInfo.join(' | '))
+  }
+  identLines.push(
+    `Profissional responsável: ${profissional.nome} — ${profissional.registro} — ${profissional.especialidade}`,
+  )
+  identLines.push(`Data da avaliação: ${fmtDate(ctx.assessmentDate)}`)
+
   const sections: ReportSection[] = [
     {
       index: 1,
       title: 'IDENTIFICAÇÃO',
-      lines: [
-        `Paciente: ${iniciais} | Idade: ${fmtNumber(ctx.patient.idade)} | Sexo: ${ctx.patient.sexo || '—'} | Escolaridade: ${ctx.patient.escolaridade || '—'}`,
-        `Profissional responsável: ${profissional.nome} — ${profissional.registro} — ${profissional.especialidade}`,
-        `Data da avaliação: ${fmtDate(ctx.assessmentDate)}`,
-      ],
+      lines: identLines,
     },
     {
       index: 2,

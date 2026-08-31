@@ -18,11 +18,11 @@ export const CLINIC_BRANDING = {
 } as const
 
 export const CLINICIAN_CREDENTIALS = {
-  name: 'Rose Mary Alves',
-  crm: 'CRMERS 19625',
-  rqe: 'RQE 29582',
+  name: 'Dra. Rose Mary Alves',
+  crm: 'CRM-SP 64.937',
+  rqe: 'RQE 37.892',
   signatureUrl: `${SUPABASE_URL}/storage/v1/object/public/clinic-assets/clinician-signature.png`,
-  fullCredentials: 'Rose Mary Alves - CRMERS 19625 RQE 29582',
+  fullCredentials: 'Dra. Rose Mary Alves — CRM-SP 64.937 / RQE 37.892',
 } as const
 
 export function getBrandHeaderHtml(): string {

@@ -559,7 +559,7 @@ export async function generateAssistedRecordPDF(ctx: AssistedRecordContext): Pro
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9)
   doc.setTextColor(medium[0], medium[1], medium[2])
-  doc.text(`${CLINICIAN_CREDENTIALS.crm} · ${CLINICIAN_CREDENTIALS.rqe}`, marginX + 40, y + 24)
+  doc.text(`${CLINICIAN_CREDENTIALS.crm} / ${CLINICIAN_CREDENTIALS.rqe}`, marginX + 40, y + 24)
   const sigNow = new Date()
   doc.text(
     `Assinado digitalmente em ${sigNow.toLocaleDateString('pt-BR')} às ${sigNow.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`,

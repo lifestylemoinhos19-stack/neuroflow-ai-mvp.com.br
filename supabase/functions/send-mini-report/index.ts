@@ -15,9 +15,9 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '
 const SUBJECT = 'Relatório MINI 5.0.0 - NeuroFlow AI'
 
 const DEFAULT_CLINICIAN = {
-  name: 'Rose Mary Alves',
-  crm: 'CRMERS 19625',
-  rqe: 'RQE 29582',
+  name: 'Dra. Rose Mary Alves',
+  crm: 'CRM-SP 64.937',
+  rqe: 'RQE 37.892',
   signatureUrl: `${SUPABASE_URL}/storage/v1/object/public/clinic-assets/clinician-signature.png`,
 }
 

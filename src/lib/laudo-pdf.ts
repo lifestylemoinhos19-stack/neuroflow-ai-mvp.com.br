@@ -476,17 +476,67 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   // --- Separador visual: DADOS FORNECIDOS ---
   writeVisualSeparator('DADOS FORNECIDOS PELO PROFISSIONAL')
 
-  // Seções 1 a 5 (dados fornecidos)
-  for (let i = 0; i < 5; i++) {
+  // Seção 1: IDENTIFICAÇÃO
+  const sec1 = report.sections[0]
+  writeSectionHeader(sec1.index, sec1.title)
+  writeLabel('Paciente (iniciais):', iniciais)
+  if (idade !== null) writeLabel('Idade:', `${idade} anos`)
+  writeLabel('Protocolo / Registro:', input.testId)
+  writeLabel('Data da avaliação:', new Date(input.startedAt).toLocaleDateString('pt-BR'))
+  writeLabel(
+    'Profissional responsável:',
+    `${CLINICIAN_CREDENTIALS.name} — ${CLINICIAN_CREDENTIALS.crm} / ${CLINICIAN_CREDENTIALS.rqe}`,
+  )
+  y += 2
+
+  // Seções 2 a 4 (Queixa, História, Sinais e Sintomas)
+  for (let i = 1; i < 4; i++) {
     const section = report.sections[i]
     writeSectionHeader(section.index, section.title)
     for (const line of section.lines) {
-      // In section 1, items are "Paciente: X | Idade..." — render as bullets.
-      if (section.index === 1) {
-        writeBullet(line)
+      writeParagraph(line)
+    }
+    y += 2
+  }
+
+  // Seção 5: INSTRUMENTOS APLICADOS (Tabela detalhada com cabeçalho estilizado)
+  const sec5 = report.sections[4]
+  writeSectionHeader(sec5.index, sec5.title)
+  if (report.json.instrumentos && report.json.instrumentos.length > 0) {
+    const colX = [marginX, marginX + 45, marginX + 75, marginX + 115, pageWidth - marginX]
+    const rowH = 7
+    const drawTableRow = (cells: string[], isHeader = false) => {
+      ensureSpace(rowH + 2)
+      if (isHeader) {
+        doc.setFillColor(accent[0], accent[1], accent[2])
+        doc.rect(marginX, y, pageWidth - marginX * 2, rowH, 'F')
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(8.5)
+        doc.setTextColor(primary[0], primary[1], primary[2])
       } else {
-        writeParagraph(line)
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(8.5)
+        doc.setTextColor(dark[0], dark[1], dark[2])
       }
+      cells.forEach((cell, idx) => {
+        const maxW = colX[idx + 1] - colX[idx] - 2
+        const lines = doc.splitTextToSize(cell, maxW)
+        doc.text(lines.slice(0, 2), colX[idx] + 2, y + 4.5)
+      })
+      doc.setDrawColor(secondary[0], secondary[1], secondary[2])
+      doc.setLineWidth(isHeader ? 0.3 : 0.1)
+      doc.line(marginX, y + rowH, pageWidth - marginX, y + rowH)
+      y += rowH
+    }
+
+    drawTableRow(['Instrumento', 'Data', 'Pontuação', 'Classificação'], true)
+    for (const inst of report.json.instrumentos) {
+      drawTableRow([inst.nome, inst.data, inst.pontuacao, inst.classificacao])
+    }
+    y += 3
+  } else {
+    for (const line of sec5.lines) {
+      writeParagraph(line)
     }
     y += 2
   }
@@ -591,7 +641,7 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9)
   doc.setTextColor(medium[0], medium[1], medium[2])
-  doc.text(`${CLINICIAN_CREDENTIALS.crm} · ${CLINICIAN_CREDENTIALS.rqe}`, sigBlockX, y + 28)
+  doc.text(`${CLINICIAN_CREDENTIALS.crm} / ${CLINICIAN_CREDENTIALS.rqe}`, sigBlockX, y + 28)
   // Abaixo: "Assinado digitalmente em [data] às [hora]"
   const sigNow = new Date()
   const sigDate = sigNow.toLocaleDateString('pt-BR')
