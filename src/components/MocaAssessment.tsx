@@ -22,6 +22,7 @@ import { AssessmentProgress } from '@/components/AssessmentProgress'
 import { saveDementiaAssessment } from '@/services/dementia-assessments'
 import { useSpeech } from '@/hooks/use-speech'
 import { DrawingCanvas } from '@/components/DrawingCanvas'
+import { InteractiveTrail } from '@/components/InteractiveTrail'
 import {
   mocaItems,
   mocaDomains,
@@ -369,16 +370,45 @@ export function MocaAssessment() {
                     </div>
                   </div>
 
-                  {/* 1) Canvas interativo para trilha */}
+                  {/* 1) Trilha Interativa com Círculos Clicáveis e Canvas de Desenho Opcional */}
                   {isTrail && (
-                    <DrawingCanvas
-                      title="Área do Teste de Trilha Alternada"
-                      instruction="Conecte 1 &rarr; A &rarr; 2 &rarr; B &rarr; 3 &rarr; C ... no espaço abaixo:"
-                      referenceTemplate="trail"
-                      initialValue={drawings[item.key]}
-                      onChange={(dataUrl) => handleDrawingChange(item.key, dataUrl)}
-                      height={240}
-                    />
+                    <div className="space-y-4">
+                      <div className="p-3 rounded-xl border border-[#00FFFF]/20 bg-[#00FFFF]/5">
+                        <p className="text-xs text-white/90 mb-2">
+                          <strong className="text-[#00FFFF]">Trilha Interativa:</strong> toque ou
+                          clique nos círculos alternando número e letra (
+                          <span className="text-[#00FFFF] font-mono font-bold">
+                            1 &rarr; A &rarr; 2 &rarr; B &rarr; 3 &rarr; C &rarr; 4 &rarr; D &rarr;
+                            5 &rarr; E
+                          </span>
+                          ) o mais rápido que puder:
+                        </p>
+                        <InteractiveTrail
+                          variant="moca"
+                          onComplete={({ errors: errCount, timeSeconds }) => {
+                            // Se terminou com 0 erros, auto pontua 1 ponto
+                            if (errCount === 0) {
+                              handleScore(item.key, 1)
+                              toast.success(
+                                `Trilha completada sem erros em ${timeSeconds}s! Pontuação máxima atribuída.`,
+                              )
+                            } else {
+                              handleScore(item.key, 0)
+                              toast.warning(`Trilha concluída com ${errCount} erro(s).`)
+                            }
+                          }}
+                        />
+                      </div>
+
+                      <DrawingCanvas
+                        title="Ou trace manualmente no Quadro Branco (opcional)"
+                        instruction="Se preferir, desenhe os traços conectando 1 &rarr; A &rarr; 2 &rarr; B &rarr; 3 &rarr; C &rarr; 4 &rarr; D &rarr; 5 &rarr; E:"
+                        referenceTemplate="trail"
+                        initialValue={drawings[item.key]}
+                        onChange={(dataUrl) => handleDrawingChange(item.key, dataUrl)}
+                        height={200}
+                      />
+                    </div>
                   )}
 
                   {/* 2) Canvas interativo para cópia do cubo */}
@@ -405,46 +435,87 @@ export function MocaAssessment() {
                     />
                   )}
 
-                  {/* 4) Imagem para nomeação de animais */}
+                  {/* 4) Imagem para nomeação de animais com Auto-avaliação inteligente */}
                   {isNaming && animalMeta && (
-                    <div className="flex flex-col sm:flex-row items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5">
-                      <img
-                        src={animalMeta.url}
-                        alt={`Identificar animal: ${animalMeta.name}`}
-                        className="w-36 h-24 object-cover rounded-lg border border-white/20 shrink-0"
-                      />
-                      <div className="flex-1 w-full space-y-1.5">
-                        <span className="text-xs text-white/70">
-                          Diga ou digite o nome deste animal:
+                    <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/5">
+                      <div className="relative group shrink-0">
+                        <img
+                          src={animalMeta.url}
+                          alt={`Identificar animal: ${animalMeta.name}`}
+                          className="w-44 h-32 object-cover rounded-xl border-2 border-[#00FFFF]/30 shadow-lg"
+                        />
+                        <div className="absolute bottom-1 right-1 bg-black/70 px-2 py-0.5 rounded text-[10px] text-white/80">
+                          Estímulo visual
+                        </div>
+                      </div>
+                      <div className="flex-1 w-full space-y-2">
+                        <span className="text-xs text-white/90 font-medium block">
+                          Qual é o nome deste animal? (Diga pelo microfone ou digite):
                         </span>
                         <div className="flex gap-2">
                           <Input
-                            placeholder="Nome do animal..."
+                            placeholder={`Ex: ${animalMeta.name.toLowerCase()}...`}
                             value={patientAnswers[item.key] || ''}
-                            onChange={(e) => handleAnswerChange(item.key, e.target.value)}
-                            className="bg-slate-900/80 border-white/20 text-white text-sm"
+                            onChange={(e) => {
+                              const text = e.target.value
+                              handleAnswerChange(item.key, text)
+                              // Auto reconhecimento de acerto em tempo real
+                              const val = text.toLowerCase().trim()
+                              const correct =
+                                (item.key === 'moca_lion' &&
+                                  (val.includes('le') ||
+                                    val.includes('leão') ||
+                                    val.includes('leao'))) ||
+                                (item.key === 'moca_rhino' &&
+                                  (val.includes('rino') || val.includes('rinoceronte'))) ||
+                                (item.key === 'moca_camel' &&
+                                  (val.includes('camel') ||
+                                    val.includes('dromed') ||
+                                    val.includes('camelo')))
+                              if (correct) {
+                                handleScore(item.key, 1)
+                              }
+                            }}
+                            className="bg-slate-900 border-white/20 text-white text-sm"
                           />
-                          {patientAnswers[item.key] && (
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => {
-                                const val = patientAnswers[item.key]?.toLowerCase().trim() || ''
-                                const correct =
-                                  (item.key === 'moca_lion' && val.includes('le')) ||
-                                  (item.key === 'moca_rhino' &&
-                                    (val.includes('rino') || val.includes('rinoceronte'))) ||
-                                  (item.key === 'moca_camel' &&
-                                    (val.includes('camel') || val.includes('dromed')))
-                                handleScore(item.key, correct ? 1 : 0)
-                              }}
-                              className="text-xs text-[#00FFFF] hover:bg-[#00FFFF]/10"
-                            >
-                              Auto-avaliar
-                            </Button>
-                          )}
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const val = patientAnswers[item.key]?.toLowerCase().trim() || ''
+                              const correct =
+                                (item.key === 'moca_lion' &&
+                                  (val.includes('le') ||
+                                    val.includes('leão') ||
+                                    val.includes('leao'))) ||
+                                (item.key === 'moca_rhino' &&
+                                  (val.includes('rino') || val.includes('rinoceronte'))) ||
+                                (item.key === 'moca_camel' &&
+                                  (val.includes('camel') ||
+                                    val.includes('dromed') ||
+                                    val.includes('camelo')))
+                              handleScore(item.key, correct ? 1 : 0)
+                              if (correct) {
+                                toast.success(
+                                  `Resposta correta para ${animalMeta.name}! 1 ponto atribuído.`,
+                                )
+                              } else {
+                                toast.info(`Resposta avaliada. Pontuação: ${correct ? 1 : 0}`)
+                              }
+                            }}
+                            className="text-xs border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/10 whitespace-nowrap"
+                          >
+                            <Sparkles className="h-3.5 w-3.5 mr-1" />
+                            Verificar
+                          </Button>
                         </div>
+                        {scores[item.key] === 1 && (
+                          <p className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Nomeação correta reconhecida (1
+                            ponto)
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}

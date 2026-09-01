@@ -202,17 +202,22 @@ export function FtdrsAssessment() {
             {domainItems.map((item) => (
               <div
                 key={item.key}
-                className="p-4 rounded-xl border border-white/10 transition-colors hover:border-[#00FFFF]/20"
+                className="p-4 sm:p-5 rounded-xl border border-white/10 transition-colors hover:border-[#00FFFF]/20 space-y-3"
                 style={CARD_BG}
               >
-                <div className="flex items-start justify-between gap-2 mb-3">
-                  <p className="text-white text-sm">
-                    <span className="text-[#00FFFF] font-medium">{item.label}.</span> {item.text}
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-white text-sm font-medium leading-relaxed">
+                    <span className="text-[#00FFFF] font-bold mr-1">{item.label}.</span> {item.text}
                   </p>
                   {ttsSupported && (
                     <button
                       type="button"
-                      onClick={() => handleToggleSpeakItem(item.key, `${item.label}. ${item.text}`)}
+                      onClick={() =>
+                        handleToggleSpeakItem(
+                          item.key,
+                          `${item.label}. ${item.text}. ${item.visualHint || ''}`,
+                        )
+                      }
                       className={cn(
                         'shrink-0 p-1.5 rounded-lg border transition-all text-xs flex items-center gap-1 cursor-pointer',
                         speaking && speakingItem === item.key
@@ -229,7 +234,18 @@ export function FtdrsAssessment() {
                     </button>
                   )}
                 </div>
-                <div className="flex flex-col gap-1.5">
+
+                {/* Dica / Estímulo visual explicativo */}
+                {item.visualHint && (
+                  <div className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white/75 flex items-start gap-2">
+                    <span className="text-[#00FFFF] font-semibold shrink-0 text-[11px] uppercase tracking-wide">
+                      Exemplo clínico:
+                    </span>
+                    <span>{item.visualHint}</span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                   {ftdrsOptions.map((opt) => (
                     <button
                       key={opt.value}
@@ -237,14 +253,9 @@ export function FtdrsAssessment() {
                       className={cn(
                         'px-3 py-2.5 rounded-lg text-xs font-medium transition-all border text-left',
                         answers[item.key] === opt.value
-                          ? 'border-[#00FFFF] text-[#00FFFF]'
-                          : 'border-white/10 text-white/85 hover:border-[#00FFFF]/30',
+                          ? 'bg-[rgba(0,255,255,0.18)] border-[#00FFFF] text-[#00FFFF] shadow-[0_0_8px_rgba(0,255,255,0.25)]'
+                          : 'border-white/10 text-white/85 hover:border-[#00FFFF]/30 hover:bg-white/5',
                       )}
-                      style={
-                        answers[item.key] === opt.value
-                          ? { backgroundColor: 'rgba(0, 255, 255, 0.1)' }
-                          : undefined
-                      }
                     >
                       {opt.label}
                     </button>

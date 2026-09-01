@@ -22,6 +22,7 @@ import { useSpeech } from '@/hooks/use-speech'
 import { useGuestScale } from '@/contexts/guest-scale-context'
 import { saveDementiaAssessment } from '@/services/dementia-assessments'
 import { calculateTmtResult, TMT_DISCLAIMER, TMT_KEYS, type TmtResult } from '@/lib/tmt-data'
+import { InteractiveTrail } from '@/components/InteractiveTrail'
 
 const CARD_BG = { backgroundColor: 'rgba(17, 34, 64, 0.85)' }
 
@@ -350,66 +351,80 @@ export function TmtAssessment() {
   if (phase === 'partA_ready' || phase === 'partA_running') {
     return (
       <div ref={topRef} className="space-y-4 animate-fade-in-up">
-        <div className="p-6 rounded-xl border border-white/10 text-center" style={CARD_BG}>
-          <Badge className="bg-[#00FFFF]/20 text-[#00FFFF] border border-[#00FFFF]/40 mb-2">
-            Etapa 1 de 2: TMT Parte A
-          </Badge>
-          <h2 className="text-white font-bold text-xl mb-1">
-            Parte A (1 &rarr; 2 &rarr; 3 ... 25)
-          </h2>
-          <p className="text-xs text-white/70 mb-4">
-            Cronometrando velocidade de processamento visual e atenção sustentada.
-          </p>
-
-          <div className="my-6">
-            <span className="text-7xl font-mono font-bold text-[#00FFFF] tracking-tight">
-              {timeA}s
+        <div className="p-4 sm:p-6 rounded-xl border border-white/10" style={CARD_BG}>
+          <div className="flex items-center justify-between mb-3">
+            <Badge className="bg-[#00FFFF]/20 text-[#00FFFF] border border-[#00FFFF]/40">
+              Etapa 1 de 2: TMT Parte A
+            </Badge>
+            <span className="text-xs text-white/70">
+              Corte esperado: <strong className="text-emerald-400">≤ 29s</strong>
             </span>
-            <p className="text-xs text-white/50 mt-1">Tempo decorrido</p>
           </div>
 
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <span className="text-xs text-white/70">Erros cometidos:</span>
+          <h2 className="text-white font-bold text-lg sm:text-xl mb-1">
+            Parte A: Toque nos números de 1 a 25 na sequência
+          </h2>
+          <p className="text-xs text-white/75 mb-4">
+            Conecte os círculos numerados na ordem correta o mais rapidamente possível. O cronômetro
+            e a contagem de erros são automáticos na tela.
+          </p>
+
+          {/* Trilha Interativa 1 a 25 na Tela */}
+          <div className="my-2">
+            <InteractiveTrail
+              variant="tmt_a"
+              onProgress={(completed, errs) => {
+                setErrorsA(errs)
+              }}
+              onComplete={({ timeSeconds, errors: errs }) => {
+                setTimeA(timeSeconds)
+                setErrorsA(errs)
+                setPhase('partA_done')
+                speak(
+                  `Parte A concluída em ${timeSeconds} segundos com ${errs} erro(s). Prepare-se para a Parte B.`,
+                )
+                toast.success(`Parte A concluída com sucesso em ${timeSeconds}s!`)
+              }}
+            />
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2">
+              <span className="text-white/70">Ajuste manual de erros se necessário:</span>
               <Button
                 type="button"
                 size="icon"
                 variant="outline"
-                className="h-7 w-7 border-white/20 text-white"
+                className="h-6 w-6 border-white/20 text-white"
                 onClick={() => setErrorsA((e) => Math.max(0, e - 1))}
               >
                 <Minus className="h-3 w-3" />
               </Button>
-              <span className="text-lg font-bold text-amber-400 w-6 text-center">{errorsA}</span>
+              <span className="font-mono text-amber-400 font-bold">{errorsA}</span>
               <Button
                 type="button"
                 size="icon"
                 variant="outline"
-                className="h-7 w-7 border-white/20 text-white"
+                className="h-6 w-6 border-white/20 text-white"
                 onClick={() => setErrorsA((e) => e + 1)}
               >
                 <Plus className="h-3 w-3" />
               </Button>
             </div>
-          </div>
 
-          {phase === 'partA_ready' ? (
             <Button
-              onClick={handleStartPartA}
-              size="lg"
-              className="w-full bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-bold"
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (timeA === 0) setTimeA(30)
+                setPhase('partA_done')
+              }}
+              className="text-slate-400 hover:text-white text-xs"
             >
-              <Play className="h-4 w-4 mr-2" /> Iniciar Cronômetro Parte A
+              Avançar para Parte B diretamente &rarr;
             </Button>
-          ) : (
-            <Button
-              onClick={handleStopPartA}
-              size="lg"
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold"
-            >
-              <CheckCircle2 className="h-5 w-5 mr-2" /> Concluir Parte A ({timeA}s)
-            </Button>
-          )}
+          </div>
         </div>
       </div>
     )
@@ -450,57 +465,83 @@ export function TmtAssessment() {
   }
 
   /* ---- PARTE B RODANDO ---- */
-  if (phase === 'partB_running') {
+  if (phase === 'partB_running' || phase === 'partB_ready') {
     return (
       <div ref={topRef} className="space-y-4 animate-fade-in-up">
-        <div className="p-6 rounded-xl border border-white/10 text-center" style={CARD_BG}>
-          <Badge className="bg-[#00FFFF]/20 text-[#00FFFF] border border-[#00FFFF]/40 mb-2">
-            Etapa 2 de 2: TMT Parte B
-          </Badge>
-          <h2 className="text-white font-bold text-xl mb-1">Parte B (1-A-2-B-3-C...)</h2>
-          <p className="text-xs text-white/70 mb-4">
-            Cronometrando flexibilidade cognitiva e alternância executiva.
-          </p>
-
-          <div className="my-6">
-            <span className="text-7xl font-mono font-bold text-[#00FFFF] tracking-tight">
-              {timeB}s
+        <div className="p-4 sm:p-6 rounded-xl border border-white/10" style={CARD_BG}>
+          <div className="flex items-center justify-between mb-3">
+            <Badge className="bg-[#00FFFF]/20 text-[#00FFFF] border border-[#00FFFF]/40">
+              Etapa 2 de 2: TMT Parte B
+            </Badge>
+            <span className="text-xs text-white/70">
+              Corte esperado: <strong className="text-emerald-400">≤ 75s</strong>
             </span>
-            <p className="text-xs text-white/50 mt-1">Tempo decorrido Parte B</p>
           </div>
 
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <span className="text-xs text-white/70">Erros cometidos:</span>
+          <h2 className="text-white font-bold text-lg sm:text-xl mb-1">
+            Parte B: Alterne Números e Letras (1 &rarr; A &rarr; 2 &rarr; B ... 13)
+          </h2>
+          <p className="text-xs text-white/75 mb-4">
+            Toque alternando número e letra em ordem alfanumérica crescente. O cronômetro e a
+            contagem de erros funcionam em tempo real.
+          </p>
+
+          {/* Trilha Interativa Parte B na Tela */}
+          <div className="my-2">
+            <InteractiveTrail
+              variant="tmt_b"
+              onProgress={(completed, errs) => {
+                setErrorsB(errs)
+              }}
+              onComplete={({ timeSeconds, errors: errs }) => {
+                setTimeB(timeSeconds)
+                setErrorsB(errs)
+                setPhase('result')
+                speak(
+                  `Parte B concluída em ${timeSeconds} segundos com ${errs} erro(s). Veja seu relatório consolidado.`,
+                )
+                toast.success(`Parte B concluída com sucesso em ${timeSeconds}s!`)
+              }}
+            />
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2">
+              <span className="text-white/70">Ajuste manual de erros se necessário:</span>
               <Button
                 type="button"
                 size="icon"
                 variant="outline"
-                className="h-7 w-7 border-white/20 text-white"
+                className="h-6 w-6 border-white/20 text-white"
                 onClick={() => setErrorsB((e) => Math.max(0, e - 1))}
               >
                 <Minus className="h-3 w-3" />
               </Button>
-              <span className="text-lg font-bold text-amber-400 w-6 text-center">{errorsB}</span>
+              <span className="font-mono text-amber-400 font-bold">{errorsB}</span>
               <Button
                 type="button"
                 size="icon"
                 variant="outline"
-                className="h-7 w-7 border-white/20 text-white"
+                className="h-6 w-6 border-white/20 text-white"
                 onClick={() => setErrorsB((e) => e + 1)}
               >
                 <Plus className="h-3 w-3" />
               </Button>
             </div>
-          </div>
 
-          <Button
-            onClick={handleStopPartB}
-            size="lg"
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold"
-          >
-            <CheckCircle2 className="h-5 w-5 mr-2" /> Finalizar Teste TMT ({timeB}s)
-          </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (timeB === 0) setTimeB(70)
+                setPhase('result')
+              }}
+              className="text-slate-400 hover:text-white text-xs"
+            >
+              Concluir e gerar resultado &rarr;
+            </Button>
+          </div>
         </div>
       </div>
     )

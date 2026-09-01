@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 import { AssessmentProgress } from '@/components/AssessmentProgress'
 import { supabase } from '@/lib/supabase/client'
 import { useSpeech } from '@/hooks/use-speech'
+import { DrawingCanvas } from '@/components/DrawingCanvas'
 import {
   createAnamnesisSessionForGuest,
   saveAnamnesisResponses,
@@ -40,6 +41,7 @@ const CARD_BG = { backgroundColor: 'rgba(17, 34, 64, 0.85)' }
 export function MarcosDesenvolvimentoAssessment() {
   const guestId = useGuestScale()
   const [answers, setAnswers] = useState<Record<string, number>>({})
+  const [drawings, setDrawings] = useState<Record<string, string>>({})
   const [showResult, setShowResult] = useState(false)
   const [saving, setSaving] = useState(false)
   const [speakingKey, setSpeakingKey] = useState<string | null>(null)
@@ -62,7 +64,11 @@ export function MarcosDesenvolvimentoAssessment() {
   useEffect(() => {
     try {
       const draft = localStorage.getItem(MILESTONES_DRAFT_KEY)
-      if (draft) setAnswers(JSON.parse(draft).answers || {})
+      if (draft) {
+        const parsed = JSON.parse(draft)
+        setAnswers(parsed.answers || {})
+        setDrawings(parsed.drawings || {})
+      }
     } catch {
       /* ignore */
     }
@@ -70,11 +76,11 @@ export function MarcosDesenvolvimentoAssessment() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(MILESTONES_DRAFT_KEY, JSON.stringify({ answers }))
+      localStorage.setItem(MILESTONES_DRAFT_KEY, JSON.stringify({ answers, drawings }))
     } catch {
       /* ignore */
     }
-  }, [answers])
+  }, [answers, drawings])
 
   const totalItems = milestoneItems.length
   const answeredCount = Object.keys(answers).length
@@ -165,8 +171,13 @@ export function MarcosDesenvolvimentoAssessment() {
     })
   }
 
+  const handleDrawingChange = (key: string, dataUrl: string) => {
+    setDrawings((prev) => ({ ...prev, [key]: dataUrl }))
+  }
+
   const handleReset = () => {
     setAnswers({})
+    setDrawings({})
     setShowResult(false)
     localStorage.removeItem(MILESTONES_DRAFT_KEY)
   }
@@ -353,12 +364,12 @@ export function MarcosDesenvolvimentoAssessment() {
             {items.map((item) => (
               <div
                 key={item.key}
-                className="p-4 rounded-xl border border-white/10 transition-colors hover:border-[#00FFFF]/20"
+                className="p-4 sm:p-5 rounded-xl border border-white/10 transition-colors hover:border-[#00FFFF]/20 space-y-3"
                 style={CARD_BG}
               >
-                <div className="flex items-start justify-between gap-2 mb-3">
-                  <p className="text-white text-sm">
-                    <span className="text-[#00FFFF] font-medium capitalize">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-white text-sm font-medium leading-relaxed">
+                    <span className="text-[#00FFFF] font-bold capitalize mr-1">
                       {DOMAIN_LABELS[item.domain]}.
                     </span>{' '}
                     {item.text}
@@ -385,7 +396,29 @@ export function MarcosDesenvolvimentoAssessment() {
                     </button>
                   )}
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+
+                {/* Canvas interativo quando o item exigir desenho / cópia infantil */}
+                {item.visualModel === 'drawing_circle' && (
+                  <DrawingCanvas
+                    title="Quadro de Desenho — Círculos e Linhas"
+                    instruction="Peça à criança para imitar ou desenhar um círculo e traços no quadro branco abaixo:"
+                    initialValue={drawings[item.key]}
+                    onChange={(dataUrl) => handleDrawingChange(item.key, dataUrl)}
+                    height={180}
+                  />
+                )}
+
+                {item.visualModel === 'drawing_person' && (
+                  <DrawingCanvas
+                    title="Quadro de Desenho — Figura Humana (Boneco)"
+                    instruction="Peça à criança para desenhar uma pessoa (cabeça, corpo, pernas e braços):"
+                    initialValue={drawings[item.key]}
+                    onChange={(dataUrl) => handleDrawingChange(item.key, dataUrl)}
+                    height={220}
+                  />
+                )}
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                   {milestoneOptions.map((opt) => (
                     <button
                       key={opt.value}
@@ -393,7 +426,7 @@ export function MarcosDesenvolvimentoAssessment() {
                       className={cn(
                         'px-3 py-2.5 rounded-lg text-xs font-medium transition-all border text-center',
                         answers[item.key] === opt.value
-                          ? 'bg-[rgba(0,255,255,0.18)] border-[#00FFFF] text-[#00FFFF]'
+                          ? 'bg-[rgba(0,255,255,0.18)] border-[#00FFFF] text-[#00FFFF] shadow-[0_0_8px_rgba(0,255,255,0.25)]'
                           : 'border-white/10 text-white/85 hover:bg-[rgba(0,255,255,0.08)] hover:border-[#00FFFF]/30',
                       )}
                     >

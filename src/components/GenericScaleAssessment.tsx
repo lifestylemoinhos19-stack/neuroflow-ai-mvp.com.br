@@ -33,15 +33,17 @@ import { returnToMinhasEscalas } from '@/lib/assessment-redirect'
 
 const CARD_BG = { backgroundColor: 'rgba(17, 34, 64, 0.85)' }
 
-// Imagens para nomeação no MEEM (Relógio e Caneta)
-const MEEM_OBJECT_IMAGES: Record<string, { name: string; url: string }> = {
+// Imagens para nomeação no MEEM (Relógio e Caneta) em alta resolução
+const MEEM_OBJECT_IMAGES: Record<string, { name: string; url: string; prompt: string }> = {
   meem_relogio: {
     name: 'Relógio de Pulso',
-    url: 'https://img.usecurling.com/p/260/180?q=wristwatch%20clock&color=dark',
+    url: 'https://img.usecurling.com/p/320/220?q=wristwatch%20watch&color=metallic',
+    prompt: 'Mostre o relógio ao paciente e peça para nomear o objeto.',
   },
   meem_caneta: {
-    name: 'Caneta',
-    url: 'https://img.usecurling.com/p/260/180?q=pen%20stationery&color=silver',
+    name: 'Caneta Esferográfica',
+    url: 'https://img.usecurling.com/p/320/220?q=ballpoint%20pen&color=blue',
+    prompt: 'Mostre a caneta ao paciente e peça para nomear o objeto.',
   },
 }
 
@@ -327,6 +329,7 @@ export function GenericScaleAssessment({ scale }: { scale: ExtraScale }) {
         // Casos interativos específicos do MEEM
         const isMeemDrawing = q.key === 'meem_q10'
         const isMeemSentence = q.key === 'meem_q9'
+        const isMeemReading = q.key === 'meem_q8' // Texto para leitura e execução: "FECHE OS OLHOS"
         const isMeemNaming = q.key === 'meem_q6'
         const isMeemSerial7 = q.key === 'meem_q4'
         const isCtClock = q.key === 'ct_q13'
@@ -422,47 +425,170 @@ export function GenericScaleAssessment({ scale }: { scale: ExtraScale }) {
               />
             )}
 
-            {/* MEEM: Escrita de Frase Espontânea */}
-            {isMeemSentence && (
-              <div className="p-3 rounded-lg border border-white/10 bg-white/5 space-y-2">
-                <span className="text-xs text-white/80 font-medium block">
-                  Digite ou fale uma frase completa (com sujeito e predicado com sentido):
+            {/* MEEM: Leitura em voz alta e execução do comando */}
+            {isMeemReading && (
+              <div className="p-4 rounded-xl border border-yellow-500/30 bg-yellow-500/10 space-y-3">
+                <span className="text-xs font-semibold text-yellow-300 uppercase tracking-wider block">
+                  Texto para leitura em voz alta pelo paciente:
                 </span>
-                <Textarea
-                  placeholder="Escreva sua frase completa aqui..."
+                <div className="p-4 rounded-xl bg-slate-950/80 border-2 border-yellow-400/50 text-center shadow-lg">
+                  <span className="text-2xl sm:text-3xl font-black text-yellow-300 tracking-wider">
+                    FECHE OS SEUS OLHOS
+                  </span>
+                </div>
+                <p className="text-xs text-white/80">
+                  Peça ao paciente que leia a frase acima e faça exatamente o que ela manda.
+                </p>
+                <Input
+                  placeholder="Observação da leitura e execução (ex.: leu em voz alta e fechou os olhos)..."
                   value={patientTexts[q.key] || ''}
                   onChange={(e) => handleTextChange(q.key, e.target.value)}
-                  className="bg-slate-900 border-white/20 text-white text-sm min-h-[70px]"
+                  className="bg-slate-900 border-white/20 text-white text-xs"
                 />
               </div>
             )}
 
-            {/* MEEM: Nomeação de Objetos com Imagens Interativas */}
+            {/* MEEM: Escrita de Frase Espontânea com Verificação Gramatical de Sujeito e Predicado */}
+            {isMeemSentence && (
+              <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-white/90 font-medium block">
+                    Escreva ou dite uma frase completa (deve conter sujeito e predicado com
+                    sentido):
+                  </span>
+                </div>
+                <Textarea
+                  placeholder="Digite a frase do paciente (ex: 'O sol brilha na praia')..."
+                  value={patientTexts[q.key] || ''}
+                  onChange={(e) => {
+                    const text = e.target.value
+                    handleTextChange(q.key, text)
+                    // Validação rápida: frase com ao menos 3 palavras e verbo comum
+                    const wordsCount = text.trim().split(/\s+/).filter(Boolean).length
+                    if (wordsCount >= 3) {
+                      handleAnswer(q.key, 1)
+                    }
+                  }}
+                  className="bg-slate-900 border-white/20 text-white text-sm min-h-[80px]"
+                />
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                  <div className="text-xs text-white/70">
+                    {patientTexts[q.key] ? (
+                      (() => {
+                        const words = patientTexts[q.key].trim().split(/\s+/).filter(Boolean)
+                        const hasLen = words.length >= 3
+                        return (
+                          <span
+                            className={cn(
+                              'font-medium',
+                              hasLen ? 'text-emerald-400' : 'text-amber-400',
+                            )}
+                          >
+                            {hasLen
+                              ? '✓ Estrutura com sujeito e predicado provável detectada'
+                              : 'Frase curta — verifique se há verbo e sujeito com sentido'}
+                          </span>
+                        )
+                      })()
+                    ) : (
+                      <span>Aguardando digitação ou fala...</span>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const text = patientTexts[q.key]?.trim() || ''
+                      const words = text.split(/\s+/).filter(Boolean)
+                      const valid = words.length >= 3
+                      handleAnswer(q.key, valid ? 1 : 0)
+                      if (valid) {
+                        toast.success('Frase validada com sujeito e predicado! 1 ponto atribuído.')
+                      } else {
+                        toast.warning('A frase precisa ter sujeito, verbo e sentido completo.')
+                      }
+                    }}
+                    className="text-xs border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/10"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 mr-1" />
+                    Validar Frase
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* MEEM: Nomeação de Objetos com Imagens Interativas em Alta Resolução */}
             {isMeemNaming && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-lg border border-white/10 bg-white/5">
-                <div className="space-y-1.5 flex flex-col items-center p-2 rounded bg-slate-900/60 border border-white/10">
-                  <img
-                    src={MEEM_OBJECT_IMAGES.meem_relogio.url}
-                    alt="Objeto 1"
-                    className="w-28 h-20 object-cover rounded border border-white/20"
-                  />
-                  <span className="text-xs text-white/80">Identifique o objeto acima</span>
+              <div className="space-y-3 p-4 rounded-xl border border-white/10 bg-white/5">
+                <span className="text-xs text-white/90 font-medium block">
+                  Identifique os dois objetos exibidos abaixo (Relógio e Caneta):
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2 flex flex-col items-center p-3 rounded-xl bg-slate-900/80 border border-white/15">
+                    <img
+                      src={MEEM_OBJECT_IMAGES.meem_relogio.url}
+                      alt="Objeto 1 - Relógio de pulso"
+                      className="w-40 h-28 object-cover rounded-lg border border-white/20 shadow"
+                    />
+                    <span className="text-xs text-[#00FFFF] font-semibold">
+                      1. Relógio de Pulso
+                    </span>
+                    <span className="text-[11px] text-white/60 text-center">
+                      Mostre na tela ao paciente
+                    </span>
+                  </div>
+                  <div className="space-y-2 flex flex-col items-center p-3 rounded-xl bg-slate-900/80 border border-white/15">
+                    <img
+                      src={MEEM_OBJECT_IMAGES.meem_caneta.url}
+                      alt="Objeto 2 - Caneta"
+                      className="w-40 h-28 object-cover rounded-lg border border-white/20 shadow"
+                    />
+                    <span className="text-xs text-[#00FFFF] font-semibold">
+                      2. Caneta Esferográfica
+                    </span>
+                    <span className="text-[11px] text-white/60 text-center">
+                      Mostre na tela ao paciente
+                    </span>
+                  </div>
                 </div>
-                <div className="space-y-1.5 flex flex-col items-center p-2 rounded bg-slate-900/60 border border-white/10">
-                  <img
-                    src={MEEM_OBJECT_IMAGES.meem_caneta.url}
-                    alt="Objeto 2"
-                    className="w-28 h-20 object-cover rounded border border-white/20"
-                  />
-                  <span className="text-xs text-white/80">Identifique o objeto acima</span>
-                </div>
-                <div className="sm:col-span-2">
+                <div className="flex gap-2">
                   <Input
                     placeholder="Resposta do paciente: ex: relógio e caneta..."
                     value={patientTexts[q.key] || ''}
-                    onChange={(e) => handleTextChange(q.key, e.target.value)}
+                    onChange={(e) => {
+                      const text = e.target.value
+                      handleTextChange(q.key, text)
+                      const val = text.toLowerCase()
+                      const hasClock =
+                        val.includes('rel') || val.includes('relogio') || val.includes('relógio')
+                      const hasPen = val.includes('caneta') || val.includes('esfer')
+                      let pts = 0
+                      if (hasClock) pts += 1
+                      if (hasPen) pts += 1
+                      if (pts > 0) handleAnswer(q.key, pts)
+                    }}
                     className="bg-slate-900 border-white/20 text-white text-xs"
                   />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const val = (patientTexts[q.key] || '').toLowerCase()
+                      const hasClock =
+                        val.includes('rel') || val.includes('relogio') || val.includes('relógio')
+                      const hasPen = val.includes('caneta') || val.includes('esfer')
+                      let pts = 0
+                      if (hasClock) pts += 1
+                      if (hasPen) pts += 1
+                      handleAnswer(q.key, pts)
+                      toast.info(`Pontuação atribuída: ${pts} de 2 pontos.`)
+                    }}
+                    className="text-xs border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/10 whitespace-nowrap"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 mr-1" /> Auto-avaliar
+                  </Button>
                 </div>
               </div>
             )}

@@ -17,6 +17,7 @@ export interface MilestoneItem {
   ageRangeId: string
   domain: MilestoneDomain
   text: string
+  visualModel?: 'drawing_circle' | 'drawing_person' | 'blocks_tower' | 'imitation' | null
 }
 
 export interface AgeRange {
@@ -274,7 +275,8 @@ export const milestoneItems: MilestoneItem[] = [
     key: 'm_2_3_7',
     ageRangeId: '2-3',
     domain: 'cognitivo',
-    text: 'Faz imitações (círculos e linhas)',
+    text: 'Faz imitações no papel ou tela (círculos e linhas verticais/horizontais)',
+    visualModel: 'drawing_circle',
   },
   {
     key: 'm_2_3_8',
@@ -284,7 +286,7 @@ export const milestoneItems: MilestoneItem[] = [
   },
 
   // ---- 3-4 anos ----
-  { key: 'm_3_4_1', ageRangeId: '3-4', domain: 'motor', text: 'Peda num pé por 2 segundos' },
+  { key: 'm_3_4_1', ageRangeId: '3-4', domain: 'motor', text: 'Pula num pé só por 2 segundos' },
   { key: 'm_3_4_2', ageRangeId: '3-4', domain: 'motor', text: 'Pega e arremessa bola' },
   {
     key: 'm_3_4_3',
@@ -296,16 +298,26 @@ export const milestoneItems: MilestoneItem[] = [
     key: 'm_3_4_4',
     ageRangeId: '3-4',
     domain: 'linguagem',
-    text: 'Faz perguntas ("por quê?", "o que é?")',
+    text: 'Faz perguntas frequentes ("por quê?", "o que é?")',
   },
   {
     key: 'm_3_4_5',
     ageRangeId: '3-4',
     domain: 'social',
-    text: 'Coopera com outras crianças em brincadeiras',
+    text: 'Coopera com outras crianças em brincadeiras em grupo',
   },
-  { key: 'm_3_4_6', ageRangeId: '3-4', domain: 'social', text: 'Compartilha objetos com ajuda' },
-  { key: 'm_3_4_7', ageRangeId: '3-4', domain: 'cognitivo', text: 'Nomeia ao menos 4 cores' },
+  {
+    key: 'm_3_4_6',
+    ageRangeId: '3-4',
+    domain: 'social',
+    text: 'Compartilha objetos e brinquedos com ajuda',
+  },
+  {
+    key: 'm_3_4_7',
+    ageRangeId: '3-4',
+    domain: 'cognitivo',
+    text: 'Nomeia ao menos 4 cores básicas',
+  },
   {
     key: 'm_3_4_8',
     ageRangeId: '3-4',
@@ -314,13 +326,13 @@ export const milestoneItems: MilestoneItem[] = [
   },
 
   // ---- 4-5 anos ----
-  { key: 'm_4_5_1', ageRangeId: '4-5', domain: 'motor', text: 'Pula num pé varias vezes' },
-  { key: 'm_4_5_2', ageRangeId: '4-5', domain: 'motor', text: 'Sube e desce escadas sem apoio' },
+  { key: 'm_4_5_1', ageRangeId: '4-5', domain: 'motor', text: 'Pula num pé várias vezes seguidas' },
+  { key: 'm_4_5_2', ageRangeId: '4-5', domain: 'motor', text: 'Sobe e desce escadas sem apoio' },
   {
     key: 'm_4_5_3',
     ageRangeId: '4-5',
     domain: 'linguagem',
-    text: 'Conta historias curtas com coerência',
+    text: 'Conta histórias curtas com coerência',
   },
   {
     key: 'm_4_5_4',
@@ -339,7 +351,8 @@ export const milestoneItems: MilestoneItem[] = [
     key: 'm_4_5_7',
     ageRangeId: '4-5',
     domain: 'cognitivo',
-    text: 'Desenha pessoas com 2 a 4 partes do corpo',
+    text: 'Desenha a figura humana (pessoas com 2 a 4 partes do corpo: cabeça, tronco, membros)',
+    visualModel: 'drawing_person',
   },
   {
     key: 'm_4_5_8',

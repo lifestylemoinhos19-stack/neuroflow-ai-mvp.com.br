@@ -94,13 +94,18 @@ export function FasAssessment() {
     if (phase === 'F') {
       setPhase('A')
       setTimeLeft(FAS_TIME_PER_LETTER)
-      speak('Letra A. Diga ou digite palavras com a letra A.')
+      speak(
+        'Atenção para a segunda letra: Letra A. Diga ou digite o máximo de palavras com a letra A.',
+      )
     } else if (phase === 'A') {
       setPhase('S')
       setTimeLeft(FAS_TIME_PER_LETTER)
-      speak('Letra S. Diga ou digite palavras com a letra S.')
+      speak(
+        'Atenção para a terceira letra: Letra S. Diga ou digite o máximo de palavras com a letra S.',
+      )
     } else if (phase === 'S') {
       setPhase('result')
+      speak('Teste de fluência FAS concluído com sucesso. Veja o seu resultado consolidado.')
     }
   }
 
@@ -247,21 +252,41 @@ export function FasAssessment() {
           </div>
         ))}
       </div>
-      <div className="text-center py-6 rounded-xl border border-white/10" style={CARD_BG}>
-        <p className="text-xs text-white/70 mb-1">Letra atual</p>
-        <p className="text-6xl font-bold text-[#00FFFF] mb-2">{currentLetter}</p>
-        <p className="text-3xl font-bold text-white">{timeLeft}s</p>
+      <div
+        className="text-center py-6 rounded-2xl border-2 border-[#00FFFF]/30 shadow-2xl relative overflow-hidden"
+        style={CARD_BG}
+      >
+        <div className="absolute top-2 right-3">
+          <span className="text-[11px] font-mono font-bold text-[#00FFFF] bg-[#00FFFF]/10 px-2.5 py-1 rounded-full border border-[#00FFFF]/30">
+            60 segundos por letra
+          </span>
+        </div>
+        <p className="text-xs text-white/70 uppercase tracking-widest font-semibold mb-1">
+          Estímulo Fonêmico Ativo
+        </p>
+        <div className="inline-flex items-center justify-center w-28 h-28 rounded-3xl bg-slate-900 border-2 border-[#00FFFF] shadow-[0_0_25px_rgba(0,255,255,0.4)] my-2">
+          <span className="text-7xl font-black text-[#00FFFF] tracking-tight">{currentLetter}</span>
+        </div>
+        <div className="mt-2">
+          <p className="text-4xl font-mono font-bold text-white">{timeLeft}s</p>
+          <p className="text-xs text-white/60 mt-0.5">
+            Tempo restante para a letra {currentLetter}
+          </p>
+        </div>
+
         {ttsSupported && (
-          <button
+          <Button
             type="button"
+            size="sm"
+            variant="ghost"
             onClick={() => {
               if (speaking) cancelSpeak()
               else speak(`Letra ${currentLetter}. Restam ${timeLeft} segundos.`)
             }}
-            className="mt-2 text-xs text-white/60 hover:text-[#00FFFF] inline-flex items-center gap-1 cursor-pointer"
+            className="mt-3 text-xs text-white/80 hover:text-[#00FFFF] hover:bg-white/5 inline-flex items-center gap-1 cursor-pointer"
           >
-            <Volume2 className="h-3 w-3" /> Ouvir letra atual
-          </button>
+            <Volume2 className="h-3.5 w-3.5" /> Ouvir instrução da letra {currentLetter}
+          </Button>
         )}
       </div>
       <div className="space-y-2">
