@@ -75,6 +75,8 @@ export function InterpretationEditor({ sessionId }: { sessionId: string }) {
       interpretation.snapIvHyperactivity,
       interpretation.globalSeverity,
       interpretation.sdsScore,
+      interpretation.bdiScore,
+      interpretation.baiScore,
     )
     setSaving(false)
     if (error) {
@@ -131,6 +133,8 @@ export function InterpretationEditor({ sessionId }: { sessionId: string }) {
       { label: 'ASRS-18', score: interpretation.asrs18Score },
       { label: 'MoCA', score: interpretation.mocaScore },
       { label: 'MEEM', score: interpretation.meemScore },
+      { label: 'BDI-II', score: interpretation.bdiScore ?? null },
+      { label: 'BAI', score: interpretation.baiScore ?? null },
       { label: 'HAM-D', score: interpretation.hamdScore },
       { label: 'HAM-A', score: interpretation.hamaScore },
       { label: 'Y-BOCS', score: interpretation.ybocsScore },

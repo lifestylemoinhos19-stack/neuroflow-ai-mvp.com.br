@@ -1000,7 +1000,560 @@ const SNAPIV_ITEMS: AssistedItem[] = [
 /* ----------------------------------------------------------------- */
 /* Registro consolidado das escalas assistidas                       */
 /* ----------------------------------------------------------------- */
+/* ----------------------------------------------------------------- */
+/* BDI-II — Leitura assistida ao paciente (21 itens)                 */
+/* ----------------------------------------------------------------- */
+const BDI_ASSISTED_ITEMS: AssistedItem[] = [
+  {
+    key: 'bdi_q1',
+    domain: 'Humor/Tristeza',
+    stimulus:
+      'Nas últimas duas semanas, incluindo hoje, como você tem se sentido em relação à tristeza? (0: Não me sinto triste; 1: Me sinto triste na maior parte do tempo; 2: Estou sempre triste; 3: Tão triste que não suporto).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Não me sinto triste', spoken: 'Não me sinto triste' },
+      {
+        value: 1,
+        label: '1 - Triste na maior parte do tempo',
+        spoken: 'Triste na maior parte do tempo',
+      },
+      { value: 2, label: '2 - Sempre triste', spoken: 'Sempre triste' },
+      { value: 3, label: '3 - Tão triste que não suporto', spoken: 'Tão triste que não suporto' },
+    ],
+    allowRepetition: true,
+  },
+  {
+    key: 'bdi_q2',
+    domain: 'Pessimismo/Futuro',
+    stimulus:
+      'Como você tem se sentido em relação ao seu futuro? (0: Não desanimado; 1: Mais desanimado que antes; 2: Não espero que nada dê certo; 3: Sem esperança, só vai piorar).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Não desanimado com o futuro', spoken: 'Não desanimado' },
+      { value: 1, label: '1 - Mais desanimado que antes', spoken: 'Mais desanimado que antes' },
+      { value: 2, label: '2 - Não espero que dê certo', spoken: 'Não espero que dê certo' },
+      { value: 3, label: '3 - Sem esperança no futuro', spoken: 'Sem esperança no futuro' },
+    ],
+    allowRepetition: true,
+  },
+  {
+    key: 'bdi_q3',
+    domain: 'Fracasso passado',
+    stimulus:
+      'Você tem sentido que é um fracasso? (0: Não me sinto fracassado; 1: Fracassei mais do que deveria; 2: Vejo muitos fracassos; 3: Sou um fracasso total).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Não me sinto fracassado', spoken: 'Não me sinto fracassado' },
+      { value: 1, label: '1 - Fracassei mais que o normal', spoken: 'Fracassei mais que o normal' },
+      { value: 2, label: '2 - Vejo muitos fracassos atrás', spoken: 'Vejo muitos fracassos' },
+      { value: 3, label: '3 - Fracasso total como pessoa', spoken: 'Fracasso total' },
+    ],
+    allowRepetition: true,
+  },
+  {
+    key: 'bdi_q4',
+    domain: 'Perda de prazer',
+    stimulus:
+      'Quanto prazer você tem sentido nas coisas que costumava gostar? (0: O mesmo prazer; 1: Menos prazer que antes; 2: Muito pouco prazer; 3: Nenhum prazer).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Mesmo prazer de sempre', spoken: 'Mesmo prazer de sempre' },
+      { value: 1, label: '1 - Não sinto tanto prazer', spoken: 'Não sinto tanto prazer' },
+      { value: 2, label: '2 - Muito pouco prazer', spoken: 'Muito pouco prazer' },
+      { value: 3, label: '3 - Não tenho prazer em nada', spoken: 'Não tenho prazer em nada' },
+    ],
+    allowRepetition: true,
+  },
+  {
+    key: 'bdi_q5',
+    domain: 'Culpa',
+    stimulus:
+      'Você tem sentido culpa? (0: Não particularmente; 1: Culpado por muitas coisas; 2: Bastante culpado quase sempre; 3: Constantemente culpado).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Sem sentimento de culpa', spoken: 'Sem culpa' },
+      { value: 1, label: '1 - Culpado por muitas coisas', spoken: 'Culpado por muitas coisas' },
+      {
+        value: 2,
+        label: '2 - Culpado na maior parte do tempo',
+        spoken: 'Culpado na maior parte do tempo',
+      },
+      { value: 3, label: '3 - Constantemente culpado', spoken: 'Constantemente culpado' },
+    ],
+    allowRepetition: true,
+    pauseAfter: true,
+  },
+  {
+    key: 'bdi_q6',
+    domain: 'Punição',
+    stimulus:
+      'Você sente que está sendo ou será punido? (0: Não sinto punição; 1: Posso ser punido; 2: Espero ser punido; 3: Sinto que estou sendo punido).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Não sinto que serei punido', spoken: 'Não sinto punição' },
+      { value: 1, label: '1 - Sinto que posso ser punido', spoken: 'Posso ser punido' },
+      { value: 2, label: '2 - Espero ser punido', spoken: 'Espero ser punido' },
+      { value: 3, label: '3 - Sinto que estou sendo punido', spoken: 'Estou sendo punido' },
+    ],
+    allowRepetition: true,
+  },
+  {
+    key: 'bdi_q7',
+    domain: 'Autoestima',
+    stimulus:
+      'Como você se sente sobre si mesmo? (0: Da mesma forma que antes; 1: Perdi a confiança em mim; 2: Decepcionado comigo mesmo; 3: Não gosto de mim / Eu me odeio).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Mesmo sentimento sobre mim', spoken: 'Mesmo sentimento sobre mim' },
+      { value: 1, label: '1 - Perdi a confiança em mim', spoken: 'Perdi a confiança' },
+      { value: 2, label: '2 - Decepcionado comigo mesmo', spoken: 'Decepcionado comigo' },
+      { value: 3, label: '3 - Eu me odeio / não gosto de mim', spoken: 'Eu me odeio' },
+    ],
+    allowRepetition: true,
+  },
+  {
+    key: 'bdi_q8',
+    domain: 'Autocrítica',
+    stimulus:
+      'Você tem se criticado ou culpado? (0: Não mais que o habitual; 1: Mais crítico que antes; 2: Critico todos os meus defeitos; 3: Me culpo por tudo de ruim).',
+    responseType: 'likert',
+    options: [
+      {
+        value: 0,
+        label: '0 - Não me critico mais que antes',
+        spoken: 'Não me critico mais que antes',
+      },
+      { value: 1, label: '1 - Mais crítico que antes', spoken: 'Mais crítico que antes' },
+      {
+        value: 2,
+        label: '2 - Critico todos os meus defeitos',
+        spoken: 'Critico todos meus defeitos',
+      },
+      { value: 3, label: '3 - Me culpo por tudo de ruim', spoken: 'Me culpo por tudo de ruim' },
+    ],
+    allowRepetition: true,
+  },
+  {
+    key: 'bdi_q9',
+    domain: 'Ideação Suicida (Risco)',
+    stimulus:
+      'Você tem tido pensamentos sobre suicídio ou morte? (0: Nenhum pensamento; 1: Pensamentos sem intenção; 2: Gostaria de me matar; 3: Me mataria se pudesse).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Sem pensamentos suicidas', spoken: 'Sem pensamentos suicidas' },
+      {
+        value: 1,
+        label: '1 - Pensamentos mas não levaria a cabo',
+        spoken: 'Pensamentos sem intenção',
+      },
+      { value: 2, label: '2 - Gostaria de me matar', spoken: 'Gostaria de me matar' },
+      {
+        value: 3,
+        label: '3 - Me mataria se tivesse chance',
+        spoken: 'Me mataria se tivesse chance',
+      },
+    ],
+    allowRepetition: true,
+  },
+  {
+    key: 'bdi_q10',
+    domain: 'Choro',
+    stimulus:
+      'Você tem chorado mais que o habitual? (0: Não mais que antes; 1: Choro mais agora; 2: Choro por qualquer coisa; 3: Quero chorar mas não consigo).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Não choro mais que antes', spoken: 'Não choro mais que antes' },
+      { value: 1, label: '1 - Choro mais agora', spoken: 'Choro mais agora' },
+      { value: 2, label: '2 - Choro por qualquer coisa', spoken: 'Choro por qualquer coisa' },
+      { value: 3, label: '3 - Quero chorar e não consigo', spoken: 'Quero chorar e não consigo' },
+    ],
+    allowRepetition: true,
+    pauseAfter: true,
+  },
+  {
+    key: 'bdi_q11',
+    domain: 'Agitação',
+    stimulus:
+      'Tem se sentido agitado ou inquieto? (0: Não mais que o habitual; 1: Mais inquieto que o normal; 2: Difícil ficar parado; 3: Agitado demais, tenho que me mexer o tempo todo).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Inquietação normal', spoken: 'Inquietação normal' },
+      { value: 1, label: '1 - Mais inquieto que o habitual', spoken: 'Mais inquieto' },
+      { value: 2, label: '2 - Difícil ficar parado', spoken: 'Difícil ficar parado' },
+      {
+        value: 3,
+        label: '3 - Preciso me mexer o tempo todo',
+        spoken: 'Preciso me mexer o tempo todo',
+      },
+    ],
+    allowRepetition: true,
+  },
+  {
+    key: 'bdi_q12',
+    domain: 'Interesse',
+    stimulus:
+      'Como está seu interesse pelas outras pessoas ou atividades? (0: Não perdi o interesse; 1: Menos interessado que antes; 2: Perdi quase todo o interesse; 3: Difícil ter interesse em algo).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Sem perda de interesse', spoken: 'Sem perda de interesse' },
+      { value: 1, label: '1 - Menos interessado que antes', spoken: 'Menos interessado' },
+      { value: 2, label: '2 - Quase nenhum interesse', spoken: 'Quase nenhum interesse' },
+      { value: 3, label: '3 - Sem interesse em nada', spoken: 'Sem interesse em nada' },
+    ],
+    allowRepetition: true,
+  },
+  {
+    key: 'bdi_q13',
+    domain: 'Indecisão',
+    stimulus:
+      'Como está sua capacidade de tomar decisões? (0: Tão bem quanto antes; 1: Mais difícil decidir agora; 2: Muito mais dificuldade; 3: Problemas para qualquer decisão).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Tomo decisões normalmente', spoken: 'Decisões normais' },
+      { value: 1, label: '1 - Mais difícil decidir agora', spoken: 'Mais difícil decidir' },
+      { value: 2, label: '2 - Muito difícil tomar decisões', spoken: 'Muito difícil decidir' },
+      { value: 3, label: '3 - Não consigo tomar decisões', spoken: 'Não consigo tomar decisões' },
+    ],
+    allowRepetition: true,
+  },
+  {
+    key: 'bdi_q14',
+    domain: 'Desvalia',
+    stimulus:
+      'Tem se sentido sem valor ou inútil? (0: Não me sinto inútil; 1: Menos valoroso que antes; 2: Mais inútil comparado aos outros; 3: Totalmente sem valor).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Não me sinto inútil', spoken: 'Não me sinto inútil' },
+      { value: 1, label: '1 - Menos útil que antes', spoken: 'Menos útil que antes' },
+      {
+        value: 2,
+        label: '2 - Sinto-me mais inútil que os outros',
+        spoken: 'Mais inútil que os outros',
+      },
+      { value: 3, label: '3 - Completamente sem valor', spoken: 'Completamente sem valor' },
+    ],
+    allowRepetition: true,
+  },
+  {
+    key: 'bdi_q15',
+    domain: 'Energia',
+    stimulus:
+      'Como está seu nível de energia? (0: Tanta energia quanto antes; 1: Menos energia que costumava; 2: Sem energia para quase nada; 3: Sem energia para nada).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Tanta energia quanto sempre', spoken: 'Energia normal' },
+      { value: 1, label: '1 - Menos energia que antes', spoken: 'Menos energia' },
+      { value: 2, label: '2 - Sem energia pra muitas coisas', spoken: 'Pouca energia' },
+      { value: 3, label: '3 - Sem energia pra nada', spoken: 'Sem energia pra nada' },
+    ],
+    allowRepetition: true,
+    pauseAfter: true,
+  },
+  {
+    key: 'bdi_q16',
+    domain: 'Sono',
+    stimulus:
+      'Houve mudanças no seu sono? (0: Nenhuma mudança; 1: Durmo um pouco mais ou menos; 2: Durmo muito mais ou menos; 3: Durmo quase o dia todo ou acordo horas antes).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Sem alterações no sono', spoken: 'Sono normal' },
+      { value: 1, label: '1 - Durmo um pouco mais ou menos', spoken: 'Pouca alteração no sono' },
+      { value: 2, label: '2 - Durmo muito mais ou menos', spoken: 'Muita alteração no sono' },
+      { value: 3, label: '3 - Sono gravemente alterado', spoken: 'Sono gravemente alterado' },
+    ],
+    allowRepetition: true,
+  },
+  {
+    key: 'bdi_q17',
+    domain: 'Irritabilidade',
+    stimulus:
+      'Você tem se sentido irritado(a)? (0: Não mais que antes; 1: Mais irritável que o habitual; 2: Muito mais irritado; 3: Irritado o tempo todo).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Não mais irritado que antes', spoken: 'Irritabilidade normal' },
+      { value: 1, label: '1 - Mais irritável que antes', spoken: 'Mais irritável' },
+      { value: 2, label: '2 - Muito mais irritado', spoken: 'Muito mais irritado' },
+      { value: 3, label: '3 - Irritado o tempo todo', spoken: 'Irritado o tempo todo' },
+    ],
+    allowRepetition: true,
+  },
+  {
+    key: 'bdi_q18',
+    domain: 'Apetite',
+    stimulus:
+      'Houve alterações no seu apetite? (0: Sem mudanças; 1: Um pouco mais ou menos apetite; 2: Muito mais ou menos; 3: Sem nenhum apetite ou fome o tempo todo).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Apetite normal', spoken: 'Apetite normal' },
+      {
+        value: 1,
+        label: '1 - Um pouco mais ou menos apetite',
+        spoken: 'Pouca alteração no apetite',
+      },
+      { value: 2, label: '2 - Muito mais ou menos apetite', spoken: 'Muita alteração no apetite' },
+      {
+        value: 3,
+        label: '3 - Sem apetite ou comendo o tempo todo',
+        spoken: 'Apetite gravemente alterado',
+      },
+    ],
+    allowRepetition: true,
+  },
+  {
+    key: 'bdi_q19',
+    domain: 'Concentração',
+    stimulus:
+      'Como está sua capacidade de concentração? (0: Tão bem quanto antes; 1: Não tão bem quanto costumava; 2: Difícil manter a mente em algo; 3: Não consigo me concentrar em nada).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Me concentro normalmente', spoken: 'Concentração normal' },
+      { value: 1, label: '1 - Não me concentro tão bem', spoken: 'Concentração reduzida' },
+      { value: 2, label: '2 - Difícil manter a atenção', spoken: 'Difícil manter a atenção' },
+      { value: 3, label: '3 - Não consigo me concentrar em nada', spoken: 'Sem concentração' },
+    ],
+    allowRepetition: true,
+  },
+  {
+    key: 'bdi_q20',
+    domain: 'Fadiga',
+    stimulus:
+      'Tem se sentido cansado ou com fadiga? (0: Não mais que antes; 1: Me canso mais facilmente; 2: Muito cansado para fazer muitas coisas; 3: Cansado demais para quase tudo).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Cansaço normal', spoken: 'Cansaço normal' },
+      { value: 1, label: '1 - Fico cansado mais fácil', spoken: 'Canso mais fácil' },
+      { value: 2, label: '2 - Cansado demais pra muitas coisas', spoken: 'Muito cansado' },
+      { value: 3, label: '3 - Cansado demais pra quase tudo', spoken: 'Fadiga extrema' },
+    ],
+    allowRepetition: true,
+  },
+  {
+    key: 'bdi_q21',
+    domain: 'Libido',
+    stimulus:
+      'Houve alterações no seu interesse por sexo? (0: Nenhuma mudança; 1: Menos interessado que antes; 2: Muito menos interessado; 3: Perdi completamente o interesse).',
+    responseType: 'likert',
+    options: [
+      { value: 0, label: '0 - Sem alteração na libido', spoken: 'Sem alteração' },
+      { value: 1, label: '1 - Menos interesse que antes', spoken: 'Menos interesse' },
+      { value: 2, label: '2 - Muito menos interesse', spoken: 'Muito menos interesse' },
+      { value: 3, label: '3 - Perda completa do interesse', spoken: 'Perda completa de interesse' },
+    ],
+    allowRepetition: true,
+    pauseAfter: true,
+  },
+]
+
+/* ----------------------------------------------------------------- */
+/* BAI — Leitura assistida ao paciente (21 itens)                    */
+/* ----------------------------------------------------------------- */
+const BAI_ASSISTED_OPTIONS = [
+  { value: 0, label: '0 - Absolutamente não', spoken: 'Absolutamente não' },
+  { value: 1, label: '1 - Levemente', spoken: 'Levemente' },
+  { value: 2, label: '2 - Moderadamente', spoken: 'Moderadamente' },
+  { value: 3, label: '3 - Gravemente', spoken: 'Gravemente' },
+]
+
+const BAI_ASSISTED_ITEMS: AssistedItem[] = [
+  {
+    key: 'bai_q1',
+    domain: 'Neurovegetativo',
+    stimulus: 'Dormência ou formigamento no corpo?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+  },
+  {
+    key: 'bai_q2',
+    domain: 'Autonômico',
+    stimulus: 'Sensação de calor ou ondas de calor repentinas?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+  },
+  {
+    key: 'bai_q3',
+    domain: 'Motor',
+    stimulus: 'Tremores ou fraqueza nas pernas?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+  },
+  {
+    key: 'bai_q4',
+    domain: 'Tensão',
+    stimulus: 'Incapacidade ou grande dificuldade de relaxar?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+  },
+  {
+    key: 'bai_q5',
+    domain: 'Cognitivo/Medo',
+    stimulus: 'Medo constante de que o pior possa acontecer?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+    pauseAfter: true,
+  },
+  {
+    key: 'bai_q6',
+    domain: 'Neurovegetativo',
+    stimulus: 'Tontura, vertigem ou sensação de cabeça oca?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+  },
+  {
+    key: 'bai_q7',
+    domain: 'Cardiovascular',
+    stimulus: 'Palpitações, taquicardia ou coração acelerado?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+  },
+  {
+    key: 'bai_q8',
+    domain: 'Motor/Equilíbrio',
+    stimulus: 'Sensação de instabilidade ou desequilíbrio?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+  },
+  {
+    key: 'bai_q9',
+    domain: 'Cognitivo/Pavor',
+    stimulus: 'Sensação de terror, pavor ou desespero?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+  },
+  {
+    key: 'bai_q10',
+    domain: 'Tensão',
+    stimulus: 'Sensação de nervosismo ou tensão intensa?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+    pauseAfter: true,
+  },
+  {
+    key: 'bai_q11',
+    domain: 'Respiratório',
+    stimulus: 'Sensação de sufocamento ou aperto na garganta?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+  },
+  {
+    key: 'bai_q12',
+    domain: 'Motor',
+    stimulus: 'Tremores involuntários nas mãos?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+  },
+  {
+    key: 'bai_q13',
+    domain: 'Motor',
+    stimulus: 'Corpo trêmulo ou abalado por inteiro?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+  },
+  {
+    key: 'bai_q14',
+    domain: 'Cognitivo/Controle',
+    stimulus: 'Medo intenso de perder o controle?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+  },
+  {
+    key: 'bai_q15',
+    domain: 'Respiratório',
+    stimulus: 'Dificuldade para respirar ou falta de ar?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+    pauseAfter: true,
+  },
+  {
+    key: 'bai_q16',
+    domain: 'Cognitivo/Morte',
+    stimulus: 'Medo de morrer?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+  },
+  {
+    key: 'bai_q17',
+    domain: 'Sobressalto',
+    stimulus: 'Assustado(a) ou sobressaltado(a) facilmente?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+  },
+  {
+    key: 'bai_q18',
+    domain: 'Gastrointestinal',
+    stimulus: 'Indigestão, náusea ou desconforto no abdômen?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+  },
+  {
+    key: 'bai_q19',
+    domain: 'Neurovegetativo',
+    stimulus: 'Sensação de desmaio iminente?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+  },
+  {
+    key: 'bai_q20',
+    domain: 'Autonômico',
+    stimulus: 'Rosto afogueado ou rubor facial?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+  },
+  {
+    key: 'bai_q21',
+    domain: 'Autonômico',
+    stimulus: 'Suor excessivo (não decorrente de calor ambiente)?',
+    responseType: 'likert',
+    options: BAI_ASSISTED_OPTIONS,
+    allowRepetition: true,
+    pauseAfter: true,
+  },
+]
+
 export const ASSISTED_SCALES: Record<string, AssistedScale> = {
+  bdi: {
+    key: 'bdi',
+    name: 'Inventário de Depressão de Beck (BDI-II)',
+    version: 'Versão brasileira (21 itens)',
+    applicationMode: 'Leitura assistida por voz ao paciente',
+    target: 'paciente',
+    items: BDI_ASSISTED_ITEMS,
+    disclaimer:
+      'O BDI-II é instrumento de triagem de gravidade de indicadores depressivos. Não constitui diagnóstico.',
+    totalKey: 'bdi_total',
+    maxTotal: 63,
+  },
+  bai: {
+    key: 'bai',
+    name: 'Inventário de Ansiedade de Beck (BAI)',
+    version: 'Versão brasileira (21 itens)',
+    applicationMode: 'Leitura assistida por voz ao paciente',
+    target: 'paciente',
+    items: BAI_ASSISTED_ITEMS,
+    disclaimer:
+      'O BAI é instrumento de triagem de gravidade de sintomas ansiosos. Não constitui diagnóstico.',
+    totalKey: 'bai_total',
+    maxTotal: 63,
+  },
   phq9: {
     key: 'phq9',
     name: 'Patient Health Questionnaire-9 (PHQ-9)',
@@ -1109,6 +1662,23 @@ export const ASSISTED_SCALE_KEYS = Object.keys(ASSISTED_SCALES)
 export function normalizeAssistedScaleType(raw: string | undefined): string | null {
   if (!raw) return null
   const lower = raw.toLowerCase().trim()
+  if (
+    lower === 'bdi' ||
+    lower === 'bdi-ii' ||
+    lower === 'bdi2' ||
+    lower === 'bdi_ii' ||
+    lower === 'beck depressao' ||
+    lower === 'beck-depressao' ||
+    lower === 'beck dm'
+  )
+    return 'bdi'
+  if (
+    lower === 'bai' ||
+    lower === 'beck ansiedade' ||
+    lower === 'beck-ansiedade' ||
+    lower === 'beck ans'
+  )
+    return 'bai'
   if (lower === 'phq-9' || lower === 'phq9' || lower === 'phq') return 'phq9'
   if (lower === 'gad-7' || lower === 'gad7' || lower === 'gad') return 'gad7'
   if (lower === 'meem' || lower === 'mini mental' || lower === 'mini-mental') return 'meem'

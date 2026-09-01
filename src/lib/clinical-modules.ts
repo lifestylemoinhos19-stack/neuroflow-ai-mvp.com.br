@@ -107,6 +107,26 @@ export const clinicalModules: ClinicalModule[] = [
     description: 'Triagem para depressão, ansiedade, comportamentos compulsivos e dependência.',
     scales: [
       {
+        key: 'bdi',
+        name: 'BDI-II (Beck DM)',
+        purpose:
+          'Inventário de Depressão de Beck (BDI-II) com 21 itens para avaliação quantitativa e qualitativa da gravidade depressiva.',
+        targetAudience: 'Adolescentes (≥13) e Adultos',
+        estimatedTime: '5-10 min',
+        route: '/avaliacao/bdi',
+        available: true,
+      },
+      {
+        key: 'bai',
+        name: 'BAI (Beck Ansiedade)',
+        purpose:
+          'Inventário de Ansiedade de Beck (BAI) com 21 itens para avaliação dos sintomas neurovegetativos, motores e subjetivos de ansiedade.',
+        targetAudience: 'Adolescentes (≥17) e Adultos',
+        estimatedTime: '5-10 min',
+        route: '/avaliacao/bai',
+        available: true,
+      },
+      {
         key: 'phq9',
         name: 'PHQ-9',
         purpose:

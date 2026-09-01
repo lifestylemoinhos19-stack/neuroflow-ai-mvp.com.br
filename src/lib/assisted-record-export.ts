@@ -122,6 +122,14 @@ export function detectImminentRisk(responses: AssistedResponseRecord[]): string 
       'paciente sozinho. Acionar serviço de emergência/CVV 188 quando indicado.'
     )
   }
+  const bdiq9 = responses.find((r) => r.key === 'bdi_q9')
+  if (bdiq9 && bdiq9.numericValue !== null && bdiq9.numericValue >= 1) {
+    return (
+      '⚠️ Item de risco (BDI-II #9 — ideação suicida) com resposta ≥ 1. INTERROMPER e orientar ' +
+      'encaminhamento urgente para avaliação de risco suicida. Não deixar o ' +
+      'paciente sozinho. Acionar serviço de emergência/CVV 188 quando indicado.'
+    )
+  }
   return null
 }
 
@@ -197,6 +205,8 @@ function buildInterpretation(ctx: AssistedRecordContext): string[] {
 
 /** Pontuações de corte (área de atenção) por escala, quando definidas. */
 const CUTOFFS: Record<string, number> = {
+  bdi: 14, // ≥14 leve/atenção
+  bai: 8, // ≥8 leve/atenção
   phq9: 10, // ≥10 moderado
   gad7: 10, // ≥10 moderado
   meem: 24, // <24 área de atenção

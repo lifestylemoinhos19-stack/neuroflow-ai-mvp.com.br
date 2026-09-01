@@ -8,6 +8,8 @@ export interface ScaleScores {
   meem: number | null
   hamd: number | null
   hama: number | null
+  bdi?: number | null
+  bai?: number | null
   ybocs: number | null
   sds: number | null
 }
@@ -34,6 +36,8 @@ export const mocaKeys: string[] = Array.from({ length: 30 }, (_, i) => `moca_q${
 export const asrs18Keys: string[] = Array.from({ length: 18 }, (_, i) => `asrs_q${i + 1}`)
 export const hamdKeys: string[] = Array.from({ length: 17 }, (_, i) => `hamd_q${i + 1}`)
 export const hamaKeys: string[] = Array.from({ length: 14 }, (_, i) => `hama_q${i + 1}`)
+export const bdiKeys: string[] = Array.from({ length: 21 }, (_, i) => `bdi_q${i + 1}`)
+export const baiKeys: string[] = Array.from({ length: 21 }, (_, i) => `bai_q${i + 1}`)
 export const ybocsKeys: string[] = Array.from({ length: 10 }, (_, i) => `ybocs_q${i + 1}`)
 export const sdsKeys: string[] = ['sds_q1', 'sds_q2', 'sds_q3']
 
@@ -106,18 +110,36 @@ export function generateScreening(scores: ScaleScores): ScreeningResult {
   if (scores.hamd !== null && scores.hamd >= 8) {
     findings.push({
       category: 'Depressão',
-      suggestion: 'Sinais sugestivos de Transtorno de Humor',
+      suggestion: 'Sinais sugestivos de Transtorno de Humor (depressão)',
       scale: 'HAM-D',
       score: scores.hamd,
       threshold: '≥ 8',
     })
   }
+  if (scores.bdi !== null && scores.bdi !== undefined && scores.bdi >= 14) {
+    findings.push({
+      category: 'Depressão',
+      suggestion: 'Sinais sugestivos de Depressão (Inventário de Beck BDI-II)',
+      scale: 'BDI-II',
+      score: scores.bdi,
+      threshold: '≥ 14',
+    })
+  }
   if (scores.hama !== null && scores.hama >= 8) {
     findings.push({
       category: 'Ansiedade',
-      suggestion: 'Sinais sugestivos de Transtorno de Humor',
+      suggestion: 'Sinais sugestivos de Transtorno de Ansiedade',
       scale: 'HAM-A',
       score: scores.hama,
+      threshold: '≥ 8',
+    })
+  }
+  if (scores.bai !== null && scores.bai !== undefined && scores.bai >= 8) {
+    findings.push({
+      category: 'Ansiedade',
+      suggestion: 'Sinais sugestivos de Ansiedade (Inventário de Beck BAI)',
+      scale: 'BAI',
+      score: scores.bai,
       threshold: '≥ 8',
     })
   }
@@ -188,6 +210,8 @@ export function computeGlobalSeverity(scores: ScaleScores): 'low' | 'moderate' |
     (scores.meem !== null && scores.meem < 18) ||
     (scores.hamd !== null && scores.hamd >= 20) ||
     (scores.hama !== null && scores.hama >= 20) ||
+    (scores.bdi !== null && scores.bdi !== undefined && scores.bdi >= 20) ||
+    (scores.bai !== null && scores.bai !== undefined && scores.bai >= 16) ||
     (scores.ybocs !== null && scores.ybocs >= 24) ||
     (scores.sds !== null && scores.sds >= 8)
 

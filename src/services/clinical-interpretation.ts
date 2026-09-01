@@ -17,6 +17,8 @@ import {
   asrs18Keys,
   hamdKeys,
   hamaKeys,
+  bdiKeys,
+  baiKeys,
   ybocsKeys,
   sdsKeys,
   type ScreeningFinding,
@@ -69,6 +71,8 @@ export interface InterpretationResult {
   meemScore: number | null
   hamdScore: number | null
   hamaScore: number | null
+  bdiScore?: number | null
+  baiScore?: number | null
   ybocsScore: number | null
   sdsScore: number | null
   findings: ScreeningFinding[]
@@ -258,6 +262,8 @@ export function getAnamnesisInterpretation(
     meemScore: null,
     hamdScore: null,
     hamaScore: null,
+    bdiScore: null,
+    baiScore: null,
     ybocsScore: null,
     sdsScore: null,
     snapIvInattention: null,
@@ -336,6 +342,8 @@ export async function getSessionInterpretation(
     : getSingleScore(raw, 'meem_total')
   const hamdScore = hasAnyKey(raw, hamdKeys) ? scoreQuestionnaire(raw, hamdKeys) : null
   const hamaScore = hasAnyKey(raw, hamaKeys) ? scoreQuestionnaire(raw, hamaKeys) : null
+  const bdiScore = hasAnyKey(raw, bdiKeys) ? scoreQuestionnaire(raw, bdiKeys) : null
+  const baiScore = hasAnyKey(raw, baiKeys) ? scoreQuestionnaire(raw, baiKeys) : null
   const ybocsScore = hasAnyKey(raw, ybocsKeys) ? scoreQuestionnaire(raw, ybocsKeys) : null
   const sdsScore = hasAnyKey(raw, sdsKeys) ? scoreQuestionnaire(raw, sdsKeys) : null
 
@@ -348,6 +356,8 @@ export async function getSessionInterpretation(
   let currentMeemScore = meemScore
   let currentHamdScore = hamdScore
   let currentHamaScore = hamaScore
+  let currentBdiScore = bdiScore
+  let currentBaiScore = baiScore
   let currentYbocsScore = ybocsScore
   let currentSdsScore = sdsScore
 
@@ -361,6 +371,8 @@ export async function getSessionInterpretation(
     currentMeemScore,
     currentHamdScore,
     currentHamaScore,
+    currentBdiScore,
+    currentBaiScore,
     currentYbocsScore,
     currentSdsScore,
   ]
@@ -370,6 +382,8 @@ export async function getSessionInterpretation(
   // mas as chaves batem com uma escala conhecida e o metadata da sessão tem scores pré-calculados
   if (!hasScaleData && raw.length > 0) {
     const isYbocsPattern = hasAnyKey(raw, ybocsKeys)
+    const isBdiPattern = hasAnyKey(raw, bdiKeys)
+    const isBaiPattern = hasAnyKey(raw, baiKeys)
     const isHamdPattern = hasAnyKey(raw, hamdKeys)
     const isHamaPattern = hasAnyKey(raw, hamaKeys)
     const isSdsPattern = hasAnyKey(raw, sdsKeys)
@@ -382,6 +396,8 @@ export async function getSessionInterpretation(
     const isMeemPattern = hasAnyKey(raw, meemKeys)
 
     const matchesKnownScalePattern =
+      isBdiPattern ||
+      isBaiPattern ||
       isYbocsPattern ||
       isHamdPattern ||
       isHamaPattern ||
@@ -413,7 +429,11 @@ export async function getSessionInterpretation(
           .trim()
 
         if (validTotalScore !== null) {
-          if (rawScaleType.includes('ybocs') || isYbocsPattern) {
+          if (rawScaleType.includes('bdi') || isBdiPattern) {
+            currentBdiScore = validTotalScore
+          } else if (rawScaleType.includes('bai') || isBaiPattern) {
+            currentBaiScore = validTotalScore
+          } else if (rawScaleType.includes('ybocs') || isYbocsPattern) {
             currentYbocsScore = validTotalScore
           } else if (rawScaleType.includes('hamd') || isHamdPattern) {
             currentHamdScore = validTotalScore
@@ -448,6 +468,8 @@ export async function getSessionInterpretation(
           currentMeemScore,
           currentHamdScore,
           currentHamaScore,
+          currentBdiScore,
+          currentBaiScore,
           currentYbocsScore,
           currentSdsScore,
         ]
@@ -466,6 +488,8 @@ export async function getSessionInterpretation(
     meem: currentMeemScore,
     hamd: currentHamdScore,
     hama: currentHamaScore,
+    bdi: currentBdiScore,
+    bai: currentBaiScore,
     ybocs: currentYbocsScore || null,
     sds: currentSdsScore || null,
   })
@@ -486,6 +510,8 @@ export async function getSessionInterpretation(
     meemScore: currentMeemScore,
     hamdScore: currentHamdScore,
     hamaScore: currentHamaScore,
+    bdiScore: currentBdiScore,
+    baiScore: currentBaiScore,
     ybocsScore: currentYbocsScore || null,
     sdsScore: currentSdsScore || null,
     cognitiveVrc,
@@ -501,6 +527,8 @@ export async function getSessionInterpretation(
     meemScore: currentMeemScore,
     hamdScore: currentHamdScore,
     hamaScore: currentHamaScore,
+    bdiScore: currentBdiScore,
+    baiScore: currentBaiScore,
     ybocsScore: currentYbocsScore || null,
     sdsScore: currentSdsScore || null,
     cognitiveVrc,
@@ -541,6 +569,8 @@ export async function getSessionInterpretation(
       meemScore: null,
       hamdScore: null,
       hamaScore: null,
+      bdiScore: null,
+      baiScore: null,
       ybocsScore: null,
       sdsScore: null,
       snapIvInattention: null,
@@ -570,6 +600,8 @@ export async function getSessionInterpretation(
     meemScore: currentMeemScore,
     hamdScore: currentHamdScore,
     hamaScore: currentHamaScore,
+    bdiScore: currentBdiScore,
+    baiScore: currentBaiScore,
     ybocsScore: currentYbocsScore || null,
     sdsScore: currentSdsScore || null,
     snapIvInattention: snapResult.inattentionAvg || null,
@@ -584,6 +616,8 @@ export async function getSessionInterpretation(
       meem: currentMeemScore,
       hamd: currentHamdScore,
       hama: currentHamaScore,
+      bdi: currentBdiScore,
+      bai: currentBaiScore,
       ybocs: currentYbocsScore || null,
       sds: currentSdsScore || null,
     }),
@@ -611,6 +645,8 @@ interface ScoreBag {
   meemScore: number | null
   hamdScore: number | null
   hamaScore: number | null
+  bdiScore?: number | null
+  baiScore?: number | null
   ybocsScore?: number | null
   sdsScore?: number | null
   cognitiveVrc: number | null
@@ -647,6 +683,20 @@ function domainHumor(s: ScoreBag): { severity: Sev; descricao: string } {
     }
     parts.push(`HAM-D ${s.hamdScore} — compatível com ${faixa} para humor.`)
   }
+  if (s.bdiScore !== null && s.bdiScore !== undefined) {
+    let faixa = 'faixa mínima'
+    if (s.bdiScore >= 29) {
+      faixa = 'faixa grave'
+      sev = 'alta'
+    } else if (s.bdiScore >= 20) {
+      faixa = 'faixa moderada'
+      sev = sev === 'alta' ? 'alta' : 'moderada'
+    } else if (s.bdiScore >= 14) {
+      faixa = 'faixa leve'
+      sev = sev || 'baixa'
+    }
+    parts.push(`BDI-II ${s.bdiScore}/63 — compatível com ${faixa} para indicadores depressivos.`)
+  }
   if (parts.length === 0) {
     return { severity: null, descricao: '' }
   }
@@ -680,6 +730,20 @@ function domainAnsiedade(s: ScoreBag): { severity: Sev; descricao: string } {
       sev = sev === 'alta' ? 'alta' : 'moderada'
     }
     parts.push(`HAM-A ${s.hamaScore} — compatível com ${faixa} para ansiedade.`)
+  }
+  if (s.baiScore !== null && s.baiScore !== undefined) {
+    let faixa = 'faixa mínima'
+    if (s.baiScore >= 26) {
+      faixa = 'faixa grave'
+      sev = 'alta'
+    } else if (s.baiScore >= 16) {
+      faixa = 'faixa moderada'
+      sev = sev === 'alta' ? 'alta' : 'moderada'
+    } else if (s.baiScore >= 8) {
+      faixa = 'faixa leve'
+      sev = sev || 'baixa'
+    }
+    parts.push(`BAI ${s.baiScore}/63 — compatível com ${faixa} para indicadores ansiosos.`)
   }
   if (parts.length === 0) {
     return { severity: null, descricao: '' }
@@ -856,6 +920,8 @@ export async function saveInterpretation(
   snapIvHyperactivity?: number | null,
   globalSeverity?: 'low' | 'moderate' | 'high' | null,
   sdsScore?: number | null,
+  bdiScore?: number | null,
+  baiScore?: number | null,
 ): Promise<{ error: string | null }> {
   const {
     data: { user },
@@ -880,6 +946,8 @@ export async function saveInterpretation(
       meem_score: meemScore,
       hamd_score: hamdScore,
       hama_score: hamaScore,
+      bdi_score: bdiScore,
+      bai_score: baiScore,
       snap_iv_inattention: snapIvInattention,
       snap_iv_hyperactivity: snapIvHyperactivity,
       global_severity: globalSeverity,

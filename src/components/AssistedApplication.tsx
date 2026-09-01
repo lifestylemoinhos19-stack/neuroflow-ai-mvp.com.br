@@ -229,8 +229,12 @@ export function AssistedApplication({
     }
     setAnswers((prev) => ({ ...prev, [item.key]: updated }))
 
-    // --- Detecção de risco iminente (PHQ-9 #9) ---
-    if (item.key === 'phq9_q9' && updated.numeric !== null && updated.numeric >= 1) {
+    // --- Detecção de risco iminente (PHQ-9 #9 ou BDI-II #9) ---
+    if (
+      (item.key === 'phq9_q9' || item.key === 'bdi_q9') &&
+      updated.numeric !== null &&
+      updated.numeric >= 1
+    ) {
       setPhase('risk')
       if (speech.ttsSupported) {
         speech.speak(

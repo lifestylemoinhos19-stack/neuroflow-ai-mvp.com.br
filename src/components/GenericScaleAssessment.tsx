@@ -262,13 +262,21 @@ export function GenericScaleAssessment({ scale }: { scale: ExtraScale }) {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              {scale.options!.map((opt) => (
+            <div
+              className={cn(
+                'grid gap-2',
+                (q.options || scale.options) &&
+                  (q.options || scale.options)!.some((o) => o.label.length > 20)
+                  ? 'grid-cols-1'
+                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+              )}
+            >
+              {(q.options || scale.options)!.map((opt) => (
                 <button
                   key={opt.value}
                   onClick={() => handleAnswer(q.key, opt.value)}
                   className={cn(
-                    'px-3 py-2.5 rounded-lg text-xs font-medium transition-all border text-center',
+                    'px-3 py-2.5 rounded-lg text-xs font-medium transition-all border text-left sm:text-center',
                     answers[q.key] === opt.value
                       ? 'bg-[rgba(0,255,255,0.18)] border-[#00FFFF] text-[#00FFFF]'
                       : 'border-white/10 text-white/85 hover:bg-[rgba(0,255,255,0.08)] hover:border-[#00FFFF]/30',

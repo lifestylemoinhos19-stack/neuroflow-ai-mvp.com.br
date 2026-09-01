@@ -14,10 +14,22 @@ export interface ScaleOption {
 
 export const SCALE_GROUPS: Record<string, ScaleOption[]> = {
   Depressão: [
+    {
+      id: 'bdi',
+      label: 'BDI-II',
+      name: 'Inventário de Depressão de Beck (Beck DM)',
+      time: '5-10 min',
+    },
     { id: 'phq9', label: 'PHQ-9', name: 'Questionário de Saúde do Paciente', time: '3-5 min' },
     { id: 'hamd', label: 'HAM-D', name: 'Escala de Depressão de Hamilton', time: '15-20 min' },
   ],
   Ansiedade: [
+    {
+      id: 'bai',
+      label: 'BAI',
+      name: 'Inventário de Ansiedade de Beck (Beck Ansiedade)',
+      time: '5-10 min',
+    },
     { id: 'gad7', label: 'GAD-7', name: 'Transtorno de Ansiedade Generalizada', time: '3-5 min' },
     { id: 'hama', label: 'HAM-A', name: 'Escala de Ansiedade de Hamilton', time: '10-15 min' },
   ],

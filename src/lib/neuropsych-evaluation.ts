@@ -208,8 +208,38 @@ function assessHumor(ctx: NeuropsychContext): DomainAssessment {
   if (
     ai &&
     ((ai.phq9Score !== undefined && ai.phq9Score !== null) ||
+      (ai.bdiScore !== undefined && ai.bdiScore !== null) ||
       (ai.hamdScore !== undefined && ai.hamdScore !== null))
   ) {
+    if (
+      ai.bdiScore !== undefined &&
+      ai.bdiScore !== null &&
+      (scaleTypeNormalized.includes('BDI') ||
+        (ai.bdiScore > 0 && !scaleTypeNormalized.includes('MINI')))
+    ) {
+      hasScore = true
+      const s = ai.bdiScore
+      let faixa = 'faixa mínima'
+      if (s >= 29) {
+        faixa = 'faixa grave'
+        severity = 'alta'
+      } else if (s >= 20) {
+        faixa = 'faixa moderada'
+        severity = severity === 'alta' ? 'alta' : 'moderada'
+      } else if (s >= 14) {
+        faixa = 'faixa leve'
+        severity = severity ?? 'baixa'
+      }
+      parts.push(
+        `BDI-II: pontuação informada ${s}/63, compatível com ${faixa} para indicadores depressivos.`,
+      )
+      instruments.push({
+        nome: 'BDI-II (Inventário de Beck)',
+        data: dataStr,
+        pontuacao: fmtScore(s, 63),
+        classificacao: `compatível com ${faixa}`,
+      })
+    }
     if (
       ai.phq9Score !== undefined &&
       ai.phq9Score !== null &&
@@ -311,8 +341,38 @@ function assessAnsiedade(ctx: NeuropsychContext): DomainAssessment {
   if (
     ai &&
     ((ai.gad7Score !== undefined && ai.gad7Score !== null) ||
+      (ai.baiScore !== undefined && ai.baiScore !== null) ||
       (ai.hamaScore !== undefined && ai.hamaScore !== null))
   ) {
+    if (
+      ai.baiScore !== undefined &&
+      ai.baiScore !== null &&
+      (scaleTypeNormalized.includes('BAI') ||
+        (ai.baiScore > 0 && !scaleTypeNormalized.includes('MINI')))
+    ) {
+      hasScore = true
+      const s = ai.baiScore
+      let faixa = 'faixa mínima'
+      if (s >= 26) {
+        faixa = 'faixa grave'
+        severity = 'alta'
+      } else if (s >= 16) {
+        faixa = 'faixa moderada'
+        severity = severity === 'alta' ? 'alta' : 'moderada'
+      } else if (s >= 8) {
+        faixa = 'faixa leve'
+        severity = severity ?? 'baixa'
+      }
+      parts.push(
+        `BAI: pontuação informada ${s}/63, compatível com ${faixa} para indicadores ansiosos.`,
+      )
+      instruments.push({
+        nome: 'BAI (Inventário de Beck)',
+        data: dataStr,
+        pontuacao: fmtScore(s, 63),
+        classificacao: `compatível com ${faixa}`,
+      })
+    }
     if (
       ai.gad7Score !== undefined &&
       ai.gad7Score !== null &&

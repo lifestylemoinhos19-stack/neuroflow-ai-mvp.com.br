@@ -299,6 +299,11 @@ export function formatCPF(value: string): string {
  * Scale display names and route mapping.
  */
 export const SCALE_DISPLAY_NAMES: Record<string, string> = {
+  BDI: 'BDI-II (Beck Depressão)',
+  'BDI-II': 'BDI-II (Beck Depressão)',
+  bdi: 'BDI-II (Beck Depressão)',
+  BAI: 'BAI (Beck Ansiedade)',
+  bai: 'BAI (Beck Ansiedade)',
   'PHQ-9': 'PHQ-9 (Depressão)',
   'GAD-7': 'GAD-7 (Ansiedade)',
   ASSQ: 'ASSQ (Autismo)',
@@ -337,6 +342,13 @@ export function getScaleRoute(scaleType: string): string {
       return '/avaliacao/phq9'
     case 'GAD-7':
       return '/avaliacao/gad7'
+    case 'BDI':
+    case 'BDI-II':
+    case 'bdi':
+      return '/avaliacao/bdi'
+    case 'BAI':
+    case 'bai':
+      return '/avaliacao/bai'
     case 'HAM-A':
       return '/avaliacao/hama'
     case 'HAM-D':

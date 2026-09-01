@@ -19,6 +19,16 @@ import { EXTRA_SCALES } from '@/lib/extra-scales-data'
  * Mapa de rotas de escala (parâmetro da URL) -> metadados para renderização.
  */
 const SCALE_META: Record<string, { title: string; subtitle: string; time: string }> = {
+  bdi: {
+    title: 'Inventário de Depressão de Beck (BDI-II)',
+    subtitle: 'Triagem e gravidade de depressão (21 itens)',
+    time: '5-10 min',
+  },
+  bai: {
+    title: 'Inventário de Ansiedade de Beck (BAI)',
+    subtitle: 'Triagem e gravidade de ansiedade (21 itens)',
+    time: '5-10 min',
+  },
   phq9: { title: 'Avaliação PHQ-9', subtitle: 'Triagem de Depressão', time: '3-5 min' },
   gad7: { title: 'Avaliação GAD-7', subtitle: 'Triagem de Ansiedade', time: '3-5 min' },
   hama: {
@@ -188,6 +198,8 @@ function ScaleContent({ scaleType }: { scaleType: string }) {
       return <FtdrsAssessment />
     case 'marcos-desenvolvimento':
       return <MarcosDesenvolvimentoAssessment />
+    case 'bdi':
+    case 'bai':
     case 'hamd':
     case 'hama':
     case 'asrs18':
