@@ -21,6 +21,8 @@ import {
   baiKeys,
   ybocsKeys,
   sdsKeys,
+  tmtKeys,
+  semanticFluencyKeys,
   type ScreeningFinding,
   computeGlobalSeverity,
 } from '@/lib/clinical-screening'
@@ -30,12 +32,41 @@ import { getSdsImpairmentLevel } from '@/lib/sds-data'
  * Análise por domínio (humor, ansiedade, cognição, comportamento,
  * neurodesenvolvimento). Linguagem cautelosa: nunca "diagnóstico".
  */
+export interface CognitiveDomainsBreakdown {
+  memoria: {
+    severity: 'baixa' | 'moderada' | 'alta' | null
+    descricao: string
+    status: 'preservado' | 'limitrofe' | 'rebaixado' | 'nao_informado'
+  }
+  atencao: {
+    severity: 'baixa' | 'moderada' | 'alta' | null
+    descricao: string
+    status: 'preservado' | 'limitrofe' | 'rebaixado' | 'nao_informado'
+  }
+  linguagem: {
+    severity: 'baixa' | 'moderada' | 'alta' | null
+    descricao: string
+    status: 'preservado' | 'limitrofe' | 'rebaixado' | 'nao_informado'
+  }
+  funcoesExecutivas: {
+    severity: 'baixa' | 'moderada' | 'alta' | null
+    descricao: string
+    status: 'preservado' | 'limitrofe' | 'rebaixado' | 'nao_informado'
+  }
+  visuoespacial: {
+    severity: 'baixa' | 'moderada' | 'alta' | null
+    descricao: string
+    status: 'preservado' | 'limitrofe' | 'rebaixado' | 'nao_informado'
+  }
+}
+
 export interface DomainAnalysis {
   humor: { severity: 'baixa' | 'moderada' | 'alta' | null; descricao: string }
   ansiedade: { severity: 'baixa' | 'moderada' | 'alta' | null; descricao: string }
   cognicao: { severity: 'baixa' | 'moderada' | 'alta' | null; descricao: string }
   comportamento: { severity: 'baixa' | 'moderada' | 'alta' | null; descricao: string }
   neurodesenvolvimento: { severity: 'baixa' | 'moderada' | 'alta' | null; descricao: string }
+  cognitiveDomains?: CognitiveDomainsBreakdown
 }
 
 export interface AnamnesisData {
@@ -75,10 +106,18 @@ export interface InterpretationResult {
   baiScore?: number | null
   ybocsScore: number | null
   sdsScore: number | null
+  tmtAScore?: number | null
+  tmtBScore?: number | null
+  tmtDiffScore?: number | null
+  fluenciaAnimaisScore?: number | null
+  fluenciaFrutasScore?: number | null
+  fluenciaSemanticaTotalScore?: number | null
   findings: ScreeningFinding[]
   comorbidities: string[]
   /** Análise por domínio com severidade estimada (linguagem cautelosa). */
   domainAnalysis: DomainAnalysis
+  /** 5 Domínios Cognitivos detalhados (Memória, Atenção, Linguagem, Executivas, Visuoespacial) */
+  cognitiveDomains?: CognitiveDomainsBreakdown
   /** Hipóteses clínicas a confirmar (nunca fechamento diagnóstico). */
   hypotheses: string[]
   /** Lacunas detectadas automaticamente (dados ausentes). */
@@ -347,6 +386,19 @@ export async function getSessionInterpretation(
   const ybocsScore = hasAnyKey(raw, ybocsKeys) ? scoreQuestionnaire(raw, ybocsKeys) : null
   const sdsScore = hasAnyKey(raw, sdsKeys) ? scoreQuestionnaire(raw, sdsKeys) : null
 
+  const tmtAScore = getSingleScore(raw, 'tmt_a_time')
+  const tmtBScore = getSingleScore(raw, 'tmt_b_time')
+  const tmtDiffScore =
+    getSingleScore(raw, 'tmt_diff_ba') ??
+    (tmtAScore !== null && tmtBScore !== null ? Math.max(0, tmtBScore - tmtAScore) : null)
+  const fluenciaAnimaisScore = getSingleScore(raw, 'fluencia_animais')
+  const fluenciaFrutasScore = getSingleScore(raw, 'fluencia_frutas')
+  const fluenciaSemanticaTotalScore =
+    getSingleScore(raw, 'fluencia_semantica_total') ??
+    (fluenciaAnimaisScore !== null && fluenciaFrutasScore !== null
+      ? fluenciaAnimaisScore + fluenciaFrutasScore
+      : null)
+
   let currentPhq9Score = phq9Score
   let currentGad7Score = gad7Score
   let currentAssqScore = assqScore
@@ -360,6 +412,12 @@ export async function getSessionInterpretation(
   let currentBaiScore = baiScore
   let currentYbocsScore = ybocsScore
   let currentSdsScore = sdsScore
+  let currentTmtAScore = tmtAScore
+  let currentTmtBScore = tmtBScore
+  let currentTmtDiffScore = tmtDiffScore
+  let currentFluenciaAnimaisScore = fluenciaAnimaisScore
+  let currentFluenciaFrutasScore = fluenciaFrutasScore
+  let currentFluenciaSemanticaTotalScore = fluenciaSemanticaTotalScore
 
   const allScores = [
     currentPhq9Score,
@@ -375,6 +433,10 @@ export async function getSessionInterpretation(
     currentBaiScore,
     currentYbocsScore,
     currentSdsScore,
+    currentTmtAScore,
+    currentTmtBScore,
+    currentFluenciaAnimaisScore,
+    currentFluenciaFrutasScore,
   ]
   let hasScaleData = allScores.some((s) => s !== null && s !== 0)
 
@@ -394,6 +456,8 @@ export async function getSessionInterpretation(
     const isAsrsPattern = hasAnyKey(raw, asrs18Keys)
     const isMocaPattern = hasAnyKey(raw, mocaKeys)
     const isMeemPattern = hasAnyKey(raw, meemKeys)
+    const isTmtPattern = hasAnyKey(raw, tmtKeys)
+    const isSemanticFluencyPattern = hasAnyKey(raw, semanticFluencyKeys)
 
     const matchesKnownScalePattern =
       isBdiPattern ||
@@ -408,7 +472,9 @@ export async function getSessionInterpretation(
       isSnapPattern ||
       isAsrsPattern ||
       isMocaPattern ||
-      isMeemPattern
+      isMeemPattern ||
+      isTmtPattern ||
+      isSemanticFluencyPattern
 
     if (matchesKnownScalePattern) {
       const { data: sessionRow } = await supabase
@@ -455,6 +521,10 @@ export async function getSessionInterpretation(
             currentMocaScore = validTotalScore
           } else if (rawScaleType.includes('meem') || isMeemPattern) {
             currentMeemScore = validTotalScore
+          } else if (rawScaleType.includes('tmt') || isTmtPattern) {
+            currentTmtBScore = validTotalScore
+          } else if (rawScaleType.includes('fluencia') || isSemanticFluencyPattern) {
+            currentFluenciaSemanticaTotalScore = validTotalScore
           }
         }
 
@@ -472,6 +542,10 @@ export async function getSessionInterpretation(
           currentBaiScore,
           currentYbocsScore,
           currentSdsScore,
+          currentTmtAScore,
+          currentTmtBScore,
+          currentFluenciaAnimaisScore,
+          currentFluenciaFrutasScore,
         ]
         hasScaleData = fallbackScores.some((s) => s !== null && s !== 0)
       }
@@ -492,6 +566,12 @@ export async function getSessionInterpretation(
     bai: currentBaiScore,
     ybocs: currentYbocsScore || null,
     sds: currentSdsScore || null,
+    tmtA: currentTmtAScore,
+    tmtB: currentTmtBScore,
+    tmtDiff: currentTmtDiffScore,
+    fluenciaAnimais: currentFluenciaAnimaisScore,
+    fluenciaFrutas: currentFluenciaFrutasScore,
+    fluenciaSemanticaTotal: currentFluenciaSemanticaTotalScore,
   })
 
   let suggestion = screening.fullSuggestion
@@ -514,6 +594,12 @@ export async function getSessionInterpretation(
     baiScore: currentBaiScore,
     ybocsScore: currentYbocsScore || null,
     sdsScore: currentSdsScore || null,
+    tmtAScore: currentTmtAScore,
+    tmtBScore: currentTmtBScore,
+    tmtDiffScore: currentTmtDiffScore,
+    fluenciaAnimaisScore: currentFluenciaAnimaisScore,
+    fluenciaFrutasScore: currentFluenciaFrutasScore,
+    fluenciaSemanticaTotalScore: currentFluenciaSemanticaTotalScore,
     cognitiveVrc,
   })
   const hypotheses = buildHypotheses(screening.findings)
@@ -531,6 +617,12 @@ export async function getSessionInterpretation(
     baiScore: currentBaiScore,
     ybocsScore: currentYbocsScore || null,
     sdsScore: currentSdsScore || null,
+    tmtAScore: currentTmtAScore,
+    tmtBScore: currentTmtBScore,
+    tmtDiffScore: currentTmtDiffScore,
+    fluenciaAnimaisScore: currentFluenciaAnimaisScore,
+    fluenciaFrutasScore: currentFluenciaFrutasScore,
+    fluenciaSemanticaTotalScore: currentFluenciaSemanticaTotalScore,
     cognitiveVrc,
   })
   suggestion += `\n\n${hypotheses.join('\n')}`
@@ -573,12 +665,19 @@ export async function getSessionInterpretation(
       baiScore: null,
       ybocsScore: null,
       sdsScore: null,
+      tmtAScore: null,
+      tmtBScore: null,
+      tmtDiffScore: null,
+      fluenciaAnimaisScore: null,
+      fluenciaFrutasScore: null,
+      fluenciaSemanticaTotalScore: null,
       snapIvInattention: null,
       snapIvHyperactivity: null,
       globalSeverity: 'low',
       findings: [],
       comorbidities: [],
       domainAnalysis,
+      cognitiveDomains: domainAnalysis.cognitiveDomains,
       hypotheses: [],
       gaps: [gapMessage],
     }
@@ -604,6 +703,12 @@ export async function getSessionInterpretation(
     baiScore: currentBaiScore,
     ybocsScore: currentYbocsScore || null,
     sdsScore: currentSdsScore || null,
+    tmtAScore: currentTmtAScore,
+    tmtBScore: currentTmtBScore,
+    tmtDiffScore: currentTmtDiffScore,
+    fluenciaAnimaisScore: currentFluenciaAnimaisScore,
+    fluenciaFrutasScore: currentFluenciaFrutasScore,
+    fluenciaSemanticaTotalScore: currentFluenciaSemanticaTotalScore,
     snapIvInattention: snapResult.inattentionAvg || null,
     snapIvHyperactivity: snapResult.hyperactivityAvg || null,
     globalSeverity: computeGlobalSeverity({
@@ -620,10 +725,17 @@ export async function getSessionInterpretation(
       bai: currentBaiScore,
       ybocs: currentYbocsScore || null,
       sds: currentSdsScore || null,
+      tmtA: currentTmtAScore,
+      tmtB: currentTmtBScore,
+      tmtDiff: currentTmtDiffScore,
+      fluenciaAnimais: currentFluenciaAnimaisScore,
+      fluenciaFrutas: currentFluenciaFrutasScore,
+      fluenciaSemanticaTotal: currentFluenciaSemanticaTotalScore,
     }),
     findings: screening.findings,
     comorbidities: screening.comorbidities,
     domainAnalysis,
+    cognitiveDomains: domainAnalysis.cognitiveDomains,
     hypotheses,
     gaps,
   }
@@ -776,6 +888,50 @@ function domainCognicao(s: ScoreBag): { severity: Sev; descricao: string } {
     }
     parts.push(`MEEM ${s.meemScore}/30 — compatível com ${faixa}.`)
   }
+  if (s.tmtAScore !== null && s.tmtAScore !== undefined) {
+    let faixa = 'preservado (≤29s)'
+    if (s.tmtAScore > 78) {
+      faixa = 'lentificação psicomotora significativa (>78s)'
+      sev = 'alta'
+    } else if (s.tmtAScore >= 30) {
+      faixa = 'desempenho limítrofe (30–78s)'
+      sev = sev === 'alta' ? 'alta' : 'moderada'
+    }
+    parts.push(`TMT Parte A ${s.tmtAScore}s — ${faixa}.`)
+  }
+  if (s.tmtBScore !== null && s.tmtBScore !== undefined) {
+    let faixa = 'preservado (≤75s)'
+    if (s.tmtBScore > 272) {
+      faixa = 'déficit executivo significativo (>272s)'
+      sev = 'alta'
+    } else if (s.tmtBScore >= 76) {
+      faixa = 'lentificação leve a moderada (76–272s)'
+      sev = sev === 'alta' ? 'alta' : 'moderada'
+    }
+    parts.push(`TMT Parte B ${s.tmtBScore}s — ${faixa}.`)
+  }
+  if (s.fluenciaAnimaisScore !== null && s.fluenciaAnimaisScore !== undefined) {
+    let faixa = 'preservado (>15)'
+    if (s.fluenciaAnimaisScore < 12) {
+      faixa = 'desempenho rebaixado (<12)'
+      sev = 'alta'
+    } else if (s.fluenciaAnimaisScore <= 14) {
+      faixa = 'desempenho limítrofe (12–14)'
+      sev = sev === 'alta' ? 'alta' : 'moderada'
+    }
+    parts.push(`Fluência Animais ${s.fluenciaAnimaisScore} — ${faixa}.`)
+  }
+  if (s.fluenciaFrutasScore !== null && s.fluenciaFrutasScore !== undefined) {
+    let faixa = 'preservado (>12)'
+    if (s.fluenciaFrutasScore < 9) {
+      faixa = 'desempenho rebaixado (<9)'
+      sev = 'alta'
+    } else if (s.fluenciaFrutasScore <= 11) {
+      faixa = 'desempenho limítrofe (9–11)'
+      sev = sev === 'alta' ? 'alta' : 'moderada'
+    }
+    parts.push(`Fluência Frutas ${s.fluenciaFrutasScore} — ${faixa}.`)
+  }
   if (s.cognitiveVrc !== null && s.cognitiveVrc < 0.5) {
     parts.push(`VRC ${s.cognitiveVrc.toFixed(2)} — abaixo do esperado.`)
     sev = sev === 'alta' ? 'alta' : 'moderada'
@@ -784,6 +940,133 @@ function domainCognicao(s: ScoreBag): { severity: Sev; descricao: string } {
     return { severity: null, descricao: '' }
   }
   return { severity: sev, descricao: parts.join(' ') }
+}
+
+export function buildCognitiveDomains(s: ScoreBag): CognitiveDomainsBreakdown {
+  // 1. MEMÓRIA (MoCA subtestes / evocação tardia, MEEM memória, etc.)
+  let memSev: Sev = null
+  let memDesc = 'Sem testagem direta isolada de memória registrada.'
+  let memStatus: 'preservado' | 'limitrofe' | 'rebaixado' | 'nao_informado' = 'nao_informado'
+  if (s.mocaScore !== null && s.mocaScore !== undefined) {
+    if (s.mocaScore < 18) {
+      memSev = 'alta'
+      memStatus = 'rebaixado'
+      memDesc = `Comprometimento na recuperação e fixação mnêmica sugerido pelo MoCA (${s.mocaScore}/30).`
+    } else if (s.mocaScore < 24) {
+      memSev = 'moderada'
+      memStatus = 'limitrofe'
+      memDesc = `Sinais de lentificação ou evocação limítrofe (MoCA ${s.mocaScore}/30).`
+    } else {
+      memStatus = 'preservado'
+      memDesc = `Desempenho mnêmico global preservado no MoCA (${s.mocaScore}/30).`
+    }
+  }
+
+  // 2. ATENÇÃO E VELOCIDADE DE PROCESSAMENTO (TMT A, MEEM atenção, MoCA dígitos/atenção, VRC)
+  let atSev: Sev = null
+  let atDesc = 'Sem dados específicos de atenção.'
+  let atStatus: 'preservado' | 'limitrofe' | 'rebaixado' | 'nao_informado' = 'nao_informado'
+  if (s.tmtAScore !== null && s.tmtAScore !== undefined) {
+    if (s.tmtAScore > 78) {
+      atSev = 'alta'
+      atStatus = 'rebaixado'
+      atDesc = `Lentificação psicomotora e atenção visual rebaixada no TMT Parte A (${s.tmtAScore}s, corte >78s).`
+    } else if (s.tmtAScore >= 30) {
+      atSev = 'moderada'
+      atStatus = 'limitrofe'
+      atDesc = `Velocidade de processamento e rastreamento atencional limítrofe no TMT Parte A (${s.tmtAScore}s, corte 30-78s).`
+    } else {
+      atStatus = 'preservado'
+      atDesc = `Atenção visual e velocidade de processamento preservadas no TMT Parte A (${s.tmtAScore}s, ≤29s).`
+    }
+  } else if (s.cognitiveVrc !== null && s.cognitiveVrc < 0.5) {
+    atSev = 'moderada'
+    atStatus = 'limitrofe'
+    atDesc = `Velocidade e estabilidade atencional reduzida observada via biofeedback/VRC (${s.cognitiveVrc.toFixed(2)}).`
+  }
+
+  // 3. LINGUAGEM E ACESSO LÉXICO (Fluência Semântica Animais/Frutas, FAS, MoCA nomeação)
+  let lingSev: Sev = null
+  let lingDesc = 'Sem testagem de fluência verbal ou linguagem registrada.'
+  let lingStatus: 'preservado' | 'limitrofe' | 'rebaixado' | 'nao_informado' = 'nao_informado'
+  if (s.fluenciaAnimaisScore !== null || s.fluenciaFrutasScore !== null) {
+    const ani = s.fluenciaAnimaisScore ?? 0
+    const fru = s.fluenciaFrutasScore ?? 0
+    const aniReb = s.fluenciaAnimaisScore !== null && ani < 12
+    const fruReb = s.fluenciaFrutasScore !== null && fru < 9
+    const aniLim = s.fluenciaAnimaisScore !== null && ani >= 12 && ani <= 14
+    const fruLim = s.fluenciaFrutasScore !== null && fru >= 9 && fru <= 11
+
+    if (aniReb || fruReb) {
+      lingSev = 'alta'
+      lingStatus = 'rebaixado'
+      lingDesc = `Rebaixamento na busca e evocação léxica semântica (Animais: ${s.fluenciaAnimaisScore ?? '-'}, Frutas: ${s.fluenciaFrutasScore ?? '-'}).`
+    } else if (aniLim || fruLim) {
+      lingSev = 'moderada'
+      lingStatus = 'limitrofe'
+      lingDesc = `Evocação léxica semântica em faixa limítrofe (Animais: ${s.fluenciaAnimaisScore ?? '-'}, Frutas: ${s.fluenciaFrutasScore ?? '-'}).`
+    } else {
+      lingStatus = 'preservado'
+      lingDesc = `Acesso léxico semântico, organização categorial e vocabulário preservados (Animais: ${s.fluenciaAnimaisScore ?? '-'}, Frutas: ${s.fluenciaFrutasScore ?? '-'}).`
+    }
+  }
+
+  // 4. FUNÇÕES EXECUTIVAS E FLEXIBILIDADE COGNITIVA (TMT B, Diferencial B-A, FAS fonêmico)
+  let execSev: Sev = null
+  let execDesc = 'Sem testagem específica de funções executivas.'
+  let execStatus: 'preservado' | 'limitrofe' | 'rebaixado' | 'nao_informado' = 'nao_informado'
+  if (s.tmtBScore !== null && s.tmtBScore !== undefined) {
+    if (s.tmtBScore > 272) {
+      execSev = 'alta'
+      execStatus = 'rebaixado'
+      execDesc = `Déficit executivo significativo em flexibilidade e alternância de tarefas no TMT Parte B (${s.tmtBScore}s, corte >272s).`
+    } else if (s.tmtBScore >= 76) {
+      execSev = 'moderada'
+      execStatus = 'limitrofe'
+      execDesc = `Lentificação executiva leve a moderada na alternância cognitiva (TMT Parte B ${s.tmtBScore}s, 76-272s).`
+    } else {
+      execStatus = 'preservado'
+      execDesc = `Flexibilidade cognitiva, controle inibitório e alternância mental preservados no TMT Parte B (${s.tmtBScore}s, ≤75s).`
+    }
+  }
+
+  // 5. HABILIDADES VISUOESPACIAIS (MoCA relógio/cubo, MEEM cópia de pentágonos)
+  let visSev: Sev = null
+  let visDesc = 'Habilidades de organização percepto-espacial e construção.'
+  let visStatus: 'preservado' | 'limitrofe' | 'rebaixado' | 'nao_informado' = 'nao_informado'
+  if (s.mocaScore !== null && s.mocaScore !== undefined) {
+    if (s.mocaScore < 18) {
+      visSev = 'alta'
+      visStatus = 'rebaixado'
+      visDesc = `Possível desorganização visuoconstrutiva associada a comprometimento cognitivo global (MoCA ${s.mocaScore}/30).`
+    } else if (s.mocaScore < 24) {
+      visSev = 'moderada'
+      visStatus = 'limitrofe'
+      visDesc = `Habilidades visuoespaciais em acompanhamento clínico (MoCA ${s.mocaScore}/30).`
+    } else {
+      visStatus = 'preservado'
+      visDesc = `Orientação visuoespacial e organização perceptiva preservadas no rastreio global (MoCA ${s.mocaScore}/30).`
+    }
+  }
+
+  return {
+    memoria: { severity: memSev, descricao: memDesc, status: memStatus },
+    atencao: { severity: atSev, descricao: atDesc, status: atStatus },
+    linguagem: { severity: lingSev, descricao: lingDesc, status: lingStatus },
+    funcoesExecutivas: { severity: execSev, descricao: execDesc, status: execStatus },
+    visuoespacial: { severity: visSev, descricao: visDesc, status: visStatus },
+  }
+}
+
+function buildDomainAnalysis(s: ScoreBag): DomainAnalysis {
+  return {
+    humor: domainHumor(s),
+    ansiedade: domainAnsiedade(s),
+    cognicao: domainCognicao(s),
+    comportamento: domainComportamento(s),
+    neurodesenvolvimento: domainNeurodesenvolvimento(s),
+    cognitiveDomains: buildCognitiveDomains(s),
+  }
 }
 
 function domainComportamento(s: ScoreBag): {

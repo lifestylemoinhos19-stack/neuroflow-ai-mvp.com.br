@@ -638,7 +638,69 @@ const CLOCK_ITEMS: AssistedItem[] = [
 ]
 
 /* ----------------------------------------------------------------- */
-/* Fluência Verbal — FAS (fonêmica) e Animais (semântica)            */
+/* Trail Making Test (TMT A/B) — Partes A e B cronometradas         */
+/* ----------------------------------------------------------------- */
+const TMT_ITEMS: AssistedItem[] = [
+  {
+    key: 'tmt_a_time',
+    domain: 'TMT Parte A — Atenção visual e velocidade psicomotora (segundos)',
+    stimulus:
+      'No Trail Making Test Parte A, você deve conectar os círculos numerados em ordem crescente (1 a 25) o mais rápido possível sem tirar o lápis do papel. Teremos cronometragem em segundos. Pode começar quando estiver pronto.',
+    responseType: 'literal',
+    requiresMaterial: true,
+    materialNote:
+      'Profissional: cronometre o tempo total em SEGUNDOS e conte os erros cometidos. Corte: ≤29s preservado, 30-78s limítrofe, >78s lentificação significativa.',
+    requiresManualScoring: true,
+    allowRepetition: false,
+  },
+  {
+    key: 'tmt_b_time',
+    domain: 'TMT Parte B — Flexibilidade cognitiva e alternância executiva (segundos)',
+    stimulus:
+      'No Trail Making Test Parte B, você deve alternar entre números e letras em ordem: 1-A-2-B-3-C até o final, o mais rápido possível. Cronometre em segundos. Pode começar.',
+    responseType: 'literal',
+    requiresMaterial: true,
+    materialNote:
+      'Profissional: cronometre em SEGUNDOS e registre erros. Corte: ≤75s preservado, 76-272s lentificação leve/moderada, >272s déficit executivo.',
+    requiresManualScoring: true,
+    allowRepetition: false,
+    pauseAfter: true,
+  },
+]
+
+/* ----------------------------------------------------------------- */
+/* Fluência Verbal Semântica — Animais e Frutas (60s cada)           */
+/* ----------------------------------------------------------------- */
+const SEMANTIC_FLUENCY_ITEMS: AssistedItem[] = [
+  {
+    key: 'fluencia_animais',
+    domain: 'Fluência Semântica — Categoria Animais (60 segundos)',
+    stimulus:
+      'Diga o maior número de nomes de ANIMAIS que você conseguir em 60 segundos. Não repita. Pode começar.',
+    responseType: 'literal',
+    requiresMaterial: true,
+    materialNote:
+      'Profissional: cronometre 60s exatos. Conte palavras válidas únicas (>15 preservado, 12-14 limítrofe, <12 rebaixado).',
+    requiresManualScoring: true,
+    allowRepetition: false,
+  },
+  {
+    key: 'fluencia_frutas',
+    domain: 'Fluência Semântica — Categoria Frutas (60 segundos)',
+    stimulus:
+      'Agora, diga o maior número de nomes de FRUTAS que conseguir em 60 segundos. Não repita. Pode começar.',
+    responseType: 'literal',
+    requiresMaterial: true,
+    materialNote:
+      'Profissional: cronometre 60s exatos. Conte palavras válidas únicas (>12 preservado, 9-11 limítrofe, <9 rebaixado).',
+    requiresManualScoring: true,
+    allowRepetition: false,
+    pauseAfter: true,
+  },
+]
+
+/* ----------------------------------------------------------------- */
+/* Fluência Verbal Fonêmica — FAS (letras F, A, S)                   */
 /* ----------------------------------------------------------------- */
 const FAS_ITEMS: AssistedItem[] = [
   {
@@ -1614,9 +1676,32 @@ export const ASSISTED_SCALES: Record<string, AssistedScale> = {
     totalKey: 'clock_total',
     maxTotal: 10,
   },
+  tmt: {
+    key: 'tmt',
+    name: 'Trail Making Test (TMT A e B)',
+    version: 'Partes A e B cronometradas em segundos',
+    applicationMode: 'Aplicação assistida por voz com cronômetro em segundos',
+    target: 'paciente',
+    items: TMT_ITEMS,
+    disclaimer:
+      'O TMT A/B avalia velocidade de processamento, atenção alternada e flexibilidade cognitiva.',
+    totalKey: 'tmt_total',
+    maxTotal: 0,
+  },
+  'fluencia-semantica': {
+    key: 'fluencia-semantica',
+    name: 'Fluência Verbal Semântica (Animais e Frutas)',
+    version: 'Categorias semânticas (60s cada)',
+    applicationMode: 'Aplicação assistida por voz com cronometragem',
+    target: 'paciente',
+    items: SEMANTIC_FLUENCY_ITEMS,
+    disclaimer: 'O teste de fluência verbal semântica avalia acesso léxico e memória semântica.',
+    totalKey: 'fluencia_semantica_total',
+    maxTotal: 0,
+  },
   fas: {
     key: 'fas',
-    name: 'Teste de Fluência Verbal (FAS + Animais)',
+    name: 'Teste de Fluência Verbal Fonêmica (FAS)',
     version: 'Fonêmica (FAS) e semântica (Animais)',
     applicationMode: 'Aplicação assistida por voz com cronometragem',
     target: 'paciente',
@@ -1684,7 +1769,24 @@ export function normalizeAssistedScaleType(raw: string | undefined): string | nu
   if (lower === 'meem' || lower === 'mini mental' || lower === 'mini-mental') return 'meem'
   if (lower === 'moca' || lower === 'montreal cognitive assessment') return 'moca'
   if (lower === 'clock' || lower === 'desenho do relogio' || lower === 'relogio') return 'clock'
-  if (lower === 'fas' || lower === 'fluencia verbal') return 'fas'
+  if (
+    lower === 'tmt' ||
+    lower === 'tmt a/b' ||
+    lower === 'tmt a' ||
+    lower === 'tmt b' ||
+    lower === 'tmta' ||
+    lower === 'tmtb' ||
+    lower === 'trail making'
+  )
+    return 'tmt'
+  if (
+    lower === 'fluencia-semantica' ||
+    lower === 'fluência semântica' ||
+    lower === 'fluencia semantica' ||
+    lower === 'fluenciasemantica'
+  )
+    return 'fluencia-semantica'
+  if (lower === 'fas' || lower === 'fluencia verbal' || lower === 'fluência fonêmica') return 'fas'
   if (lower === 'm-chat' || lower === 'mchat' || lower === 'mchat-r') return 'mchat'
   if (lower === 'snap-iv' || lower === 'snapiv' || lower === 'snap iv') return 'snapiv'
   return null

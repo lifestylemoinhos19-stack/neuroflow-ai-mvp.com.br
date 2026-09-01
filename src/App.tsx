@@ -51,6 +51,8 @@ import ClinicalModulesHub from '@/pages/ClinicalModulesHub'
 import MocaPage from '@/pages/MocaPage'
 import FtdrsPage from '@/pages/FtdrsPage'
 import FasPage from '@/pages/FasPage'
+import TmtPage from '@/pages/TmtPage'
+import SemanticFluencyPage from '@/pages/SemanticFluencyPage'
 import Gad7Page from '@/pages/Gad7Page'
 import Mini500 from '@/pages/Mini500'
 import AdminPainel from '@/pages/AdminPainel'
@@ -123,6 +125,8 @@ function AppInner() {
         <Route path="/avaliacao/marcos-desenvolvimento" element={<PublicScaleAssessment />} />
         <Route path="/avaliacao/ybocs" element={<PublicScaleAssessment />} />
         <Route path="/avaliacao/fas" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/tmt" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/fluencia-semantica" element={<PublicScaleAssessment />} />
         <Route path="/avaliacao/ftdrs" element={<PublicScaleAssessment />} />
         <Route path="/avaliacao/sds" element={<PublicScaleAssessment />} />
         <Route path="/avaliacao/:scale" element={<PublicAssessment />} />
@@ -298,6 +302,8 @@ function AppInner() {
           <Route path="/evaluations/moca" element={<MocaPage />} />
           <Route path="/evaluations/ftdrs" element={<FtdrsPage />} />
           <Route path="/evaluations/fas" element={<FasPage />} />
+          <Route path="/evaluations/tmt" element={<TmtPage />} />
+          <Route path="/evaluations/fluencia-semantica" element={<SemanticFluencyPage />} />
           <Route path="/ybocs-assessment" element={<YbocsPage />} />
           <Route path="/neuro-validation" element={<NeuroValidationPage />} />
           <Route path="/stress-test" element={<StressTestDashboard />} />

@@ -10,6 +10,8 @@ import { YbocsAssessment } from '@/components/YbocsAssessment'
 import { SdsAssessment } from '@/components/SdsAssessment'
 import { MocaAssessment } from '@/components/MocaAssessment'
 import { FasAssessment } from '@/components/FasAssessment'
+import { TmtAssessment } from '@/components/TmtAssessment'
+import { SemanticFluencyAssessment } from '@/components/SemanticFluencyAssessment'
 import { FtdrsAssessment } from '@/components/FtdrsAssessment'
 import { GenericScaleAssessment } from '@/components/GenericScaleAssessment'
 import { MarcosDesenvolvimentoAssessment } from '@/components/MarcosDesenvolvimentoAssessment'
@@ -78,6 +80,16 @@ const SCALE_META: Record<string, { title: string; subtitle: string; time: string
     subtitle: 'Triagem cognitiva complementar (MoCA/MEEM)',
     time: '15-20 min',
   },
+  tmt: {
+    title: 'Trail Making Test (TMT A/B)',
+    subtitle: 'Atenção visual, velocidade psicomotora e flexibilidade executiva',
+    time: '5-10 min',
+  },
+  'fluencia-semantica': {
+    title: 'Fluência Verbal Semântica',
+    subtitle: 'Categorias: Animais e Frutas (60s cada)',
+    time: '3-5 min',
+  },
 }
 
 /**
@@ -94,6 +106,23 @@ function normalizeScaleType(raw: string | undefined): string | undefined {
   // Casos especiais: siglas que não colapsam diretamente para a chave do SCALE_META.
   if (lower === 'marcos') return 'marcos-desenvolvimento'
   if (lower === 'cog-triage' || lower === 'cogtriage') return 'cognitive-triage'
+  if (
+    lower === 'tmt' ||
+    lower === 'tmt a/b' ||
+    lower === 'tmta' ||
+    lower === 'tmtb' ||
+    lower === 'tmt a' ||
+    lower === 'tmt b' ||
+    lower === 'tmt-a/b'
+  )
+    return 'tmt'
+  if (
+    lower.includes('fluencia-semantica') ||
+    lower.includes('fluência semântica') ||
+    lower.includes('fluenciasemantica') ||
+    lower.includes('semantica')
+  )
+    return 'fluencia-semantica'
   // Demais escalas: remove hifens, espaços e underscores (gad-7 → gad7, y-bocs → ybocs)
   return lower.replace(/[\s_-]/g, '')
 }
@@ -194,6 +223,10 @@ function ScaleContent({ scaleType }: { scaleType: string }) {
       return <MocaAssessment />
     case 'fas':
       return <FasAssessment />
+    case 'tmt':
+      return <TmtAssessment />
+    case 'fluencia-semantica':
+      return <SemanticFluencyAssessment />
     case 'ftdrs':
       return <FtdrsAssessment />
     case 'marcos-desenvolvimento':

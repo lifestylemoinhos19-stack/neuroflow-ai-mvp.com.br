@@ -12,6 +12,12 @@ export interface ScaleScores {
   bai?: number | null
   ybocs: number | null
   sds: number | null
+  tmtA?: number | null
+  tmtB?: number | null
+  tmtDiff?: number | null
+  fluenciaAnimais?: number | null
+  fluenciaFrutas?: number | null
+  fluenciaSemanticaTotal?: number | null
 }
 
 export interface ScreeningFinding {
@@ -40,6 +46,21 @@ export const bdiKeys: string[] = Array.from({ length: 21 }, (_, i) => `bdi_q${i 
 export const baiKeys: string[] = Array.from({ length: 21 }, (_, i) => `bai_q${i + 1}`)
 export const ybocsKeys: string[] = Array.from({ length: 10 }, (_, i) => `ybocs_q${i + 1}`)
 export const sdsKeys: string[] = ['sds_q1', 'sds_q2', 'sds_q3']
+export const tmtKeys: string[] = [
+  'tmt_a_time',
+  'tmt_b_time',
+  'tmt_diff_ba',
+  'tmt_a_errors',
+  'tmt_b_errors',
+  'tmt_total',
+]
+export const semanticFluencyKeys: string[] = [
+  'fluencia_animais',
+  'fluencia_frutas',
+  'fluencia_semantica_total',
+  'fluencia_animais_words',
+  'fluencia_frutas_words',
+]
 
 export function generateScreening(scores: ScaleScores): ScreeningResult {
   const findings: ScreeningFinding[] = []
@@ -159,6 +180,90 @@ export function generateScreening(scores: ScaleScores): ScreeningResult {
       scale: 'SDS',
       score: scores.sds,
       threshold: '≥ 5',
+    })
+  }
+  if (scores.tmtA !== null && scores.tmtA !== undefined && scores.tmtA > 78) {
+    findings.push({
+      category: 'Atenção e Velocidade',
+      suggestion: 'Sinais de lentificação psicomotora e atenção visual rebaixada',
+      scale: 'TMT Parte A',
+      score: scores.tmtA,
+      threshold: '> 78s',
+    })
+  } else if (scores.tmtA !== null && scores.tmtA !== undefined && scores.tmtA >= 30) {
+    findings.push({
+      category: 'Atenção e Velocidade',
+      suggestion: 'Desempenho limítrofe em velocidade de processamento visual',
+      scale: 'TMT Parte A',
+      score: scores.tmtA,
+      threshold: '30–78s',
+    })
+  }
+  if (scores.tmtB !== null && scores.tmtB !== undefined && scores.tmtB > 272) {
+    findings.push({
+      category: 'Funções Executivas',
+      suggestion: 'Sinais compatíveis com déficit executivo significativo na alternância',
+      scale: 'TMT Parte B',
+      score: scores.tmtB,
+      threshold: '> 272s',
+    })
+  } else if (scores.tmtB !== null && scores.tmtB !== undefined && scores.tmtB >= 76) {
+    findings.push({
+      category: 'Funções Executivas',
+      suggestion: 'Lentificação executiva leve a moderada na alternância',
+      scale: 'TMT Parte B',
+      score: scores.tmtB,
+      threshold: '76–272s',
+    })
+  }
+  if (
+    scores.fluenciaAnimais !== null &&
+    scores.fluenciaAnimais !== undefined &&
+    scores.fluenciaAnimais < 12
+  ) {
+    findings.push({
+      category: 'Linguagem e Memória',
+      suggestion: 'Rebaixamento em fluência verbal semântica (animais)',
+      scale: 'Fluência Animais',
+      score: scores.fluenciaAnimais,
+      threshold: '< 12',
+    })
+  } else if (
+    scores.fluenciaAnimais !== null &&
+    scores.fluenciaAnimais !== undefined &&
+    scores.fluenciaAnimais <= 14
+  ) {
+    findings.push({
+      category: 'Linguagem e Memória',
+      suggestion: 'Desempenho limítrofe em fluência verbal semântica (animais)',
+      scale: 'Fluência Animais',
+      score: scores.fluenciaAnimais,
+      threshold: '12–14',
+    })
+  }
+  if (
+    scores.fluenciaFrutas !== null &&
+    scores.fluenciaFrutas !== undefined &&
+    scores.fluenciaFrutas < 9
+  ) {
+    findings.push({
+      category: 'Linguagem e Memória',
+      suggestion: 'Rebaixamento em fluência verbal semântica (frutas)',
+      scale: 'Fluência Frutas',
+      score: scores.fluenciaFrutas,
+      threshold: '< 9',
+    })
+  } else if (
+    scores.fluenciaFrutas !== null &&
+    scores.fluenciaFrutas !== undefined &&
+    scores.fluenciaFrutas <= 11
+  ) {
+    findings.push({
+      category: 'Linguagem e Memória',
+      suggestion: 'Desempenho limítrofe em fluência verbal semântica (frutas)',
+      scale: 'Fluência Frutas',
+      score: scores.fluenciaFrutas,
+      threshold: '9–11',
     })
   }
 

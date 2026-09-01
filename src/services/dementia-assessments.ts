@@ -7,7 +7,7 @@ import {
   type AnamnesisResponseInput,
 } from '@/services/anamnesis'
 
-export type DementiaScaleType = 'moca' | 'ftdrs' | 'fas'
+export type DementiaScaleType = 'moca' | 'ftdrs' | 'fas' | 'tmt' | 'fluencia-semantica'
 
 export async function saveDementiaAssessment(
   scaleType: DementiaScaleType,

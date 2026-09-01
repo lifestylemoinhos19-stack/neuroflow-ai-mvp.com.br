@@ -51,7 +51,14 @@ export const SCALE_GROUPS: Record<string, ScaleOption[]> = {
   Cognição: [
     { id: 'moca', label: 'MoCA', name: 'Avaliação Cognitiva Montreal', time: '10-15 min' },
     { id: 'meem', label: 'MEEM', name: 'Mini Exame do Estado Mental', time: '7-10 min' },
-    { id: 'fas', label: 'FAS', name: 'Teste de Fluência Verbal', time: '3-5 min' },
+    { id: 'tmt', label: 'TMT A/B', name: 'Trail Making Test (Partes A e B)', time: '5-10 min' },
+    {
+      id: 'fluencia-semantica',
+      label: 'Fluência Semântica',
+      name: 'Fluência Verbal Semântica (Animais e Frutas)',
+      time: '3-5 min',
+    },
+    { id: 'fas', label: 'FAS', name: 'Teste de Fluência Verbal Fonêmica', time: '3-5 min' },
     {
       id: 'cognitive-triage',
       label: 'COG-TRIAGE',

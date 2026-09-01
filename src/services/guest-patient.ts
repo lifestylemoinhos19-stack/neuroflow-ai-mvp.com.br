@@ -320,6 +320,10 @@ export const SCALE_DISPLAY_NAMES: Record<string, string> = {
   ANAMNESE: 'Anamnese (Entrevista Clínica Inicial)',
   MARCOS: 'Marcos do Desenvolvimento (Neurodesenvolvimento)',
   'COG-TRIAGE': 'Triagem Cognitiva NeuroFlow (Cognição)',
+  'TMT A/B': 'TMT A/B (Trail Making Test - Partes A e B)',
+  TMT: 'TMT A/B (Trail Making Test)',
+  'FLUENCIA-SEMANTICA': 'Fluência Verbal Semântica (Animais e Frutas)',
+  'Fluência Semântica': 'Fluência Verbal Semântica (Animais e Frutas)',
 }
 
 export function getScaleDisplayName(scaleType: string): string {
@@ -375,6 +379,15 @@ export function getScaleRoute(scaleType: string): string {
       return '/avaliacao/marcos-desenvolvimento'
     case 'COG-TRIAGE':
       return '/avaliacao/triagem-cognitiva'
+    case 'TMT':
+    case 'TMT A/B':
+    case 'tmt':
+      return '/avaliacao/tmt'
+    case 'FLUENCIA-SEMANTICA':
+    case 'FLUÊNCIA SEMÂNTICA':
+    case 'FLUENCIA_SEMANTICA':
+    case 'fluencia-semantica':
+      return '/avaliacao/fluencia-semantica'
     default:
       return '/avaliacao'
   }
