@@ -156,11 +156,18 @@ export default function AssistedApplicationPage() {
             <p className="text-sm" style={{ color: CLINIC_BRANDING.colors.medium }}>
               Verifique se a testagem selecionada suporta o modo assistido e se você tem permissão.
             </p>
-            <Button asChild variant="outline" className="border-[#C4A35A] text-[#7B5B3A]">
-              <Link to="/admin/painel">
-                <ArrowLeft className="h-4 w-4 mr-1" /> Voltar ao Painel Admin
-              </Link>
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              <Button asChild variant="outline" className="border-[#C4A35A] text-[#7B5B3A]">
+                <Link to="/minhas-escalas">
+                  <ArrowLeft className="h-4 w-4 mr-1" /> Voltar para Minhas Escalas
+                </Link>
+              </Button>
+              {user && (
+                <Button asChild variant="ghost" className="text-[#7B5B3A]">
+                  <Link to="/admin/painel">Painel Admin</Link>
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

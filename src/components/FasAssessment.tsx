@@ -1,10 +1,20 @@
 import { useState, useEffect, useRef } from 'react'
-import { Loader2, RotateCcw, Play, Timer, FileText, ArrowLeft } from 'lucide-react'
+import {
+  Loader2,
+  RotateCcw,
+  Play,
+  Timer,
+  FileText,
+  ArrowLeft,
+  Volume2,
+  VolumeX,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { saveDementiaAssessment } from '@/services/dementia-assessments'
+import { useSpeech } from '@/hooks/use-speech'
 import {
   FAS_LETTERS,
   FAS_TIME_PER_LETTER,
@@ -25,6 +35,8 @@ export function FasAssessment() {
   const [words, setWords] = useState<Record<string, string>>({ F: '', A: '', S: '' })
   const [saving, setSaving] = useState(false)
   const topRef = useRef<HTMLDivElement>(null)
+
+  const { speak, cancelSpeak, speaking, ttsSupported } = useSpeech({ lang: 'pt-BR' })
 
   useEffect(() => {
     if (phase === 'intro' || phase === 'result') return
@@ -49,15 +61,18 @@ export function FasAssessment() {
   const handleStart = () => {
     setPhase('F')
     setTimeLeft(FAS_TIME_PER_LETTER)
+    speak('Letra F. Diga ou digite palavras com a letra F.')
   }
 
   const handleNext = () => {
     if (phase === 'F') {
       setPhase('A')
       setTimeLeft(FAS_TIME_PER_LETTER)
+      speak('Letra A. Diga ou digite palavras com a letra A.')
     } else if (phase === 'A') {
       setPhase('S')
       setTimeLeft(FAS_TIME_PER_LETTER)
+      speak('Letra S. Diga ou digite palavras com a letra S.')
     } else if (phase === 'S') {
       setPhase('result')
     }
@@ -99,6 +114,31 @@ export function FasAssessment() {
             S). Digite o máximo de palavras que conseguir, uma por linha. Não use nomes próprios,
             nomes de lugares ou variações da mesma palavra.
           </p>
+          {ttsSupported && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (speaking) cancelSpeak()
+                else
+                  speak(
+                    'Teste de Fluência Verbal FAS. Você terá 60 segundos para cada letra: F, A e S. Digite o máximo de palavras que conseguir, uma por linha. Não use nomes próprios, nomes de lugares ou variações da mesma palavra.',
+                  )
+              }}
+              className="mt-3 text-[#00FFFF] hover:bg-[#00FFFF]/10 text-xs cursor-pointer"
+            >
+              {speaking ? (
+                <>
+                  <VolumeX className="h-3.5 w-3.5 mr-1 text-red-400" /> Parar Narração
+                </>
+              ) : (
+                <>
+                  <Volume2 className="h-3.5 w-3.5 mr-1" /> Ouvir Instruções
+                </>
+              )}
+            </Button>
+          )}
         </div>
         <Button
           onClick={handleStart}
@@ -185,6 +225,18 @@ export function FasAssessment() {
         <p className="text-xs text-white/70 mb-1">Letra atual</p>
         <p className="text-6xl font-bold text-[#00FFFF] mb-2">{currentLetter}</p>
         <p className="text-3xl font-bold text-white">{timeLeft}s</p>
+        {ttsSupported && (
+          <button
+            type="button"
+            onClick={() => {
+              if (speaking) cancelSpeak()
+              else speak(`Letra ${currentLetter}. Restam ${timeLeft} segundos.`)
+            }}
+            className="mt-2 text-xs text-white/60 hover:text-[#00FFFF] inline-flex items-center gap-1 cursor-pointer"
+          >
+            <Volume2 className="h-3 w-3" /> Ouvir letra atual
+          </button>
+        )}
       </div>
       <Textarea
         value={words[currentLetter]}

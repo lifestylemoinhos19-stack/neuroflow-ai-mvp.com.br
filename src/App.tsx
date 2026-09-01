@@ -126,6 +126,11 @@ function AppInner() {
         <Route path="/avaliacao/ftdrs" element={<PublicScaleAssessment />} />
         <Route path="/avaliacao/sds" element={<PublicScaleAssessment />} />
         <Route path="/avaliacao/:scale" element={<PublicAssessment />} />
+        {/* /aplicacao-assistida: acessível tanto para profissional logado quanto para paciente público com guest_id/assignmentId */}
+        <Route
+          path="/aplicacao-assistida/:scaleType/:assignmentId"
+          element={<AssistedApplicationPage />}
+        />
         <Route path="/welcome" element={<Welcome />} />
         <Route path="/minhas-escalas" element={<MinhasEscalas />} />
         <Route path="/neuroflow-ia" element={<NeuroFlowLanding />} />
@@ -325,15 +330,6 @@ function AppInner() {
             element={
               <AuthGuard requireClinical>
                 <IndicatorsDashboard />
-              </AuthGuard>
-            }
-          />
-          {/* /aplicacao-assistida: admin, doctor, staff (modo assistido por voz). */}
-          <Route
-            path="/aplicacao-assistida/:scaleType/:assignmentId"
-            element={
-              <AuthGuard requireStaff>
-                <AssistedApplicationPage />
               </AuthGuard>
             }
           />

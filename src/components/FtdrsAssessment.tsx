@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import { Loader2, RotateCcw, Eye, FileText, ArrowLeft } from 'lucide-react'
+import { Loader2, RotateCcw, Eye, FileText, ArrowLeft, Volume2, VolumeX } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { AssessmentProgress } from '@/components/AssessmentProgress'
 import { saveDementiaAssessment } from '@/services/dementia-assessments'
+import { useSpeech } from '@/hooks/use-speech'
 import {
   ftdrsItems,
   ftdrsDomains,
@@ -25,7 +26,22 @@ export function FtdrsAssessment() {
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [showResult, setShowResult] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [speakingItem, setSpeakingItem] = useState<string | null>(null)
   const topRef = useRef<HTMLDivElement>(null)
+
+  const { speak, cancelSpeak, speaking, ttsSupported } = useSpeech({
+    lang: 'pt-BR',
+  })
+
+  const handleToggleSpeakItem = (itemKey: string, text: string) => {
+    if (speaking && speakingItem === itemKey) {
+      cancelSpeak()
+      setSpeakingItem(null)
+    } else {
+      setSpeakingItem(itemKey)
+      speak(text)
+    }
+  }
 
   useEffect(() => {
     try {
@@ -60,7 +76,7 @@ export function FtdrsAssessment() {
       question_label: item.text,
       response_value: answers[item.key] ?? 0,
     }))
-    const ok = await saveDementiaAssessment('ftdrs', responses, totalScore)
+    const ok = await saveDementiaAssessment('ftdrs', responses, totalScore, guestId)
     setSaving(false)
     if (ok) {
       localStorage.removeItem(FTDRS_DRAFT_KEY)
@@ -115,6 +131,12 @@ export function FtdrsAssessment() {
           <p className="text-xs text-yellow-400/80 italic">{FTDRS_DISCLAIMER}</p>
         </div>
         <Button
+          onClick={() => returnToMinhasEscalas(guestId)}
+          className="w-full bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-semibold"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para Minhas Escalas
+        </Button>
+        <Button
           onClick={handleReset}
           variant="outline"
           className="w-full border-white/20 text-white hover:bg-white/10"
@@ -142,9 +164,30 @@ export function FtdrsAssessment() {
                 className="p-4 rounded-xl border border-white/10 transition-colors hover:border-[#00FFFF]/20"
                 style={CARD_BG}
               >
-                <p className="text-white text-sm mb-3">
-                  <span className="text-[#00FFFF] font-medium">{item.label}.</span> {item.text}
-                </p>
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <p className="text-white text-sm">
+                    <span className="text-[#00FFFF] font-medium">{item.label}.</span> {item.text}
+                  </p>
+                  {ttsSupported && (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleSpeakItem(item.key, `${item.label}. ${item.text}`)}
+                      className={cn(
+                        'shrink-0 p-1.5 rounded-lg border transition-all text-xs flex items-center gap-1 cursor-pointer',
+                        speaking && speakingItem === item.key
+                          ? 'border-[#00FFFF] bg-[#00FFFF]/20 text-[#00FFFF]'
+                          : 'border-white/10 text-white/60 hover:text-[#00FFFF] hover:border-[#00FFFF]/30',
+                      )}
+                      title="Ouvir pergunta"
+                    >
+                      {speaking && speakingItem === item.key ? (
+                        <VolumeX className="h-3.5 w-3.5 text-[#00FFFF]" />
+                      ) : (
+                        <Volume2 className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                  )}
+                </div>
                 <div className="flex flex-col gap-1.5">
                   {ftdrsOptions.map((opt) => (
                     <button

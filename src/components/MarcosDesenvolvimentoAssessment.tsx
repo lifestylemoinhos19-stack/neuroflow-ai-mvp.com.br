@@ -7,12 +7,15 @@ import {
   ArrowLeft,
   AlertTriangle,
   CheckCircle2,
+  Volume2,
+  VolumeX,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { AssessmentProgress } from '@/components/AssessmentProgress'
 import { supabase } from '@/lib/supabase/client'
+import { useSpeech } from '@/hooks/use-speech'
 import {
   createAnamnesisSessionForGuest,
   saveAnamnesisResponses,
@@ -38,7 +41,22 @@ export function MarcosDesenvolvimentoAssessment() {
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [showResult, setShowResult] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [speakingKey, setSpeakingKey] = useState<string | null>(null)
   const topRef = useRef<HTMLDivElement>(null)
+
+  const { speak, cancelSpeak, speaking, ttsSupported } = useSpeech({
+    lang: 'pt-BR',
+  })
+
+  const handleToggleSpeak = (key: string, text: string) => {
+    if (speaking && speakingKey === key) {
+      cancelSpeak()
+      setSpeakingKey(null)
+    } else {
+      setSpeakingKey(key)
+      speak(text)
+    }
+  }
 
   useEffect(() => {
     try {
@@ -306,12 +324,35 @@ export function MarcosDesenvolvimentoAssessment() {
                 className="p-4 rounded-xl border border-white/10 transition-colors hover:border-[#00FFFF]/20"
                 style={CARD_BG}
               >
-                <p className="text-white text-sm mb-3">
-                  <span className="text-[#00FFFF] font-medium capitalize">
-                    {DOMAIN_LABELS[item.domain]}.
-                  </span>{' '}
-                  {item.text}
-                </p>
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <p className="text-white text-sm">
+                    <span className="text-[#00FFFF] font-medium capitalize">
+                      {DOMAIN_LABELS[item.domain]}.
+                    </span>{' '}
+                    {item.text}
+                  </p>
+                  {ttsSupported && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleToggleSpeak(item.key, `${DOMAIN_LABELS[item.domain]}. ${item.text}`)
+                      }
+                      className={cn(
+                        'shrink-0 p-1.5 rounded-lg border transition-all text-xs flex items-center gap-1 cursor-pointer',
+                        speaking && speakingKey === item.key
+                          ? 'border-[#00FFFF] bg-[#00FFFF]/20 text-[#00FFFF]'
+                          : 'border-white/10 text-white/60 hover:text-[#00FFFF] hover:border-[#00FFFF]/30',
+                      )}
+                      title="Ouvir marco"
+                    >
+                      {speaking && speakingKey === item.key ? (
+                        <VolumeX className="h-3.5 w-3.5 text-[#00FFFF]" />
+                      ) : (
+                        <Volume2 className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                  )}
+                </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {milestoneOptions.map((opt) => (
                     <button

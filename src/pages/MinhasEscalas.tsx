@@ -19,8 +19,10 @@ import {
   ChevronDown,
   ChevronUp,
   CheckCircle2,
+  Headphones,
 } from 'lucide-react'
 import { InformedConsent } from '@/components/InformedConsent'
+import { normalizeAssistedScaleType } from '@/lib/assisted-scales-data'
 import {
   getGuestAssignments,
   completeAssignment,
@@ -186,6 +188,11 @@ export default function MinhasEscalas() {
     )
   }
 
+  const handleStartAssisted = (assignment: GuestAssignment) => {
+    if (guest) saveGuestId(guest.id)
+    navigate(`/aplicacao-assistida/${encodeURIComponent(assignment.scale_type)}/${assignment.id}`)
+  }
+
   const handleBack = () => {
     clearGuestId()
     setGuest(null)
@@ -269,10 +276,11 @@ export default function MinhasEscalas() {
                     </p>
                     {items.map((a) => {
                       const opt = findScaleOption(a.scale_type)
+                      const assistedKey = normalizeAssistedScaleType(a.scale_type)
                       return (
                         <div
                           key={a.id}
-                          className="flex items-center justify-between gap-3 p-4 rounded-xl border border-[#00FFFF]/20 bg-[#00FFFF]/5"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-[#00FFFF]/20 bg-[#00FFFF]/5"
                         >
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
@@ -284,6 +292,14 @@ export default function MinhasEscalas() {
                                   {opt.time}
                                 </span>
                               )}
+                              {assistedKey && (
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-[#C4A35A]/20 text-[#E8DDC8] border border-[#C4A35A]/40 text-[10px] flex items-center gap-1 py-0"
+                                >
+                                  <Headphones className="h-3 w-3 text-[#C4A35A]" /> Skill de Voz
+                                </Badge>
+                              )}
                             </div>
                             {opt?.name && (
                               <p className="text-xs text-white/70 mt-0.5">{opt.name}</p>
@@ -292,19 +308,34 @@ export default function MinhasEscalas() {
                               Atribuída em {new Date(a.assigned_at).toLocaleDateString('pt-BR')}
                             </p>
                           </div>
-                          <Button
-                            size="sm"
-                            disabled={loading}
-                            onClick={() => handleStartAssignment(a)}
-                            className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-semibold"
-                          >
-                            {loading ? (
-                              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                            ) : (
-                              <ArrowRight className="h-4 w-4 mr-1" />
+                          <div className="flex items-center gap-2 shrink-0">
+                            {assistedKey && (
+                              <Button
+                                size="sm"
+                                disabled={loading}
+                                onClick={() => handleStartAssisted(a)}
+                                variant="outline"
+                                className="border-[#C4A35A] text-[#E8DDC8] bg-[#C4A35A]/10 hover:bg-[#C4A35A]/20 font-semibold"
+                                title="Responder com narração e auxílio por voz"
+                              >
+                                <Headphones className="h-4 w-4 mr-1 text-[#C4A35A]" />
+                                Modo Falado
+                              </Button>
                             )}
-                            Responder
-                          </Button>
+                            <Button
+                              size="sm"
+                              disabled={loading}
+                              onClick={() => handleStartAssignment(a)}
+                              className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-semibold"
+                            >
+                              {loading ? (
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                              ) : (
+                                <ArrowRight className="h-4 w-4 mr-1" />
+                              )}
+                              Responder Manual
+                            </Button>
+                          </div>
                         </div>
                       )
                     })}
