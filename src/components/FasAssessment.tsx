@@ -8,10 +8,13 @@ import {
   ArrowLeft,
   Volume2,
   VolumeX,
+  Mic,
+  MicOff,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { saveDementiaAssessment } from '@/services/dementia-assessments'
 import { useSpeech } from '@/hooks/use-speech'
@@ -36,7 +39,16 @@ export function FasAssessment() {
   const [saving, setSaving] = useState(false)
   const topRef = useRef<HTMLDivElement>(null)
 
-  const { speak, cancelSpeak, speaking, ttsSupported } = useSpeech({ lang: 'pt-BR' })
+  const {
+    speak,
+    cancelSpeak,
+    speaking,
+    ttsSupported,
+    sttSupported,
+    startListening,
+    stopListening,
+    listening,
+  } = useSpeech({ lang: 'pt-BR' })
 
   useEffect(() => {
     if (phase === 'intro' || phase === 'result') return
@@ -64,7 +76,21 @@ export function FasAssessment() {
     speak('Letra F. Diga ou digite palavras com a letra F.')
   }
 
+  const handleToggleMic = (letter: string) => {
+    if (listening) {
+      stopListening()
+    } else {
+      startListening((text) => {
+        setWords((prev) => ({
+          ...prev,
+          [letter]: prev[letter] ? `${prev[letter]}\n${text}`.trim() : text,
+        }))
+      })
+    }
+  }
+
   const handleNext = () => {
+    if (listening) stopListening()
     if (phase === 'F') {
       setPhase('A')
       setTimeLeft(FAS_TIME_PER_LETTER)
@@ -238,12 +264,38 @@ export function FasAssessment() {
           </button>
         )}
       </div>
-      <Textarea
-        value={words[currentLetter]}
-        onChange={(e) => setWords((prev) => ({ ...prev, [currentLetter]: e.target.value }))}
-        placeholder={`Digite palavras começando com "${currentLetter}" — uma por linha...`}
-        className="min-h-[200px] bg-[rgba(17,34,64,0.85)] border-white/10 text-white"
-      />
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-white/70">Palavras com a letra {currentLetter}:</span>
+          {sttSupported && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => handleToggleMic(currentLetter)}
+              className={cn(
+                'text-xs border transition-all',
+                listening
+                  ? 'border-red-500 bg-red-500/20 text-red-300 animate-pulse'
+                  : 'border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/10',
+              )}
+            >
+              {listening ? (
+                <MicOff className="h-3.5 w-3.5 mr-1" />
+              ) : (
+                <Mic className="h-3.5 w-3.5 mr-1" />
+              )}
+              {listening ? 'Gravando voz...' : 'Falar Palavras (Microfone)'}
+            </Button>
+          )}
+        </div>
+        <Textarea
+          value={words[currentLetter]}
+          onChange={(e) => setWords((prev) => ({ ...prev, [currentLetter]: e.target.value }))}
+          placeholder={`Digite ou fale palavras começando com "${currentLetter}" — uma por linha...`}
+          className="min-h-[200px] bg-[rgba(17,34,64,0.85)] border-white/10 text-white"
+        />
+      </div>
       <Button
         onClick={handleNext}
         variant="outline"

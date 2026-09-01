@@ -7,6 +7,8 @@ import {
   FileText,
   Volume2,
   VolumeX,
+  Mic,
+  MicOff,
   AlertTriangle,
   CheckCircle2,
 } from 'lucide-react'
@@ -14,6 +16,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import { useSpeech } from '@/hooks/use-speech'
 import { useGuestScale } from '@/contexts/guest-scale-context'
 import { saveDementiaAssessment } from '@/services/dementia-assessments'
@@ -46,7 +49,16 @@ export function SemanticFluencyAssessment() {
   const [saving, setSaving] = useState(false)
   const topRef = useRef<HTMLDivElement>(null)
 
-  const { speak, cancelSpeak, speaking, ttsSupported } = useSpeech({ lang: 'pt-BR' })
+  const {
+    speak,
+    cancelSpeak,
+    speaking,
+    ttsSupported,
+    sttSupported,
+    startListening,
+    stopListening,
+    listening,
+  } = useSpeech({ lang: 'pt-BR' })
 
   // Cronômetro 60s
   useEffect(() => {
@@ -69,6 +81,20 @@ export function SemanticFluencyAssessment() {
   const computedResult: SemanticFluencyResult | null =
     phase === 'result' ? calculateSemanticFluencyResult(animaisWords, frutasWords) : null
 
+  const handleToggleMic = (category: 'animais' | 'frutas') => {
+    if (listening) {
+      stopListening()
+    } else {
+      startListening((text) => {
+        if (category === 'animais') {
+          setAnimaisWords((prev) => (prev ? `${prev}\n${text}`.trim() : text))
+        } else {
+          setFrutasWords((prev) => (prev ? `${prev}\n${text}`.trim() : text))
+        }
+      })
+    }
+  }
+
   const handleStartAnimais = () => {
     setPhase('animais_running')
     setTimeLeft(TIME_PER_CATEGORY)
@@ -78,6 +104,7 @@ export function SemanticFluencyAssessment() {
   }
 
   const handleFinishAnimais = () => {
+    if (listening) stopListening()
     setPhase('animais_done')
     speak('Primeira etapa concluída. Prepare-se para a categoria Frutas.')
   }
@@ -89,6 +116,7 @@ export function SemanticFluencyAssessment() {
   }
 
   const handleFinishFrutas = () => {
+    if (listening) stopListening()
     setPhase('result')
     speak('Teste de fluência semântica concluído.')
   }
@@ -267,13 +295,38 @@ export function SemanticFluencyAssessment() {
           )}
         </div>
 
-        <Textarea
-          value={animaisWords}
-          onChange={(e) => setAnimaisWords(e.target.value)}
-          placeholder="Exemplo:\ncachorro\ngato\nelefante\nleão\n..."
-          disabled={phase === 'animais_ready'}
-          className="min-h-[180px] bg-[rgba(17,34,64,0.85)] border-white/10 text-white font-medium"
-        />
+        <div className="space-y-2">
+          {sttSupported && phase === 'animais_running' && (
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => handleToggleMic('animais')}
+                className={cn(
+                  'text-xs border transition-all',
+                  listening
+                    ? 'border-red-500 bg-red-500/20 text-red-300 animate-pulse'
+                    : 'border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/10',
+                )}
+              >
+                {listening ? (
+                  <MicOff className="h-3.5 w-3.5 mr-1" />
+                ) : (
+                  <Mic className="h-3.5 w-3.5 mr-1" />
+                )}
+                {listening ? 'Ouvindo animais...' : 'Falar Nomes de Animais (Microfone)'}
+              </Button>
+            </div>
+          )}
+          <Textarea
+            value={animaisWords}
+            onChange={(e) => setAnimaisWords(e.target.value)}
+            placeholder="Exemplo:\ncachorro\ngato\nelefante\nleão\n..."
+            disabled={phase === 'animais_ready'}
+            className="min-h-[180px] bg-[rgba(17,34,64,0.85)] border-white/10 text-white font-medium"
+          />
+        </div>
       </div>
     )
   }
@@ -343,13 +396,38 @@ export function SemanticFluencyAssessment() {
           )}
         </div>
 
-        <Textarea
-          value={frutasWords}
-          onChange={(e) => setFrutasWords(e.target.value)}
-          placeholder="Exemplo:\nmaçã\nbanana\nuva\nabacaxi\n..."
-          disabled={phase === 'frutas_ready'}
-          className="min-h-[180px] bg-[rgba(17,34,64,0.85)] border-white/10 text-white font-medium"
-        />
+        <div className="space-y-2">
+          {sttSupported && phase === 'frutas_running' && (
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => handleToggleMic('frutas')}
+                className={cn(
+                  'text-xs border transition-all',
+                  listening
+                    ? 'border-red-500 bg-red-500/20 text-red-300 animate-pulse'
+                    : 'border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/10',
+                )}
+              >
+                {listening ? (
+                  <MicOff className="h-3.5 w-3.5 mr-1" />
+                ) : (
+                  <Mic className="h-3.5 w-3.5 mr-1" />
+                )}
+                {listening ? 'Ouvindo frutas...' : 'Falar Nomes de Frutas (Microfone)'}
+              </Button>
+            </div>
+          )}
+          <Textarea
+            value={frutasWords}
+            onChange={(e) => setFrutasWords(e.target.value)}
+            placeholder="Exemplo:\nmaçã\nbanana\nuva\nabacaxi\n..."
+            disabled={phase === 'frutas_ready'}
+            className="min-h-[180px] bg-[rgba(17,34,64,0.85)] border-white/10 text-white font-medium"
+          />
+        </div>
       </div>
     )
   }

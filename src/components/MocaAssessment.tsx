@@ -1,11 +1,27 @@
 import { useState, useEffect, useRef } from 'react'
-import { Loader2, RotateCcw, Eye, FileText, ArrowLeft, Volume2, VolumeX } from 'lucide-react'
+import {
+  Loader2,
+  RotateCcw,
+  Eye,
+  FileText,
+  ArrowLeft,
+  Volume2,
+  VolumeX,
+  Mic,
+  MicOff,
+  Sparkles,
+  CheckCircle2,
+  PenTool,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { AssessmentProgress } from '@/components/AssessmentProgress'
 import { saveDementiaAssessment } from '@/services/dementia-assessments'
 import { useSpeech } from '@/hooks/use-speech'
+import { DrawingCanvas } from '@/components/DrawingCanvas'
 import {
   mocaItems,
   mocaDomains,
@@ -20,6 +36,22 @@ import { returnToMinhasEscalas } from '@/lib/assessment-redirect'
 
 const CARD_BG = { backgroundColor: 'rgba(17, 34, 64, 0.85)' }
 
+// Imagens para o teste de nomeação do MoCA
+const ANIMAL_IMAGES: Record<string, { name: string; url: string }> = {
+  moca_lion: {
+    name: 'Leão',
+    url: 'https://img.usecurling.com/p/300/200?q=lion%20animal&color=amber',
+  },
+  moca_rhino: {
+    name: 'Rinoceronte',
+    url: 'https://img.usecurling.com/p/300/200?q=rhinoceros%20wildlife&color=slate',
+  },
+  moca_camel: {
+    name: 'Camelo',
+    url: 'https://img.usecurling.com/p/300/200?q=camel%20desert&color=sand',
+  },
+}
+
 function ScoreInput({
   max,
   value,
@@ -30,16 +62,18 @@ function ScoreInput({
   onSelect: (v: number) => void
 }) {
   return (
-    <div className="flex gap-1.5">
+    <div className="flex items-center gap-1.5 flex-wrap">
+      <span className="text-xs text-white/60 mr-1">Pontuação atribuída:</span>
       {Array.from({ length: max + 1 }, (_, i) => (
         <button
           key={i}
+          type="button"
           onClick={() => onSelect(i)}
           className={cn(
             'h-8 w-8 rounded-lg text-xs font-bold transition-all border',
             value === i
-              ? 'bg-[#00FFFF] border-[#00FFFF] text-[#0A192F]'
-              : 'border-white/10 text-white/85 hover:bg-[rgba(0,255,255,0.08)]',
+              ? 'bg-[#00FFFF] border-[#00FFFF] text-[#0A192F] shadow-[0_0_10px_rgba(0,255,255,0.4)]'
+              : 'border-white/10 text-white/85 hover:bg-[rgba(0,255,255,0.08)] hover:border-[#00FFFF]/30',
           )}
         >
           {i}
@@ -52,12 +86,24 @@ function ScoreInput({
 export function MocaAssessment() {
   const guestId = useGuestScale()
   const [scores, setScores] = useState<Record<string, number>>({})
+  const [patientAnswers, setPatientAnswers] = useState<Record<string, string>>({})
+  const [drawings, setDrawings] = useState<Record<string, string>>({})
   const [showResult, setShowResult] = useState(false)
   const [saving, setSaving] = useState(false)
   const [speakingItem, setSpeakingItem] = useState<string | null>(null)
+  const [activeListeningItem, setActiveListeningItem] = useState<string | null>(null)
   const topRef = useRef<HTMLDivElement>(null)
 
-  const { speak, cancelSpeak, speaking, ttsSupported } = useSpeech({
+  const {
+    speak,
+    cancelSpeak,
+    speaking,
+    ttsSupported,
+    sttSupported,
+    startListening,
+    stopListening,
+    listening,
+  } = useSpeech({
     lang: 'pt-BR',
   })
 
@@ -71,10 +117,30 @@ export function MocaAssessment() {
     }
   }
 
+  const handleToggleMic = (itemKey: string) => {
+    if (listening && activeListeningItem === itemKey) {
+      stopListening()
+      setActiveListeningItem(null)
+    } else {
+      setActiveListeningItem(itemKey)
+      startListening((text) => {
+        setPatientAnswers((prev) => ({
+          ...prev,
+          [itemKey]: prev[itemKey] ? `${prev[itemKey]} ${text}`.trim() : text,
+        }))
+      })
+    }
+  }
+
   useEffect(() => {
     try {
       const draft = localStorage.getItem(MOCA_DRAFT_KEY)
-      if (draft) setScores(JSON.parse(draft).scores || {})
+      if (draft) {
+        const parsed = JSON.parse(draft)
+        setScores(parsed.scores || {})
+        setPatientAnswers(parsed.patientAnswers || {})
+        setDrawings(parsed.drawings || {})
+      }
     } catch {
       /* ignore */
     }
@@ -82,11 +148,11 @@ export function MocaAssessment() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(MOCA_DRAFT_KEY, JSON.stringify({ scores }))
+      localStorage.setItem(MOCA_DRAFT_KEY, JSON.stringify({ scores, patientAnswers, drawings }))
     } catch {
       /* ignore */
     }
-  }, [scores])
+  }, [scores, patientAnswers, drawings])
 
   const totalScore = getMocaTotal(scores)
   const severity = getMocaSeverity(totalScore)
@@ -97,12 +163,24 @@ export function MocaAssessment() {
     if (showResult) setShowResult(false)
   }
 
+  const handleAnswerChange = (key: string, text: string) => {
+    setPatientAnswers((prev) => ({ ...prev, [key]: text }))
+  }
+
+  const handleDrawingChange = (key: string, dataUrl: string) => {
+    setDrawings((prev) => ({ ...prev, [key]: dataUrl }))
+  }
+
   const handleSubmit = async () => {
     setSaving(true)
     const responses = mocaItems.map((item) => ({
       question_key: item.key,
       question_label: item.text,
       response_value: scores[item.key] ?? 0,
+      metadata: {
+        text_response: patientAnswers[item.key] ?? '',
+        drawing_data: drawings[item.key] ? 'captured' : null,
+      },
     }))
     const ok = await saveDementiaAssessment('moca', responses, totalScore, guestId)
     setSaving(false)
@@ -120,6 +198,8 @@ export function MocaAssessment() {
 
   const handleReset = () => {
     setScores({})
+    setPatientAnswers({})
+    setDrawings({})
     setShowResult(false)
     localStorage.removeItem(MOCA_DRAFT_KEY)
   }
@@ -177,59 +257,239 @@ export function MocaAssessment() {
   }
 
   return (
-    <div ref={topRef} className="space-y-3">
+    <div ref={topRef} className="space-y-4">
+      {/* Banner de orientações com IA e voz */}
+      <div className="p-4 rounded-xl border border-[#00FFFF]/20 bg-[#00FFFF]/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-[#00FFFF] shrink-0" />
+          <p className="text-xs text-white/90">
+            <strong>MoCA 100% Interativo:</strong> use os botões de áudio para ouvir as perguntas,
+            fale ou digite suas respostas e desenhe nos quadros em tela.
+          </p>
+        </div>
+        {ttsSupported && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              if (speaking) cancelSpeak()
+              else
+                speak(
+                  'Avaliação Montreal Cognitive Assessment MoCA. Siga as instruções em cada item, ouça o áudio ou responda diretamente na tela.',
+                )
+            }}
+            className="border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/10 text-xs shrink-0"
+          >
+            {speaking ? (
+              <VolumeX className="h-3.5 w-3.5 mr-1 text-red-400" />
+            ) : (
+              <Volume2 className="h-3.5 w-3.5 mr-1" />
+            )}
+            {speaking ? 'Parar Áudio' : 'Ouvir Visão Geral'}
+          </Button>
+        )}
+      </div>
+
       <AssessmentProgress answered={answeredCount} total={mocaItems.length} />
+
       {mocaDomains.map((domain) => {
         const domainItems = mocaItems.filter((i) => i.domain === domain.id)
         return (
-          <div key={domain.id} className="space-y-2">
+          <div key={domain.id} className="space-y-3">
             <div className="pt-2">
-              <h2 className="text-sm font-bold text-[#00FFFF]">{domain.title}</h2>
+              <h2 className="text-sm font-bold text-[#00FFFF] uppercase tracking-wider">
+                {domain.title}
+              </h2>
               <p className="text-xs text-white/75">{domain.description}</p>
             </div>
-            {domainItems.map((item) => (
-              <div
-                key={item.key}
-                className="p-4 rounded-xl border border-white/10 transition-colors hover:border-[#00FFFF]/20"
-                style={CARD_BG}
-              >
-                <div className="flex items-start justify-between gap-2 mb-3">
-                  <p className="text-white text-sm">
-                    <span className="text-[#00FFFF] font-medium">{item.label}.</span> {item.text}
-                    {!item.scored && (
-                      <span className="text-white/70 text-xs ml-2">(não pontuado)</span>
-                    )}
-                  </p>
-                  {ttsSupported && (
-                    <button
-                      type="button"
-                      onClick={() => handleToggleSpeakItem(item.key, `${item.label}. ${item.text}`)}
-                      className={cn(
-                        'shrink-0 p-1.5 rounded-lg border transition-all text-xs flex items-center gap-1 cursor-pointer',
-                        speaking && speakingItem === item.key
-                          ? 'border-[#00FFFF] bg-[#00FFFF]/20 text-[#00FFFF]'
-                          : 'border-white/10 text-white/60 hover:text-[#00FFFF] hover:border-[#00FFFF]/30',
+            {domainItems.map((item) => {
+              const isTrail = item.key === 'moca_trail'
+              const isCube = item.key === 'moca_cube'
+              const isClock = item.key === 'moca_clock'
+              const isNaming = ['moca_lion', 'moca_rhino', 'moca_camel'].includes(item.key)
+              const isSerial7 = item.key === 'moca_serial7'
+              const animalMeta = isNaming ? ANIMAL_IMAGES[item.key] : null
+
+              return (
+                <div
+                  key={item.key}
+                  className="p-4 sm:p-5 rounded-xl border border-white/10 transition-colors hover:border-[#00FFFF]/20 space-y-3"
+                  style={CARD_BG}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-white text-sm leading-relaxed">
+                      <span className="text-[#00FFFF] font-bold mr-1">{item.label}.</span>
+                      {item.text}
+                      {!item.scored && (
+                        <span className="text-white/60 text-xs ml-2">(não pontuado)</span>
                       )}
-                      title="Ouvir instrução do item"
-                    >
-                      {speaking && speakingItem === item.key ? (
-                        <VolumeX className="h-3.5 w-3.5 text-[#00FFFF]" />
-                      ) : (
-                        <Volume2 className="h-3.5 w-3.5" />
+                    </p>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {ttsSupported && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleToggleSpeakItem(item.key, `${item.label}. ${item.text}`)
+                          }
+                          className={cn(
+                            'p-1.5 rounded-lg border transition-all text-xs flex items-center gap-1 cursor-pointer',
+                            speaking && speakingItem === item.key
+                              ? 'border-[#00FFFF] bg-[#00FFFF]/20 text-[#00FFFF]'
+                              : 'border-white/10 text-white/60 hover:text-[#00FFFF] hover:border-[#00FFFF]/30',
+                          )}
+                          title="Ouvir instrução"
+                        >
+                          {speaking && speakingItem === item.key ? (
+                            <VolumeX className="h-3.5 w-3.5 text-[#00FFFF]" />
+                          ) : (
+                            <Volume2 className="h-3.5 w-3.5" />
+                          )}
+                        </button>
                       )}
-                    </button>
+                      {sttSupported && (
+                        <button
+                          type="button"
+                          onClick={() => handleToggleMic(item.key)}
+                          className={cn(
+                            'p-1.5 rounded-lg border transition-all text-xs flex items-center gap-1 cursor-pointer',
+                            listening && activeListeningItem === item.key
+                              ? 'border-red-500 bg-red-500/20 text-red-400 animate-pulse'
+                              : 'border-white/10 text-white/60 hover:text-[#00FFFF] hover:border-[#00FFFF]/30',
+                          )}
+                          title="Falar resposta via microfone"
+                        >
+                          {listening && activeListeningItem === item.key ? (
+                            <MicOff className="h-3.5 w-3.5" />
+                          ) : (
+                            <Mic className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 1) Canvas interativo para trilha */}
+                  {isTrail && (
+                    <DrawingCanvas
+                      title="Área do Teste de Trilha Alternada"
+                      instruction="Conecte 1 &rarr; A &rarr; 2 &rarr; B &rarr; 3 &rarr; C ... no espaço abaixo:"
+                      referenceTemplate="trail"
+                      initialValue={drawings[item.key]}
+                      onChange={(dataUrl) => handleDrawingChange(item.key, dataUrl)}
+                      height={240}
+                    />
                   )}
+
+                  {/* 2) Canvas interativo para cópia do cubo */}
+                  {isCube && (
+                    <DrawingCanvas
+                      title="Cópia do Cubo em Perspectiva"
+                      instruction="Observe o modelo ao lado e copie o cubo no quadro branco:"
+                      referenceTemplate="cube"
+                      initialValue={drawings[item.key]}
+                      onChange={(dataUrl) => handleDrawingChange(item.key, dataUrl)}
+                      height={240}
+                    />
+                  )}
+
+                  {/* 3) Canvas interativo para teste do desenho do relógio */}
+                  {isClock && (
+                    <DrawingCanvas
+                      title="Desenho do Relógio (Contorno, Números e Ponteiros)"
+                      instruction="Desenhe um relógio circular com todos os números e ponteiros marcando 11:10:"
+                      referenceTemplate="clock"
+                      initialValue={drawings[item.key]}
+                      onChange={(dataUrl) => handleDrawingChange(item.key, dataUrl)}
+                      height={280}
+                    />
+                  )}
+
+                  {/* 4) Imagem para nomeação de animais */}
+                  {isNaming && animalMeta && (
+                    <div className="flex flex-col sm:flex-row items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5">
+                      <img
+                        src={animalMeta.url}
+                        alt={`Identificar animal: ${animalMeta.name}`}
+                        className="w-36 h-24 object-cover rounded-lg border border-white/20 shrink-0"
+                      />
+                      <div className="flex-1 w-full space-y-1.5">
+                        <span className="text-xs text-white/70">
+                          Diga ou digite o nome deste animal:
+                        </span>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Nome do animal..."
+                            value={patientAnswers[item.key] || ''}
+                            onChange={(e) => handleAnswerChange(item.key, e.target.value)}
+                            className="bg-slate-900/80 border-white/20 text-white text-sm"
+                          />
+                          {patientAnswers[item.key] && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                const val = patientAnswers[item.key]?.toLowerCase().trim() || ''
+                                const correct =
+                                  (item.key === 'moca_lion' && val.includes('le')) ||
+                                  (item.key === 'moca_rhino' &&
+                                    (val.includes('rino') || val.includes('rinoceronte'))) ||
+                                  (item.key === 'moca_camel' &&
+                                    (val.includes('camel') || val.includes('dromed')))
+                                handleScore(item.key, correct ? 1 : 0)
+                              }}
+                              className="text-xs text-[#00FFFF] hover:bg-[#00FFFF]/10"
+                            >
+                              Auto-avaliar
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 5) Subtração serial interativa (100 - 7...) */}
+                  {isSerial7 && (
+                    <div className="p-3 rounded-lg border border-white/10 bg-white/5 space-y-2">
+                      <p className="text-xs text-white/80">
+                        Digite a sequência das 5 subtrações (ex.: 93, 86, 79, 72, 65):
+                      </p>
+                      <Input
+                        placeholder="Ex: 93, 86, 79, 72, 65"
+                        value={patientAnswers[item.key] || ''}
+                        onChange={(e) => handleAnswerChange(item.key, e.target.value)}
+                        className="bg-slate-900 border-white/20 text-white text-sm font-mono"
+                      />
+                    </div>
+                  )}
+
+                  {/* Entrada de texto padrão para outros itens verbais/recordação */}
+                  {!isTrail && !isCube && !isClock && !isNaming && !isSerial7 && (
+                    <div className="space-y-1">
+                      <Input
+                        placeholder="Resposta do paciente (digite ou use o microfone)..."
+                        value={patientAnswers[item.key] || ''}
+                        onChange={(e) => handleAnswerChange(item.key, e.target.value)}
+                        className="bg-slate-900/60 border-white/10 text-white text-xs"
+                      />
+                    </div>
+                  )}
+
+                  <div className="pt-1">
+                    <ScoreInput
+                      max={item.maxScore}
+                      value={scores[item.key] ?? -1}
+                      onSelect={(v) => handleScore(item.key, v)}
+                    />
+                  </div>
                 </div>
-                <ScoreInput
-                  max={item.maxScore}
-                  value={scores[item.key] ?? -1}
-                  onSelect={(v) => handleScore(item.key, v)}
-                />
-              </div>
-            ))}
+              )
+            })}
           </div>
         )
       })}
+
       <Button
         onClick={handleSubmit}
         disabled={answeredCount < mocaItems.length || saving}
@@ -240,7 +500,7 @@ export function MocaAssessment() {
         ) : (
           <Eye className="h-4 w-4 mr-2" />
         )}
-        Gerar Resultados
+        Gerar Resultados do MoCA
       </Button>
     </div>
   )

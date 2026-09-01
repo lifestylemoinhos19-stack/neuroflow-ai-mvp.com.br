@@ -80,44 +80,128 @@ export interface UseSpeechResult {
 export function useSpeech(options: UseSpeechOptions = {}): UseSpeechResult {
   const { lang = 'pt-BR', rate = 0.95 } = options
 
-  const [ttsSupported] = useState(() => !!getSpeechSynthesis())
-  const [sttSupported] = useState(() => !!getSpeechRecognitionCtor())
+  const [ttsSupported, setTtsSupported] = useState(() => !!getSpeechSynthesis())
+  const [sttSupported, setSttSupported] = useState(() => !!getSpeechRecognitionCtor())
   const [speaking, setSpeaking] = useState(false)
   const [listening, setListening] = useState(false)
   const [interimTranscript, setInterimTranscript] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
 
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const resumeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Atualiza vozes disponíveis
+  const updateVoices = useCallback(() => {
+    const synth = getSpeechSynthesis()
+    if (!synth) return
+    try {
+      const loadedVoices = synth.getVoices() || []
+      if (loadedVoices.length > 0) {
+        setVoices(loadedVoices)
+      }
+    } catch {
+      /* noop */
+    }
+  }, [])
+
+  useEffect(() => {
+    setTtsSupported(!!getSpeechSynthesis())
+    setSttSupported(!!getSpeechRecognitionCtor())
+    updateVoices()
+  }, [updateVoices])
 
   // --- Text-to-speech --------------------------------------------------
   const speak = useCallback(
     (text: string) => {
       const synth = getSpeechSynthesis()
-      if (!synth || !text) return
-      // Interrompe qualquer fala em andamento para evitar sobreposição.
-      synth.cancel()
-      const utter = new SpeechSynthesisUtterance(text)
+      if (!synth || !text || !text.trim()) return
+
+      // Desbloqueia estado de pausa do navegador se travado
+      try {
+        if (synth.paused) {
+          synth.resume()
+        }
+        synth.cancel()
+      } catch {
+        /* noop */
+      }
+
+      const cleanText = text
+        .replace(/[*_#`[\]()]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+      const utter = new SpeechSynthesisUtterance(cleanText)
       utter.lang = lang
       utter.rate = rate
       utter.pitch = 1
+      utter.volume = 1
+
       // Tenta escolher uma voz pt-BR se disponível.
-      const voices = synth.getVoices()
-      const ptVoice = voices.find((v) => v.lang?.toLowerCase().startsWith('pt'))
-      if (ptVoice) utter.voice = ptVoice
-      utter.onstart = () => setSpeaking(true)
+      const currentVoices = synth.getVoices()
+      const list = currentVoices.length > 0 ? currentVoices : voices
+      const ptVoice =
+        list.find((v) => v.lang?.toLowerCase().replace('_', '-') === 'pt-br') ||
+        list.find((v) => v.lang?.toLowerCase().startsWith('pt')) ||
+        list[0]
+
+      if (ptVoice) {
+        utter.voice = ptVoice
+      }
+
+      utter.onstart = () => {
+        setSpeaking(true)
+        // Bugfix Chrome/Safari: síntese longa pode pausar após ~15 segundos.
+        // Um timer resume() mantém a reprodução contínua.
+        if (resumeIntervalRef.current) clearInterval(resumeIntervalRef.current)
+        resumeIntervalRef.current = setInterval(() => {
+          if (synth && synth.speaking && !synth.paused) {
+            synth.pause()
+            synth.resume()
+          }
+        }, 10000)
+      }
+
       utter.onend = () => {
         setSpeaking(false)
         utteranceRef.current = null
+        if (resumeIntervalRef.current) {
+          clearInterval(resumeIntervalRef.current)
+          resumeIntervalRef.current = null
+        }
       }
-      utter.onerror = () => {
+
+      utter.onerror = (e) => {
+        // 'interrupted' e 'canceled' são normais quando cancelSpeak() ou nova fala ocorre
+        if (e.error !== 'interrupted' && e.error !== 'canceled') {
+          console.warn('SpeechSynthesis error:', e.error)
+        }
         setSpeaking(false)
         utteranceRef.current = null
+        if (resumeIntervalRef.current) {
+          clearInterval(resumeIntervalRef.current)
+          resumeIntervalRef.current = null
+        }
       }
+
       utteranceRef.current = utter
-      synth.speak(utter)
+
+      // Timeout de 10ms para garantir que cancel() anterior seja processado
+      setTimeout(() => {
+        try {
+          synth.speak(utter)
+          // Força resume caso navegador tenha entrado em suspensão de áudio
+          if (synth.paused) {
+            synth.resume()
+          }
+        } catch (err) {
+          console.warn('Falha ao acionar speak():', err)
+          setSpeaking(false)
+        }
+      }, 10)
     },
-    [lang, rate],
+    [lang, rate, voices],
   )
 
   const cancelSpeak = useCallback(() => {
@@ -203,8 +287,18 @@ export function useSpeech(options: UseSpeechOptions = {}): UseSpeechResult {
   // Limpeza ao desmontar.
   useEffect(() => {
     return () => {
+      if (resumeIntervalRef.current) {
+        clearInterval(resumeIntervalRef.current)
+        resumeIntervalRef.current = null
+      }
       const synth = getSpeechSynthesis()
-      if (synth) synth.cancel()
+      if (synth) {
+        try {
+          synth.cancel()
+        } catch {
+          /* noop */
+        }
+      }
       const rec = recognitionRef.current
       if (rec) {
         try {
@@ -216,14 +310,27 @@ export function useSpeech(options: UseSpeechOptions = {}): UseSpeechResult {
     }
   }, [])
 
-  // Carrega vozes (alguns navegadores só preenecem getVoices() após evento).
+  // Carrega vozes (alguns navegadores só preenchem getVoices() após evento ou delay).
   useEffect(() => {
     const synth = getSpeechSynthesis()
     if (!synth) return
-    const handler = () => synth.getVoices()
-    synth.addEventListener?.('voiceschanged', handler)
-    return () => synth.removeEventListener?.('voiceschanged', handler)
-  }, [])
+    updateVoices()
+    const handler = () => {
+      updateVoices()
+    }
+    if (typeof synth.addEventListener === 'function') {
+      synth.addEventListener('voiceschanged', handler)
+    } else if ('onvoiceschanged' in synth) {
+      synth.onvoiceschanged = handler
+    }
+    return () => {
+      if (typeof synth.removeEventListener === 'function') {
+        synth.removeEventListener('voiceschanged', handler)
+      } else if ('onvoiceschanged' in synth) {
+        synth.onvoiceschanged = null
+      }
+    }
+  }, [updateVoices])
 
   return {
     ttsSupported,

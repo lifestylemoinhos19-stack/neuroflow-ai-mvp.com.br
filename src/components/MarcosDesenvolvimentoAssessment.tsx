@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Volume2,
   VolumeX,
+  Sparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -309,6 +310,37 @@ export function MarcosDesenvolvimentoAssessment() {
 
   return (
     <div ref={topRef} className="space-y-3">
+      <div className="p-4 rounded-xl border border-[#00FFFF]/20 bg-[#00FFFF]/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-[#00FFFF] shrink-0" />
+          <p className="text-xs text-white/90">
+            <strong>Marcos do Desenvolvimento com Voz:</strong> ouça cada marco de desenvolvimento
+            sendo narrado em voz alta para facilitar a observação com o responsável.
+          </p>
+        </div>
+        {ttsSupported && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              if (speaking) cancelSpeak()
+              else
+                speak(
+                  'Marcos do Desenvolvimento Infantil. Indique o nível de aquisição de cada habilidade por faixa etária.',
+                )
+            }}
+            className="border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/10 text-xs shrink-0"
+          >
+            {speaking ? (
+              <VolumeX className="h-3.5 w-3.5 mr-1 text-red-400" />
+            ) : (
+              <Volume2 className="h-3.5 w-3.5 mr-1" />
+            )}
+            {speaking ? 'Parar Áudio' : 'Ouvir Instruções'}
+          </Button>
+        )}
+      </div>
       <AssessmentProgress answered={answeredCount} total={totalItems} />
       {ageRanges.map((ar) => {
         const items = milestoneItems.filter((i) => i.ageRangeId === ar.id)

@@ -1,5 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
-import { Loader2, RotateCcw, Eye, FileText, ArrowLeft, Volume2, VolumeX } from 'lucide-react'
+import {
+  Loader2,
+  RotateCcw,
+  Eye,
+  FileText,
+  ArrowLeft,
+  Volume2,
+  VolumeX,
+  Sparkles,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -149,6 +158,38 @@ export function FtdrsAssessment() {
 
   return (
     <div ref={topRef} className="space-y-4">
+      <div className="p-4 rounded-xl border border-[#00FFFF]/20 bg-[#00FFFF]/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-[#00FFFF] shrink-0" />
+          <p className="text-xs text-white/90">
+            <strong>FTDRS com Narração Integrada:</strong> você pode ouvir as perguntas lidas em voz
+            alta ou responder diretamente pelas opções abaixo.
+          </p>
+        </div>
+        {ttsSupported && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              if (speaking) cancelSpeak()
+              else
+                speak(
+                  'Escala FTDRS para Demência Frontotemporal. Responda o nível de gravidade ou frequência de cada comportamento listado.',
+                )
+            }}
+            className="border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/10 text-xs shrink-0"
+          >
+            {speaking ? (
+              <VolumeX className="h-3.5 w-3.5 mr-1 text-red-400" />
+            ) : (
+              <Volume2 className="h-3.5 w-3.5 mr-1" />
+            )}
+            {speaking ? 'Parar Áudio' : 'Ouvir Instruções'}
+          </Button>
+        )}
+      </div>
+
       <AssessmentProgress answered={answeredCount} total={ftdrsItems.length} />
       {ftdrsDomains.map((domain) => {
         const domainItems = ftdrsItems.filter((i) => i.domain === domain.id)

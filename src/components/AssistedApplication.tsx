@@ -134,7 +134,7 @@ export function AssistedApplication({
         speech.speak(it.stimulus)
       }
     },
-    [scale.items, speech],
+    [scale.items, speech.ttsSupported, speech.speak],
   )
 
   // Quando muda para a fase 'item' (ou o índice), lê a pergunta.
