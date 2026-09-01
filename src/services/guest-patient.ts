@@ -386,6 +386,9 @@ export function getScaleRoute(scaleType: string): string {
     case 'FLUENCIA-SEMANTICA':
     case 'FLUÊNCIA SEMÂNTICA':
     case 'FLUENCIA_SEMANTICA':
+    case 'FLUÊNCIA SEMANTICA':
+    case 'FLUENCIA SEMANTICA':
+    case 'FLUÊNCIA VERBAL SEMÂNTICA':
     case 'fluencia-semantica':
       return '/avaliacao/fluencia-semantica'
     default:

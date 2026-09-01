@@ -761,6 +761,12 @@ interface ScoreBag {
   baiScore?: number | null
   ybocsScore?: number | null
   sdsScore?: number | null
+  tmtAScore?: number | null
+  tmtBScore?: number | null
+  tmtDiffScore?: number | null
+  fluenciaAnimaisScore?: number | null
+  fluenciaFrutasScore?: number | null
+  fluenciaSemanticaTotalScore?: number | null
   cognitiveVrc: number | null
 }
 
@@ -1159,16 +1165,6 @@ function domainNeurodesenvolvimento(s: ScoreBag): {
     return { severity: null, descricao: '' }
   }
   return { severity: sev, descricao: parts.join(' ') }
-}
-
-function buildDomainAnalysis(s: ScoreBag): DomainAnalysis {
-  return {
-    humor: domainHumor(s),
-    ansiedade: domainAnsiedade(s),
-    cognicao: domainCognicao(s),
-    comportamento: domainComportamento(s),
-    neurodesenvolvimento: domainNeurodesenvolvimento(s),
-  }
 }
 
 function buildHypotheses(findings: ScreeningFinding[]): string[] {

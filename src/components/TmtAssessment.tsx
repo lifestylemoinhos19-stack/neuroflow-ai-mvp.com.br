@@ -53,7 +53,7 @@ export function TmtAssessment() {
 
   const [saving, setSaving] = useState(false)
   const [timerRunning, setTimerRunning] = useState(false)
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const topRef = useRef<HTMLDivElement>(null)
 
   const { speak, cancelSpeak, speaking, ttsSupported } = useSpeech({ lang: 'pt-BR' })

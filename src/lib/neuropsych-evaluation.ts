@@ -507,6 +507,82 @@ function assessCognicao(ctx: NeuropsychContext): DomainAssessment {
         classificacao: `compatível com ${faixa}`,
       })
     }
+    if (ai.tmtAScore !== null && ai.tmtAScore !== undefined) {
+      hasScore = true
+      const s = ai.tmtAScore
+      let faixa = 'preservado (≤29s)'
+      if (s > 78) {
+        faixa = 'lentificação significativa (>78s)'
+        severity = 'alta'
+      } else if (s >= 30) {
+        faixa = 'limítrofe (30–78s)'
+        severity = severity === 'alta' ? 'alta' : 'moderada'
+      }
+      parts.push(`TMT Parte A: tempo informado ${s}s, ${faixa}.`)
+      instruments.push({
+        nome: 'Trail Making Test - Parte A (TMT-A)',
+        data: dataStr,
+        pontuacao: `${s}s`,
+        classificacao: faixa,
+      })
+    }
+    if (ai.tmtBScore !== null && ai.tmtBScore !== undefined) {
+      hasScore = true
+      const s = ai.tmtBScore
+      let faixa = 'preservado (≤75s)'
+      if (s > 272) {
+        faixa = 'déficit executivo significativo (>272s)'
+        severity = 'alta'
+      } else if (s >= 76) {
+        faixa = 'lentificação executiva leve a moderada (76–272s)'
+        severity = severity === 'alta' ? 'alta' : 'moderada'
+      }
+      parts.push(`TMT Parte B: tempo informado ${s}s, ${faixa}.`)
+      instruments.push({
+        nome: 'Trail Making Test - Parte B (TMT-B)',
+        data: dataStr,
+        pontuacao: `${s}s`,
+        classificacao: faixa,
+      })
+    }
+    if (ai.fluenciaAnimaisScore !== null && ai.fluenciaAnimaisScore !== undefined) {
+      hasScore = true
+      const s = ai.fluenciaAnimaisScore
+      let faixa = 'preservado (>15)'
+      if (s < 12) {
+        faixa = 'rebaixado (<12)'
+        severity = 'alta'
+      } else if (s <= 14) {
+        faixa = 'limítrofe (12–14)'
+        severity = severity === 'alta' ? 'alta' : 'moderada'
+      }
+      parts.push(`Fluência Semântica (Animais): ${s} palavras em 60s, ${faixa}.`)
+      instruments.push({
+        nome: 'Fluência Verbal Semântica - Animais',
+        data: dataStr,
+        pontuacao: `${s} palavras`,
+        classificacao: faixa,
+      })
+    }
+    if (ai.fluenciaFrutasScore !== null && ai.fluenciaFrutasScore !== undefined) {
+      hasScore = true
+      const s = ai.fluenciaFrutasScore
+      let faixa = 'preservado (>12)'
+      if (s < 9) {
+        faixa = 'rebaixado (<9)'
+        severity = 'alta'
+      } else if (s <= 11) {
+        faixa = 'limítrofe (9–11)'
+        severity = severity === 'alta' ? 'alta' : 'moderada'
+      }
+      parts.push(`Fluência Semântica (Frutas): ${s} palavras em 60s, ${faixa}.`)
+      instruments.push({
+        nome: 'Fluência Verbal Semântica - Frutas',
+        data: dataStr,
+        pontuacao: `${s} palavras`,
+        classificacao: faixa,
+      })
+    }
   }
 
   // VRC (performance cognitiva em sessão de foco)

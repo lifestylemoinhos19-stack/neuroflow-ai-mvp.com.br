@@ -43,6 +43,8 @@ export const SCALE_TYPES = [
   'Y-BOCS',
   'FAS',
   'FTDRS',
+  'TMT A/B',
+  'Fluência Semântica',
 ]
 
 export function translateStatus(status: string): string {
@@ -364,6 +366,8 @@ export function getScaleExpectedQuestions(scaleType: string): number | null {
   if (norm.includes('FTDRS')) return 6
   if (norm.includes('SDS')) return 20
   if (norm.includes('M-CHAT') || norm.includes('MCHAT')) return 20
+  if (norm.includes('TMT')) return 5
+  if (norm.includes('FLUENCIA') || norm.includes('FLUÊNCIA')) return 2
   return null
 }
 
