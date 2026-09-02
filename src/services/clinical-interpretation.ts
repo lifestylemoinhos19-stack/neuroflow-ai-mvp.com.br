@@ -24,6 +24,7 @@ import {
   sdsKeys,
   tmtKeys,
   semanticFluencyKeys,
+  ftdrsKeys,
   wursKeys,
   aq10Keys,
   aq50Keys,
@@ -32,6 +33,7 @@ import {
   type ScreeningFinding,
 } from '@/lib/clinical-screening'
 import { getSdsImpairmentLevel } from '@/lib/sds-data'
+import { getFtdrsSeverity } from '@/lib/ftdrs-data'
 
 /**
  * Análise por domínio (humor, ansiedade, cognição, comportamento,
@@ -117,6 +119,8 @@ export interface InterpretationResult {
   fluenciaAnimaisScore?: number | null
   fluenciaFrutasScore?: number | null
   fluenciaSemanticaTotalScore?: number | null
+  ftdrs?: number | null
+  ftdrsSeverity?: string | null
   findings: ScreeningFinding[]
   comorbidities: string[]
   /** Análise por domínio com severidade estimada (linguagem cautelosa). */
@@ -390,6 +394,10 @@ export async function getSessionInterpretation(
   const baiScore = hasAnyKey(raw, baiKeys) ? scoreQuestionnaire(raw, baiKeys) : null
   const ybocsScore = hasAnyKey(raw, ybocsKeys) ? scoreQuestionnaire(raw, ybocsKeys) : null
   const sdsScore = hasAnyKey(raw, sdsKeys) ? scoreQuestionnaire(raw, sdsKeys) : null
+  const ftdrsScore = hasAnyKey(raw, ftdrsKeys)
+    ? scoreQuestionnaire(raw, ftdrsKeys)
+    : getSingleScore(raw, 'ftdrs_total')
+  const ftdrsSeverity = ftdrsScore !== null ? getFtdrsSeverity(ftdrsScore).label : null
 
   const tmtAScore = getSingleScore(raw, 'tmt_a_time')
   const tmtBScore = getSingleScore(raw, 'tmt_b_time')
@@ -436,6 +444,7 @@ export async function getSessionInterpretation(
   let currentFluenciaAnimaisScore = fluenciaAnimaisScore
   let currentFluenciaFrutasScore = fluenciaFrutasScore
   let currentFluenciaSemanticaTotalScore = fluenciaSemanticaTotalScore
+  let currentFtdrsScore = ftdrsScore
 
   const allScores = [
     currentPhq9Score,
@@ -460,6 +469,7 @@ export async function getSessionInterpretation(
     currentTmtBScore,
     currentFluenciaAnimaisScore,
     currentFluenciaFrutasScore,
+    currentFtdrsScore,
   ]
   let hasScaleData = allScores.some((s) => s !== null && s !== 0)
 
@@ -486,6 +496,7 @@ export async function getSessionInterpretation(
     const isAq50Pattern = hasAnyKey(raw, aq50Keys)
     const isVanderbiltPattern = hasAnyKey(raw, vanderbiltKeys)
     const isScqPattern = hasAnyKey(raw, scqKeys)
+    const isFtdrsPattern = hasAnyKey(raw, ftdrsKeys)
 
     const matchesKnownScalePattern =
       isBdiPattern ||
@@ -507,7 +518,8 @@ export async function getSessionInterpretation(
       isMocaPattern ||
       isMeemPattern ||
       isTmtPattern ||
-      isSemanticFluencyPattern
+      isSemanticFluencyPattern ||
+      isFtdrsPattern
 
     if (matchesKnownScalePattern) {
       const { data: sessionRow } = await supabase
@@ -580,6 +592,8 @@ export async function getSessionInterpretation(
             currentVanderbiltScore = validTotalScore
           } else if (rawScaleType.includes('scq') || isScqPattern) {
             currentScqScore = validTotalScore
+          } else if (rawScaleType.includes('ftdrs') || isFtdrsPattern) {
+            currentFtdrsScore = validTotalScore
           }
         }
 
@@ -606,6 +620,7 @@ export async function getSessionInterpretation(
           currentTmtBScore,
           currentFluenciaAnimaisScore,
           currentFluenciaFrutasScore,
+          currentFtdrsScore,
         ]
         hasScaleData = fallbackScores.some((s) => s !== null && s !== 0)
       }
@@ -670,6 +685,7 @@ export async function getSessionInterpretation(
     fluenciaAnimaisScore: currentFluenciaAnimaisScore,
     fluenciaFrutasScore: currentFluenciaFrutasScore,
     fluenciaSemanticaTotalScore: currentFluenciaSemanticaTotalScore,
+    ftdrs: currentFtdrsScore,
     cognitiveVrc,
   })
   const hypotheses = buildHypotheses(screening.findings)
@@ -693,6 +709,7 @@ export async function getSessionInterpretation(
     fluenciaAnimaisScore: currentFluenciaAnimaisScore,
     fluenciaFrutasScore: currentFluenciaFrutasScore,
     fluenciaSemanticaTotalScore: currentFluenciaSemanticaTotalScore,
+    ftdrs: currentFtdrsScore,
     cognitiveVrc,
   })
   suggestion += `\n\n${hypotheses.join('\n')}`
@@ -741,6 +758,8 @@ export async function getSessionInterpretation(
       fluenciaAnimaisScore: null,
       fluenciaFrutasScore: null,
       fluenciaSemanticaTotalScore: null,
+      ftdrs: null,
+      ftdrsSeverity: null,
       snapIvInattention: null,
       snapIvHyperactivity: null,
       globalSeverity: 'low',
@@ -779,6 +798,8 @@ export async function getSessionInterpretation(
     fluenciaAnimaisScore: currentFluenciaAnimaisScore,
     fluenciaFrutasScore: currentFluenciaFrutasScore,
     fluenciaSemanticaTotalScore: currentFluenciaSemanticaTotalScore,
+    ftdrs: currentFtdrsScore,
+    ftdrsSeverity,
     snapIvInattention: snapResult.inattentionAvg || null,
     snapIvHyperactivity: snapResult.hyperactivityAvg || null,
     globalSeverity: computeGlobalSeverity({
@@ -806,6 +827,7 @@ export async function getSessionInterpretation(
       fluenciaAnimais: currentFluenciaAnimaisScore,
       fluenciaFrutas: currentFluenciaFrutasScore,
       fluenciaSemanticaTotal: currentFluenciaSemanticaTotalScore,
+      ftdrs: currentFtdrsScore,
     }),
     findings: screening.findings,
     comorbidities: screening.comorbidities,
@@ -842,6 +864,7 @@ interface ScoreBag {
   fluenciaAnimaisScore?: number | null
   fluenciaFrutasScore?: number | null
   fluenciaSemanticaTotalScore?: number | null
+  ftdrs?: number | null
   wurs25Score?: number | null
   aq10Score?: number | null
   aq50Score?: number | null
@@ -1017,6 +1040,20 @@ function domainCognicao(s: ScoreBag): { severity: Sev; descricao: string } {
       sev = sev === 'alta' ? 'alta' : 'moderada'
     }
     parts.push(`Fluência Frutas ${s.fluenciaFrutasScore} — ${faixa}.`)
+  }
+  if (s.ftdrs !== null && s.ftdrs !== undefined) {
+    let faixa = 'dentro do esperado'
+    if (s.ftdrs >= 30) {
+      faixa = 'faixa de comprometimento grave'
+      sev = 'alta'
+    } else if (s.ftdrs >= 20) {
+      faixa = 'faixa de comprometimento moderado'
+      sev = sev === 'alta' ? 'alta' : 'moderada'
+    } else if (s.ftdrs >= 10) {
+      faixa = 'faixa de comprometimento leve'
+      sev = sev === 'alta' ? 'alta' : 'moderada'
+    }
+    parts.push(`FTDRS ${s.ftdrs}/45 — compatível com ${faixa}.`)
   }
   if (s.cognitiveVrc !== null && s.cognitiveVrc < 0.5) {
     parts.push(`VRC ${s.cognitiveVrc.toFixed(2)} — abaixo do esperado.`)

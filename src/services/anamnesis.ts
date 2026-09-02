@@ -71,9 +71,7 @@ export async function createAnamnesisSessionForGuest(
   extraMetadata?: Record<string, unknown>,
 ): Promise<AnamnesisSession | null> {
   const resolvedGuestId =
-    guestId ||
-    (typeof window !== 'undefined' ? localStorage.getItem('guest_id') : null) ||
-    null
+    guestId || (typeof window !== 'undefined' ? localStorage.getItem('guest_id') : null) || null
 
   const {
     data: { user },
@@ -178,7 +176,7 @@ export async function completeAnamnesisSession(
 
   const { error } = await supabase
     .from('anamnesis_sessions')
-    .update(updatePayload)
+    .update(updatePayload as any)
     .eq('id', sessionId)
 
   if (error) {

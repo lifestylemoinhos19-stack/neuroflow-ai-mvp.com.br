@@ -23,6 +23,7 @@ export interface ScaleScores {
   fluenciaAnimais?: number | null
   fluenciaFrutas?: number | null
   fluenciaSemanticaTotal?: number | null
+  ftdrs?: number | null
 }
 
 export interface ScreeningFinding {
@@ -50,6 +51,7 @@ export const hamaKeys: string[] = Array.from({ length: 14 }, (_, i) => `hama_q${
 export const bdiKeys: string[] = Array.from({ length: 21 }, (_, i) => `bdi_q${i + 1}`)
 export const baiKeys: string[] = Array.from({ length: 21 }, (_, i) => `bai_q${i + 1}`)
 export const ybocsKeys: string[] = Array.from({ length: 10 }, (_, i) => `ybocs_q${i + 1}`)
+export const ftdrsKeys: string[] = Array.from({ length: 15 }, (_, i) => `ftdrs_q${i + 1}`)
 export const sdsKeys: string[] = ['sds_q1', 'sds_q2', 'sds_q3']
 export const tmtKeys: string[] = [
   'tmt_a_time',
@@ -237,6 +239,15 @@ export function generateScreening(scores: ScaleScores): ScreeningResult {
       threshold: '≥ 5',
     })
   }
+  if (scores.ftdrs !== null && scores.ftdrs !== undefined && scores.ftdrs >= 10) {
+    findings.push({
+      category: 'Declínio Cognitivo',
+      suggestion: 'Sinais sugestivos de Demência Frontotemporal',
+      scale: 'FTDRS',
+      score: scores.ftdrs,
+      threshold: '≥ 10',
+    })
+  }
   if (scores.tmtA !== null && scores.tmtA !== undefined && scores.tmtA > 78) {
     findings.push({
       category: 'Atenção e Velocidade',
@@ -378,7 +389,8 @@ export function computeGlobalSeverity(scores: ScaleScores): 'low' | 'moderate' |
     (scores.bdi !== null && scores.bdi !== undefined && scores.bdi >= 20) ||
     (scores.bai !== null && scores.bai !== undefined && scores.bai >= 16) ||
     (scores.ybocs !== null && scores.ybocs >= 24) ||
-    (scores.sds !== null && scores.sds >= 8)
+    (scores.sds !== null && scores.sds >= 8) ||
+    (scores.ftdrs !== null && scores.ftdrs !== undefined && scores.ftdrs >= 30)
 
   if (hasHighSeverity) return 'high'
   return 'moderate'
