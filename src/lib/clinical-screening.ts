@@ -45,7 +45,39 @@ export interface ScreeningResult {
 export const snapKeys: string[] = Array.from({ length: 18 }, (_, i) => `snapiv_q${i + 1}`)
 export const snapLegacyKeys: string[] = Array.from({ length: 18 }, (_, i) => `snap_${i + 1}`)
 export const meemKeys: string[] = Array.from({ length: 10 }, (_, i) => `meem_q${i + 1}`)
-export const mocaKeys: string[] = Array.from({ length: 30 }, (_, i) => `moca_q${i + 1}`)
+// Chaves reais gravadas pelo MoCA (moca_trail, moca_cube, moca_clock, moca_lion,
+// moca_rhino, moca_camel, moca_recall*, moca_date, moca_month, moca_year, moca_day,
+// moca_place, moca_city e demais itens do teste) — mesmo padrão das demais escalas.
+export const mocaKeys: string[] = [
+  'moca_trail',
+  'moca_cube',
+  'moca_clock',
+  'moca_lion',
+  'moca_rhino',
+  'moca_camel',
+  'moca_memory',
+  'moca_digits_fwd',
+  'moca_digits_bwd',
+  'moca_vigilance',
+  'moca_serial7',
+  'moca_repetition',
+  'moca_fluency',
+  'moca_abs1',
+  'moca_abs2',
+  'moca_recall1',
+  'moca_recall2',
+  'moca_recall3',
+  'moca_recall4',
+  'moca_recall5',
+  'moca_date',
+  'moca_month',
+  'moca_year',
+  'moca_day',
+  'moca_place',
+  'moca_city',
+]
+// Chave do total salvo (moca_total) e demais chaves legadas reconhecidas.
+export const mocaTotalKeys: string[] = ['moca_total']
 export const asrs18Keys: string[] = Array.from({ length: 18 }, (_, i) => `asrs_q${i + 1}`)
 export const hamdKeys: string[] = Array.from({ length: 17 }, (_, i) => `hamd_q${i + 1}`)
 export const hamaKeys: string[] = Array.from({ length: 14 }, (_, i) => `hama_q${i + 1}`)

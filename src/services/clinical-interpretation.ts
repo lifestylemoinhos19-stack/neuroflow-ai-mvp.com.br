@@ -15,6 +15,7 @@ import {
   snapLegacyKeys,
   asrs18Keys,
   mocaKeys,
+  mocaTotalKeys,
   meemKeys,
   hamdKeys,
   hamaKeys,
@@ -36,6 +37,7 @@ import {
 import { getSdsImpairmentLevel } from '@/lib/sds-data'
 import { getFtdrsSeverity } from '@/lib/ftdrs-data'
 import { calculateFasResult, parseWords } from '@/lib/fas-data'
+import { mocaItems } from '@/lib/moca-data'
 
 /**
  * Análise por domínio (humor, ansiedade, cognição, comportamento,
@@ -161,6 +163,26 @@ function hasAnyKey(responses: RawResponse[], keys: string[]): boolean {
 function getSingleScore(responses: RawResponse[], key: string): number | null {
   const r = responses.find((resp) => resp.question_key === key)
   return r ? parseValue(r.response_value) : null
+}
+
+/**
+ * Calcula o escore total do MoCA (0–30) a partir das respostas brutas
+ * gravadas pelo teste (chaves reais: moca_trail, moca_cube, moca_clock,
+ * moca_lion, moca_rhino, moca_camel, moca_recall*, moca_digits*, moca_vigilance,
+ * moca_serial7, moca_repetition, moca_fluency, moca_abs*, moca_date, moca_month,
+ * moca_year, moca_day, moca_place, moca_city). Itens não pontuados (moca_memory)
+ * e o total já salvo (moca_total) são ignorados no somatório dos itens.
+ * Retorna null quando nenhuma chave do MoCA está presente.
+ * Mesmo padrão das demais escalas (FTDRS, FAS).
+ */
+function getMocaScoreFromRaw(responses: RawResponse[]): number | null {
+  const scoredItems = mocaItems.filter((item) => item.scored)
+  const scoredKeys = scoredItems.map((item) => item.key)
+  if (!hasAnyKey(responses, scoredKeys)) return null
+  return scoredItems.reduce((total, item) => {
+    const r = responses.find((resp) => resp.question_key === item.key)
+    return total + (r ? parseValue(r.response_value) : 0)
+  }, 0)
 }
 
 /**
@@ -419,9 +441,11 @@ export async function getSessionInterpretation(
   const snapIvScore = hasSnapData ? snapResult.average : null
 
   const asrs18Score = hasAnyKey(raw, asrs18Keys) ? scoreQuestionnaire(raw, asrs18Keys) : null
-  const mocaScore = hasAnyKey(raw, mocaKeys)
-    ? scoreQuestionnaire(raw, mocaKeys)
-    : getSingleScore(raw, 'moca_total')
+  const mocaScore =
+    getMocaScoreFromRaw(raw) ??
+    (hasAnyKey(raw, mocaKeys) ? scoreQuestionnaire(raw, mocaKeys) : null) ??
+    getSingleScore(raw, 'moca_total') ??
+    (hasAnyKey(raw, mocaTotalKeys) ? scoreQuestionnaire(raw, mocaTotalKeys) : null)
   const meemScore = hasAnyKey(raw, meemKeys)
     ? scoreQuestionnaire(raw, meemKeys)
     : getSingleScore(raw, 'meem_total')
@@ -527,7 +551,10 @@ export async function getSessionInterpretation(
     const isAssqPattern = hasAnyKey(raw, assqKeys)
     const isSnapPattern = hasSnapData
     const isAsrsPattern = hasAnyKey(raw, asrs18Keys)
-    const isMocaPattern = hasAnyKey(raw, mocaKeys)
+    const isMocaPattern =
+      hasAnyKey(raw, mocaKeys) ||
+      hasAnyKey(raw, mocaTotalKeys) ||
+      raw.some((r) => r.question_key?.startsWith('moca_')) === true
     const isMeemPattern = hasAnyKey(raw, meemKeys)
     const isTmtPattern = hasAnyKey(raw, tmtKeys)
     const isSemanticFluencyPattern = hasAnyKey(raw, semanticFluencyKeys)
@@ -604,7 +631,11 @@ export async function getSessionInterpretation(
             currentSnapIvScore = validTotalScore
           } else if (rawScaleType.includes('asrs') || isAsrsPattern) {
             currentAsrs18Score = validTotalScore
-          } else if (rawScaleType.includes('moca') || isMocaPattern) {
+          } else if (
+            rawScaleType.includes('moca') ||
+            rawScaleType.includes('montreal') ||
+            isMocaPattern
+          ) {
             currentMocaScore = validTotalScore
           } else if (rawScaleType.includes('meem') || isMeemPattern) {
             currentMeemScore = validTotalScore
