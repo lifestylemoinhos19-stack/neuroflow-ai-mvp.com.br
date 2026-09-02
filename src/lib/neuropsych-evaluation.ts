@@ -599,13 +599,58 @@ function assessCognicao(ctx: NeuropsychContext): DomainAssessment {
         classificacao: faixa,
       })
     }
+    // FTDRS (Frontotemporal Dementia Rating Scale — 0–45, chaves ftdrs_q1..q15)
+    if (ai.ftdrs !== null && ai.ftdrs !== undefined) {
+      hasScore = true
+      const s = ai.ftdrs
+      let faixa = 'gravidade mínima'
+      if (s >= 30) {
+        faixa = 'faixa de gravidade grave'
+        severity = 'alta'
+      } else if (s >= 20) {
+        faixa = 'faixa de gravidade moderada'
+        severity = severity === 'alta' ? 'alta' : 'moderada'
+      } else if (s >= 10) {
+        faixa = 'faixa de gravidade leve'
+        severity = severity === 'alta' ? 'alta' : 'baixa'
+      }
+      parts.push(
+        `FTDRS: pontuação informada ${s}/45, compatível com ${faixa} para indicadores de demência frontotemporal.`,
+      )
+      instruments.push({
+        nome: 'FTDRS (Frontotemporal Dementia Rating Scale)',
+        data: dataStr,
+        pontuacao: fmtScore(s, 45),
+        classificacao: `compatível com ${faixa}`,
+      })
+    }
+    // WURS-25 (Wender Utah Rating Scale — 0–100, corte clínico ≥ 46)
+    if (ai.wurs25Score !== null && ai.wurs25Score !== undefined) {
+      hasScore = true
+      const s = ai.wurs25Score
+      let faixa = 'abaixo do corte retrospectivo (< 46)'
+      if (s >= 46) {
+        faixa = 'sinais compatíveis com história infantil de TDAH (corte ≥ 46)'
+        severity = 'alta'
+      } else if (s >= 36) {
+        faixa = 'pontuação limítrofe para história infantil de TDAH (36–45)'
+        if (!severity) severity = 'moderada'
+      }
+      parts.push(`WURS-25: pontuação informada ${s}/100, ${faixa}.`)
+      instruments.push({
+        nome: 'WURS-25 (Wender Utah Rating Scale)',
+        data: dataStr,
+        pontuacao: fmtScore(s, 100),
+        classificacao: faixa,
+      })
+    }
   }
 
-  // VRC (performance cognitiva em sessão de foco)
+  // VRC (performance cognitiva em sessão de foco) — omitido quando ausente/null
   const vrc = !scaleTypeNormalized.includes('MINI')
     ? (ctx.cognitiveVrc ?? ai?.cognitiveVrc ?? null)
     : null
-  if (vrc !== null && vrc !== undefined) {
+  if (vrc !== null && vrc !== undefined && !isNaN(vrc) && vrc > 0) {
     hasScore = true
     if (vrc < 0.5) {
       parts.push(
@@ -812,15 +857,17 @@ function assessNeurodesenvolvimento(ctx: NeuropsychContext): DomainAssessment {
   }
 
   // WURS-25 (Wender Utah Rating Scale - TDAH retrospectivo)
-  if (
-    ctx.scaleType &&
-    (ctx.scaleType.toLowerCase().includes('wurs') ||
-      ctx.scaleType.toLowerCase().includes('wender')) &&
-    ctx.score !== null &&
-    ctx.score > 0
-  ) {
+  const wursScore =
+    ((ctx.scaleType &&
+    (ctx.scaleType.toLowerCase().includes('wurs') || ctx.scaleType.toLowerCase().includes('wender'))
+      ? ctx.score
+      : null) ??
+      ai?.wurs25Score ??
+      null) ||
+    null
+  if (wursScore !== null) {
     hasScore = true
-    const s = ctx.score
+    const s = wursScore
     let faixa = 'abaixo do corte retrospectivo (< 46)'
     if (s >= 46) {
       faixa = 'sinais compatíveis com história infantil de TDAH (≥ 46)'
@@ -831,7 +878,7 @@ function assessNeurodesenvolvimento(ctx: NeuropsychContext): DomainAssessment {
     }
     parts.push(`WURS-25: pontuação informada ${s}/100, ${faixa}.`)
     instruments.push({
-      nome: 'WURS-25',
+      nome: 'WURS-25 (Wender Utah Rating Scale)',
       data: dataStr,
       pontuacao: fmtScore(s, 100),
       classificacao: faixa,
@@ -966,10 +1013,15 @@ function assessNeurodesenvolvimento(ctx: NeuropsychContext): DomainAssessment {
     })
   }
 
-  // FTDRS via score bruto
-  if (ctx.scaleType && ctx.scaleType.toUpperCase().trim() === 'FTDRS' && ctx.score !== null) {
+  // FTDRS via score bruto ou aiInterpretation (chaves reais ftdrs_q1..q15)
+  const ftdrsScore =
+    ((ctx.scaleType && ctx.scaleType.toUpperCase().trim() === 'FTDRS' ? ctx.score : null) ??
+      ai?.ftdrs ??
+      null) ||
+    null
+  if (ftdrsScore !== null) {
     hasScore = true
-    const s = ctx.score
+    const s = ftdrsScore
     let faixa = 'gravidade mínima'
     if (s >= 30) {
       faixa = 'faixa de gravidade grave'
@@ -985,22 +1037,27 @@ function assessNeurodesenvolvimento(ctx: NeuropsychContext): DomainAssessment {
       `FTDRS: pontuação informada ${s}/45, compatível com ${faixa} para indicadores de demência frontotemporal.`,
     )
     instruments.push({
-      nome: 'FTDRS',
+      nome: 'FTDRS (Frontotemporal Dementia Rating Scale)',
       data: dataStr,
       pontuacao: fmtScore(s, 45),
       classificacao: `compatível com ${faixa}`,
     })
   }
 
-  // FAS via score bruto
-  if (ctx.scaleType && ctx.scaleType.toUpperCase().trim() === 'FAS' && ctx.score !== null) {
+  // FAS via score bruto ou aiInterpretation
+  const fasScore =
+    ((ctx.scaleType && ctx.scaleType.toUpperCase().trim() === 'FAS' ? ctx.score : null) ??
+      ai?.fas ??
+      null) ||
+    null
+  if (fasScore !== null) {
     hasScore = true
-    const s = ctx.score
+    const s = fasScore
     const faixa = s < 15 ? 'possível comprometimento (abaixo de 15)' : 'dentro do esperado'
     if (s < 15) severity = 'moderada'
     parts.push(`FAS: pontuação informada ${s} palavras, compatível com ${faixa}.`)
     instruments.push({
-      nome: 'FAS',
+      nome: 'FAS (Fluência Verbal Fonêmica)',
       data: dataStr,
       pontuacao: fmtScore(s),
       classificacao: `compatível com ${faixa}`,
@@ -1411,7 +1468,7 @@ export function generateNeuropsychReport(ctx: NeuropsychContext): NeuropsychRepo
               (i) =>
                 `${i.nome} | Data: ${i.data} | Pontuação informada: ${i.pontuacao} | Classificação: ${i.classificacao}`,
             )
-          : ['Instrumento clínico registrado nesta avaliação.'],
+          : ['Nenhum instrumento quantitativo pontuado registrado nesta avaliação.'],
     },
     {
       index: 6,

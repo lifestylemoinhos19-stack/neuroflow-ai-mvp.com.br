@@ -125,6 +125,8 @@ export interface InterpretationResult {
   fluenciaSemanticaTotalScore?: number | null
   ftdrs?: number | null
   ftdrsSeverity?: string | null
+  /** Escore total da WURS-25 (0–100), quando presente na sessão. */
+  wurs25Score?: number | null
   fas?: number | null
   fasTotal?: number | null
   findings: ScreeningFinding[]
@@ -183,6 +185,17 @@ function getMocaScoreFromRaw(responses: RawResponse[]): number | null {
     const r = responses.find((resp) => resp.question_key === item.key)
     return total + (r ? parseValue(r.response_value) : 0)
   }, 0)
+}
+
+/**
+ * Calcula o escore total do WURS-25 (Wender Utah Rating Scale, 0–100) a
+ * partir das respostas brutas (chaves reais: wurs_q1 a wurs_q25). Retorna
+ * null quando nenhuma chave da escala está presente.
+ * Mesmo padrão das demais escalas (FTDRS, FAS, MoCA).
+ */
+function getWurs25ScoreFromRaw(responses: RawResponse[]): number | null {
+  if (!hasAnyKey(responses, wursKeys)) return null
+  return scoreQuestionnaire(responses, wursKeys)
 }
 
 /**
@@ -474,7 +487,7 @@ export async function getSessionInterpretation(
       ? fluenciaAnimaisScore + fluenciaFrutasScore
       : null)
 
-  const wurs25Score = hasAnyKey(raw, wursKeys) ? scoreQuestionnaire(raw, wursKeys) : null
+  const wurs25Score = getWurs25ScoreFromRaw(raw) ?? getSingleScore(raw, 'wurs25_total')
   const aq10Score = hasAnyKey(raw, aq10Keys) ? scoreQuestionnaire(raw, aq10Keys) : null
   const aq50Score = hasAnyKey(raw, aq50Keys) ? scoreQuestionnaire(raw, aq50Keys) : null
   const vanderbiltScore = hasAnyKey(raw, vanderbiltKeys)
@@ -507,6 +520,7 @@ export async function getSessionInterpretation(
   let currentFluenciaFrutasScore = fluenciaFrutasScore
   let currentFluenciaSemanticaTotalScore = fluenciaSemanticaTotalScore
   let currentFtdrsScore = ftdrsScore
+  let currentFtdrsSeverity = ftdrsSeverity
   let currentFasScore = fasScore
 
   const allScores = [
@@ -667,6 +681,7 @@ export async function getSessionInterpretation(
             currentScqScore = validTotalScore
           } else if (rawScaleType.includes('ftdrs') || isFtdrsPattern) {
             currentFtdrsScore = validTotalScore
+            currentFtdrsSeverity = getFtdrsSeverity(validTotalScore).label
           } else if (rawScaleType.includes('fas') || isFasPattern) {
             currentFasScore = validTotalScore
           }
@@ -838,6 +853,7 @@ export async function getSessionInterpretation(
       fluenciaSemanticaTotalScore: null,
       ftdrs: null,
       ftdrsSeverity: null,
+      wurs25Score: null,
       fas: null,
       fasTotal: null,
       snapIvInattention: null,
@@ -879,7 +895,8 @@ export async function getSessionInterpretation(
     fluenciaFrutasScore: currentFluenciaFrutasScore,
     fluenciaSemanticaTotalScore: currentFluenciaSemanticaTotalScore,
     ftdrs: currentFtdrsScore,
-    ftdrsSeverity,
+    ftdrsSeverity: currentFtdrsSeverity,
+    wurs25Score: currentWurs25Score,
     fas: currentFasScore,
     fasTotal: currentFasScore,
     snapIvInattention: snapResult.inattentionAvg || null,
@@ -1138,6 +1155,17 @@ function domainCognicao(s: ScoreBag): { severity: Sev; descricao: string } {
       sev = sev === 'alta' ? 'alta' : 'moderada'
     }
     parts.push(`FTDRS ${s.ftdrs}/45 — compatível com ${faixa}.`)
+  }
+  if (s.wurs25Score !== null && s.wurs25Score !== undefined && s.wurs25Score > 0) {
+    let faixa = 'abaixo do corte retrospectivo (< 46)'
+    if (s.wurs25Score >= 46) {
+      faixa = 'compatível com história infantil de TDAH (corte ≥ 46)'
+      sev = 'alta'
+    } else if (s.wurs25Score >= 36) {
+      faixa = 'faixa limítrofe para história infantil de TDAH (36–45)'
+      sev = sev === 'alta' ? 'alta' : 'moderada'
+    }
+    parts.push(`WURS-25 ${s.wurs25Score}/100 — ${faixa}.`)
   }
   if (s.fas !== null && s.fas !== undefined) {
     let faixa = 'dentro do esperado'

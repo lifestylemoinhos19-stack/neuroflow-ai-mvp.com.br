@@ -353,6 +353,19 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   const historia =
     anamnesis?.developmentalHistory || (interpretation.trim() ? interpretation.trim() : null)
 
+  // Escores reais das escalas (FTDRS, WURS-25, FAS etc.) propagados para o PDF.
+  // Vazio/null → não propagate (o campo simplesmente não aparece no laudo).
+  const toFiniteScore = (v: unknown): number | null =>
+    typeof v === 'number' && isFinite(v) && v > 0 ? v : null
+
+  const realScaleType = aiInterpretation?.scaleType || null
+  const realScore =
+    toFiniteScore(aiInterpretation?.ftdrs) ??
+    toFiniteScore((aiInterpretation as any)?.wurs25Score) ??
+    toFiniteScore(aiInterpretation?.fas) ??
+    toFiniteScore(input.score) ??
+    null
+
   const reportCtx: NeuropsychContext = {
     patient: {
       iniciais,
@@ -368,8 +381,8 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
       especialidade: 'Psiquiatria',
     },
     assessmentDate: input.startedAt,
-    scaleType: input.type,
-    score: input.score,
+    scaleType: realScaleType ?? input.type,
+    score: realScore,
     queixaPrincipal: queixa,
     historiaEvolucao: historia,
     aiInterpretation,
@@ -729,6 +742,18 @@ export async function generateLaudoJSON(
   const historia =
     anamnesis?.developmentalHistory || (interpretation.trim() ? interpretation.trim() : null)
 
+  // Mesmo padrão do generateLaudoPDF: propaga os escores reais das escalas.
+  const toFiniteScore = (v: unknown): number | null =>
+    typeof v === 'number' && isFinite(v) && v > 0 ? v : null
+
+  const realScaleType = aiInterpretation?.scaleType || null
+  const realScore =
+    toFiniteScore(aiInterpretation?.ftdrs) ??
+    toFiniteScore((aiInterpretation as any)?.wurs25Score) ??
+    toFiniteScore(aiInterpretation?.fas) ??
+    toFiniteScore(input.score) ??
+    null
+
   const reportCtx: NeuropsychContext = {
     patient: {
       iniciais,
@@ -743,8 +768,8 @@ export async function generateLaudoJSON(
       especialidade: 'Psiquiatria',
     },
     assessmentDate: input.startedAt,
-    scaleType: input.type,
-    score: input.score,
+    scaleType: realScaleType ?? input.type,
+    score: realScore,
     queixaPrincipal: queixa,
     historiaEvolucao: historia,
     aiInterpretation,
