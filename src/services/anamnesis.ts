@@ -16,11 +16,30 @@ export interface AnamnesisResponseInput {
   response_value: string | number
 }
 
-export async function createAnamnesisSession(): Promise<AnamnesisSession | null> {
+export async function createAnamnesisSession(
+  scaleType?: string | null,
+  guestId?: string | null,
+  extraMetadata?: Record<string, unknown>,
+): Promise<AnamnesisSession | null> {
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return null
+
+  const resolvedGuestId =
+    guestId ||
+    (typeof window !== 'undefined' ? localStorage.getItem('guest_id') : null) ||
+    undefined
+
+  const metadata: Record<string, Json | undefined> = {
+    ...(extraMetadata as Record<string, Json | undefined>),
+  }
+  if (scaleType) {
+    metadata.scaleType = scaleType
+  }
+  if (resolvedGuestId) {
+    metadata.guest_id = resolvedGuestId
+  }
 
   const { data, error } = await supabase
     .from('anamnesis_sessions')
@@ -28,6 +47,7 @@ export async function createAnamnesisSession(): Promise<AnamnesisSession | null>
       user_id: user.id,
       status: 'in_progress',
       started_at: new Date().toISOString(),
+      metadata,
     })
     .select()
     .single()
@@ -41,23 +61,30 @@ export async function createAnamnesisSession(): Promise<AnamnesisSession | null>
 }
 
 /**
- * Cria uma sessão de anamnese para o fluxo público, priorizando o usuário
- * autenticado quando existir e, caso contrário, criando uma sessão anon
- * vinculada ao guest via guest_token. Isto permite que os componentes de
- * escala (Phq9Assessment, MocaAssessment, etc.) funcionem tanto no fluxo
- * autenticado (/evaluations/*) quanto no fluxo público de paciente
- * (/avaliacao/* com guest_id via query param).
+ * Cria uma sessão de anamnese para o fluxo público ou autenticado,
+ * SEMPRE persistindo scaleType e guest_id no metadata para garantir
+ * que o trigger de vinculação de scale_assignments funcione de forma determinística.
  */
 export async function createAnamnesisSessionForGuest(
   guestId?: string | null,
   scaleType?: string | null,
+  extraMetadata?: Record<string, unknown>,
 ): Promise<AnamnesisSession | null> {
+  const resolvedGuestId =
+    guestId ||
+    (typeof window !== 'undefined' ? localStorage.getItem('guest_id') : null) ||
+    null
+
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (user) return createAnamnesisSession()
-  if (!guestId) return null
-  return createGuestAnamnesisSession(guestId, scaleType)
+
+  if (user) {
+    return createAnamnesisSession(scaleType, resolvedGuestId, extraMetadata)
+  }
+
+  if (!resolvedGuestId) return null
+  return createGuestAnamnesisSession(resolvedGuestId, scaleType, extraMetadata)
 }
 
 /**
@@ -68,6 +95,7 @@ export async function createAnamnesisSessionForGuest(
 export async function createGuestAnamnesisSession(
   guestId: string,
   scaleType?: string | null,
+  extraMetadata?: Record<string, unknown>,
 ): Promise<AnamnesisSession | null> {
   const guestToken =
     typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -75,6 +103,7 @@ export async function createGuestAnamnesisSession(
       : `${guestId}-${Date.now()}-${Math.random().toString(36).slice(2)}`
 
   const metadata: Record<string, Json | undefined> = {
+    ...(extraMetadata as Record<string, Json | undefined>),
     guest_id: guestId,
     source: 'public_anamnesis',
   }
@@ -122,14 +151,34 @@ export async function saveAnamnesisResponses(
   return true
 }
 
-export async function completeAnamnesisSession(sessionId: string): Promise<boolean> {
+export async function completeAnamnesisSession(
+  sessionId: string,
+  metadataToMerge?: Record<string, unknown>,
+): Promise<boolean> {
+  let finalMetadata: Record<string, Json | undefined> | undefined = undefined
+
+  if (metadataToMerge && Object.keys(metadataToMerge).length > 0) {
+    const { data: session } = await supabase
+      .from('anamnesis_sessions')
+      .select('metadata')
+      .eq('id', sessionId)
+      .maybeSingle()
+    const existing = (session?.metadata as Record<string, Json | undefined>) || {}
+    finalMetadata = { ...existing, ...(metadataToMerge as Record<string, Json | undefined>) }
+  }
+
+  const updatePayload: Record<string, unknown> = {
+    status: 'completed',
+    completed_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+  if (finalMetadata !== undefined) {
+    updatePayload.metadata = finalMetadata
+  }
+
   const { error } = await supabase
     .from('anamnesis_sessions')
-    .update({
-      status: 'completed',
-      completed_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
+    .update(updatePayload)
     .eq('id', sessionId)
 
   if (error) {
