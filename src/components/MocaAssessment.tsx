@@ -37,19 +37,22 @@ import { returnToMinhasEscalas } from '@/lib/assessment-redirect'
 
 const CARD_BG = { backgroundColor: 'rgba(17, 34, 64, 0.85)' }
 
-// Imagens para o teste de nomeação do MoCA
-const ANIMAL_IMAGES: Record<string, { name: string; url: string }> = {
+// Imagens em alta resolução para o teste de nomeação do MoCA (sem revelar o nome ao paciente)
+const ANIMAL_IMAGES: Record<string, { label: string; url: string; acceptedKeywords: string[] }> = {
   moca_lion: {
-    name: 'Leão',
-    url: 'https://img.usecurling.com/p/300/200?q=lion%20animal&color=amber',
+    label: '1º Animal',
+    url: 'https://img.usecurling.com/p/600/450?q=lion%20safari%20wildlife&dpr=2',
+    acceptedKeywords: ['leao', 'leão', 'lion', 'leoa'],
   },
   moca_rhino: {
-    name: 'Rinoceronte',
-    url: 'https://img.usecurling.com/p/300/200?q=rhinoceros%20wildlife&color=slate',
+    label: '2º Animal',
+    url: 'https://img.usecurling.com/p/600/450?q=rhinoceros%20wildlife%20mammal&dpr=2',
+    acceptedKeywords: ['rinoceronte', 'rhino', 'rinoceron', 'rino'],
   },
   moca_camel: {
-    name: 'Camelo',
-    url: 'https://img.usecurling.com/p/300/200?q=camel%20desert&color=sand',
+    label: '3º Animal',
+    url: 'https://img.usecurling.com/p/600/450?q=camel%20dromedary%20desert&dpr=2',
+    acceptedKeywords: ['camelo', 'dromedario', 'dromedário', 'camel', 'dromed'],
   },
 }
 
@@ -435,73 +438,62 @@ export function MocaAssessment() {
                     />
                   )}
 
-                  {/* 4) Imagem para nomeação de animais com Auto-avaliação inteligente */}
+                  {/* 4) Imagem para nomeação de animais com Auto-avaliação inteligente (nome oculto conforme protocolo MoCA) */}
                   {isNaming && animalMeta && (
                     <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/5">
-                      <div className="relative group shrink-0">
-                        <img
-                          src={animalMeta.url}
-                          alt={`Identificar animal: ${animalMeta.name}`}
-                          className="w-44 h-32 object-cover rounded-xl border-2 border-[#00FFFF]/30 shadow-lg"
-                        />
-                        <div className="absolute bottom-1 right-1 bg-black/70 px-2 py-0.5 rounded text-[10px] text-white/80">
-                          Estímulo visual
+                      <div className="relative group shrink-0 w-full sm:w-auto flex justify-center">
+                        <div className="relative overflow-hidden rounded-xl border-2 border-[#00FFFF]/40 shadow-lg bg-black/40">
+                          <img
+                            src={animalMeta.url}
+                            alt="Estímulo visual para identificação do animal"
+                            className="w-56 sm:w-64 h-40 sm:h-44 object-cover transition-transform hover:scale-105 duration-300"
+                            loading="lazy"
+                          />
+                          <div className="absolute bottom-1 right-1 bg-black/80 px-2 py-0.5 rounded text-[10px] text-[#00FFFF] font-medium backdrop-blur-sm border border-[#00FFFF]/20">
+                            Figura {item.label}
+                          </div>
                         </div>
                       </div>
                       <div className="flex-1 w-full space-y-2">
                         <span className="text-xs text-white/90 font-medium block">
-                          Qual é o nome deste animal? (Diga pelo microfone ou digite):
+                          Qual é o nome deste animal? (Diga pelo microfone ou digite sua resposta):
                         </span>
                         <div className="flex gap-2">
                           <Input
-                            placeholder={`Ex: ${animalMeta.name.toLowerCase()}...`}
+                            placeholder="Digite o nome do animal observado..."
                             value={patientAnswers[item.key] || ''}
                             onChange={(e) => {
                               const text = e.target.value
                               handleAnswerChange(item.key, text)
                               // Auto reconhecimento de acerto em tempo real
                               const val = text.toLowerCase().trim()
-                              const correct =
-                                (item.key === 'moca_lion' &&
-                                  (val.includes('le') ||
-                                    val.includes('leão') ||
-                                    val.includes('leao'))) ||
-                                (item.key === 'moca_rhino' &&
-                                  (val.includes('rino') || val.includes('rinoceronte'))) ||
-                                (item.key === 'moca_camel' &&
-                                  (val.includes('camel') ||
-                                    val.includes('dromed') ||
-                                    val.includes('camelo')))
-                              if (correct) {
+                              const isMatch = animalMeta.acceptedKeywords.some((kw) =>
+                                val.includes(kw),
+                              )
+                              if (isMatch) {
                                 handleScore(item.key, 1)
                               }
                             }}
-                            className="bg-slate-900 border-white/20 text-white text-sm"
+                            className="bg-slate-900 border-white/20 text-white text-sm placeholder:text-white/40"
                           />
                           <Button
                             type="button"
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              const val = patientAnswers[item.key]?.toLowerCase().trim() || ''
-                              const correct =
-                                (item.key === 'moca_lion' &&
-                                  (val.includes('le') ||
-                                    val.includes('leão') ||
-                                    val.includes('leao'))) ||
-                                (item.key === 'moca_rhino' &&
-                                  (val.includes('rino') || val.includes('rinoceronte'))) ||
-                                (item.key === 'moca_camel' &&
-                                  (val.includes('camel') ||
-                                    val.includes('dromed') ||
-                                    val.includes('camelo')))
-                              handleScore(item.key, correct ? 1 : 0)
-                              if (correct) {
-                                toast.success(
-                                  `Resposta correta para ${animalMeta.name}! 1 ponto atribuído.`,
-                                )
+                              const val = (patientAnswers[item.key] || '').toLowerCase().trim()
+                              const isMatch = animalMeta.acceptedKeywords.some((kw) =>
+                                val.includes(kw),
+                              )
+                              handleScore(item.key, isMatch ? 1 : 0)
+                              if (isMatch) {
+                                toast.success('Resposta correta reconhecida! 1 ponto atribuído.')
                               } else {
-                                toast.info(`Resposta avaliada. Pontuação: ${correct ? 1 : 0}`)
+                                toast.info(
+                                  val
+                                    ? 'Resposta registrada. Verifique a pontuação se necessário.'
+                                    : 'Digite ou dite o nome do animal.',
+                                )
                               }
                             }}
                             className="text-xs border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/10 whitespace-nowrap"

@@ -30,70 +30,116 @@ export function DrawingCanvas({
   readOnly = false,
 }: DrawingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const [isDrawing, setIsDrawing] = useState(false)
+  const isDrawingRef = useRef(false)
   const [mode, setMode] = useState<'pen' | 'eraser'>('pen')
   const [hasDrawn, setHasDrawn] = useState(false)
-  const [lineWidth, setLineWidth] = useState(3)
+  const [lineWidth] = useState(3)
+  const lastSavedDataUrlRef = useRef<string | null>(initialValue || null)
+  const isInitializedRef = useRef(false)
 
-  // Inicializa o canvas com fundo branco/escuro limpo
-  const initCanvas = useCallback(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    // Ajusta resolução para telas retina
-    const rect = canvas.getBoundingClientRect()
-    const dpr = window.devicePixelRatio || 1
-    canvas.width = rect.width * dpr
-    canvas.height = height * dpr
-    ctx.scale(dpr, dpr)
-
-    // Preenche com fundo branco para contraste limpo de desenho
-    ctx.fillStyle = '#FFFFFF'
-    ctx.fillRect(0, 0, rect.width, height)
-
-    // Se houver imagem inicial salva, desenha
-    if (initialValue) {
-      const img = new Image()
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0, rect.width, height)
-        setHasDrawn(true)
-      }
-      img.src = initialValue
+  // Sincroniza estado de initialValue se mudar externamente e ainda não desenhado
+  useEffect(() => {
+    if (initialValue && !lastSavedDataUrlRef.current) {
+      lastSavedDataUrlRef.current = initialValue
+      setHasDrawn(true)
     }
-  }, [height, initialValue])
+  }, [initialValue])
+
+  // Inicializa o canvas garantindo preservação de traços existentes
+  const initCanvas = useCallback(
+    (preserveContent = true) => {
+      const canvas = canvasRef.current
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      const rect = canvas.getBoundingClientRect()
+      const dpr = window.devicePixelRatio || 1
+      const targetWidth = Math.round(rect.width * dpr)
+      const targetHeight = Math.round(height * dpr)
+
+      if (targetWidth === 0 || targetHeight === 0) return
+
+      // Se já houver conteúdo desenhado e formos preservar
+      const currentData = preserveContent
+        ? lastSavedDataUrlRef.current ||
+          (isInitializedRef.current ? canvas.toDataURL('image/png') : null)
+        : null
+
+      // Ajusta o buffer do canvas
+      canvas.width = targetWidth
+      canvas.height = targetHeight
+      ctx.scale(dpr, dpr)
+
+      // Fundo branco sólido
+      ctx.fillStyle = '#FFFFFF'
+      ctx.fillRect(0, 0, rect.width, height)
+
+      // Restaura conteúdo anterior
+      const dataToRestore = currentData || initialValue
+      if (dataToRestore) {
+        const img = new Image()
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, rect.width, height)
+          setHasDrawn(true)
+        }
+        img.src = dataToRestore
+      }
+      isInitializedRef.current = true
+    },
+    [height, initialValue],
+  )
 
   useEffect(() => {
-    initCanvas()
+    initCanvas(true)
+
+    // Ao redimensionar a tela, preserva o desenho antes de recalcular
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null
     const handleResize = () => {
-      // re-renderiza se redimensionar
-      initCanvas()
+      if (resizeTimer) clearTimeout(resizeTimer)
+      resizeTimer = setTimeout(() => {
+        initCanvas(true)
+      }, 100)
     }
+
     window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    return () => {
+      if (resizeTimer) clearTimeout(resizeTimer)
+      window.removeEventListener('resize', handleResize)
+    }
   }, [initCanvas])
 
-  const getPos = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  const getPos = (
+    e:
+      | React.MouseEvent<HTMLCanvasElement>
+      | React.TouchEvent<HTMLCanvasElement>
+      | React.PointerEvent<HTMLCanvasElement>
+      | PointerEvent
+      | TouchEvent
+      | MouseEvent,
+  ) => {
     const canvas = canvasRef.current
     if (!canvas) return { x: 0, y: 0 }
     const rect = canvas.getBoundingClientRect()
-    if ('touches' in e && e.touches.length > 0) {
+    if ('touches' in e && (e as TouchEvent).touches.length > 0) {
       return {
-        x: e.touches[0].clientX - rect.left,
-        y: e.touches[0].clientY - rect.top,
+        x: (e as TouchEvent).touches[0].clientX - rect.left,
+        y: (e as TouchEvent).touches[0].clientY - rect.top,
       }
     } else if ('clientX' in e) {
       return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+        x: (e as MouseEvent).clientX - rect.left,
+        y: (e as MouseEvent).clientY - rect.top,
       }
     }
     return { x: 0, y: 0 }
   }
 
   const startDrawing = (
-    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>,
+    e:
+      | React.MouseEvent<HTMLCanvasElement>
+      | React.TouchEvent<HTMLCanvasElement>
+      | React.PointerEvent<HTMLCanvasElement>,
   ) => {
     if (readOnly) return
     const canvas = canvasRef.current
@@ -101,28 +147,28 @@ export function DrawingCanvas({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    setIsDrawing(true)
+    isDrawingRef.current = true
     setHasDrawn(true)
     const { x, y } = getPos(e)
     ctx.beginPath()
     ctx.moveTo(x, y)
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
-    ctx.lineWidth = mode === 'eraser' ? 16 : lineWidth
+    ctx.lineWidth = mode === 'eraser' ? 20 : lineWidth
     ctx.strokeStyle = mode === 'eraser' ? '#FFFFFF' : '#0A192F'
   }
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || readOnly) return
+  const draw = (
+    e:
+      | React.MouseEvent<HTMLCanvasElement>
+      | React.TouchEvent<HTMLCanvasElement>
+      | React.PointerEvent<HTMLCanvasElement>,
+  ) => {
+    if (!isDrawingRef.current || readOnly) return
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-
-    // Previne scroll na tela touch enquanto desenha
-    if ('touches' in e) {
-      e.preventDefault()
-    }
 
     const { x, y } = getPos(e)
     ctx.lineTo(x, y)
@@ -130,20 +176,21 @@ export function DrawingCanvas({
   }
 
   const stopDrawing = () => {
-    if (!isDrawing || readOnly) return
-    setIsDrawing(false)
+    if (!isDrawingRef.current || readOnly) return
+    isDrawingRef.current = false
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (ctx) ctx.closePath()
 
-    if (onChange) {
-      try {
-        const dataUrl = canvas.toDataURL('image/png')
+    try {
+      const dataUrl = canvas.toDataURL('image/png')
+      lastSavedDataUrlRef.current = dataUrl
+      if (onChange) {
         onChange(dataUrl)
-      } catch {
-        /* noop */
       }
+    } catch {
+      /* noop */
     }
   }
 
@@ -156,6 +203,7 @@ export function DrawingCanvas({
     const rect = canvas.getBoundingClientRect()
     ctx.fillStyle = '#FFFFFF'
     ctx.fillRect(0, 0, rect.width, height)
+    lastSavedDataUrlRef.current = null
     setHasDrawn(false)
     if (onChange) {
       onChange('')
@@ -278,15 +326,24 @@ export function DrawingCanvas({
       <div className="relative rounded-xl overflow-hidden border-2 border-white/20 shadow-inner bg-white">
         <canvas
           ref={canvasRef}
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-          onTouchStart={startDrawing}
-          onTouchMove={draw}
-          onTouchEnd={stopDrawing}
+          onPointerDown={(e) => {
+            e.currentTarget.setPointerCapture?.(e.pointerId)
+            startDrawing(e)
+          }}
+          onPointerMove={draw}
+          onPointerUp={(e) => {
+            e.currentTarget.releasePointerCapture?.(e.pointerId)
+            stopDrawing()
+          }}
+          onPointerCancel={(e) => {
+            e.currentTarget.releasePointerCapture?.(e.pointerId)
+            stopDrawing()
+          }}
+          onPointerLeave={() => {
+            if (isDrawingRef.current) stopDrawing()
+          }}
           style={{ height: `${height}px`, width: '100%', touchAction: 'none' }}
-          className="cursor-crosshair block w-full"
+          className="cursor-crosshair block w-full touch-none select-none"
         />
         {!hasDrawn && !readOnly && (
           <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
