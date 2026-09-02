@@ -795,6 +795,138 @@ function assessNeurodesenvolvimento(ctx: NeuropsychContext): DomainAssessment {
     }
   }
 
+  // WURS-25 (Wender Utah Rating Scale - TDAH retrospectivo)
+  if (
+    ctx.scaleType &&
+    (ctx.scaleType.toLowerCase().includes('wurs') ||
+      ctx.scaleType.toLowerCase().includes('wender')) &&
+    ctx.score !== null &&
+    ctx.score > 0
+  ) {
+    hasScore = true
+    const s = ctx.score
+    let faixa = 'abaixo do corte retrospectivo (< 46)'
+    if (s >= 46) {
+      faixa = 'sinais compatíveis com história infantil de TDAH (≥ 46)'
+      severity = 'alta'
+    } else if (s >= 36) {
+      faixa = 'pontuação limítrofe para história infantil de TDAH (36–45)'
+      if (!severity) severity = 'moderada'
+    }
+    parts.push(`WURS-25: pontuação informada ${s}/100, ${faixa}.`)
+    instruments.push({
+      nome: 'WURS-25',
+      data: dataStr,
+      pontuacao: fmtScore(s, 100),
+      classificacao: faixa,
+    })
+  }
+
+  // AQ-10 (Quociente do Espectro Autista - Triagem)
+  if (
+    ctx.scaleType &&
+    (ctx.scaleType.toLowerCase().includes('aq-10') || ctx.scaleType.toLowerCase() === 'aq10') &&
+    ctx.score !== null &&
+    ctx.score > 0
+  ) {
+    hasScore = true
+    const s = ctx.score
+    let faixa = 'abaixo do corte de triagem (< 6)'
+    if (s >= 6) {
+      faixa = 'sinais compatíveis com traços de TEA (≥ 6) — encaminhar para avaliação completa'
+      severity = 'alta'
+    }
+    parts.push(`AQ-10: pontuação informada ${s}/10, ${faixa}.`)
+    instruments.push({
+      nome: 'AQ-10',
+      data: dataStr,
+      pontuacao: fmtScore(s, 10),
+      classificacao: faixa,
+    })
+  }
+
+  // AQ Completo (AQ-50)
+  if (
+    ctx.scaleType &&
+    (ctx.scaleType.toLowerCase().includes('aq-50') ||
+      ctx.scaleType.toLowerCase() === 'aq50' ||
+      ctx.scaleType.toLowerCase() === 'aq') &&
+    ctx.score !== null &&
+    ctx.score > 0
+  ) {
+    hasScore = true
+    const s = ctx.score
+    let faixa = 'padrão neurotípico (< 26)'
+    if (s >= 32) {
+      faixa = 'fortemente compatível com traços de TEA no adulto (≥ 32)'
+      severity = 'alta'
+    } else if (s >= 26) {
+      faixa = 'traços moderados no espectro autista (26–31)'
+      if (!severity) severity = 'moderada'
+    }
+    parts.push(`AQ-50: pontuação informada ${s}/50, ${faixa}.`)
+    instruments.push({
+      nome: 'AQ-50',
+      data: dataStr,
+      pontuacao: fmtScore(s, 50),
+      classificacao: faixa,
+    })
+  }
+
+  // Vanderbilt (VADRS)
+  if (
+    ctx.scaleType &&
+    (ctx.scaleType.toLowerCase().includes('vanderbilt') ||
+      ctx.scaleType.toLowerCase().includes('vadrs')) &&
+    ctx.score !== null &&
+    ctx.score > 0
+  ) {
+    hasScore = true
+    const s = ctx.score
+    let faixa = 'dentro do padrão comportamental esperado'
+    if (s >= 50) {
+      faixa = 'sinais elevados de TDAH e/ou comorbidades comportamentais'
+      severity = 'alta'
+    } else if (s >= 30) {
+      faixa = 'sinais moderados em desatenção/hiperatividade/comorbidades'
+      if (!severity) severity = 'moderada'
+    }
+    parts.push(`Vanderbilt (VADRS): pontuação informada ${s}, ${faixa}.`)
+    instruments.push({
+      nome: 'Vanderbilt (VADRS)',
+      data: dataStr,
+      pontuacao: fmtScore(s),
+      classificacao: faixa,
+    })
+  }
+
+  // SCQ (Social Communication Questionnaire)
+  if (
+    ctx.scaleType &&
+    (ctx.scaleType.toLowerCase().includes('scq') ||
+      ctx.scaleType.toLowerCase().includes('social communication')) &&
+    ctx.score !== null &&
+    ctx.score > 0
+  ) {
+    hasScore = true
+    const s = ctx.score
+    let faixa = 'abaixo do corte de risco (< 15)'
+    if (s >= 15) {
+      faixa = 'sinais compatíveis com risco de TEA infantil (corte ≥ 15)'
+      severity = 'alta'
+    } else if (s >= 11) {
+      faixa = 'risco limítrofe para alterações na comunicação social (11–14)'
+      if (!severity) severity = 'moderada'
+    }
+    parts.push(`SCQ: pontuação informada ${s}/39, ${faixa}.`)
+    instruments.push({
+      nome: 'SCQ',
+      data: dataStr,
+      pontuacao: fmtScore(s, 39),
+      classificacao: faixa,
+    })
+  }
+
   // M-CHAT-R via score bruto do input
   if (ctx.scaleType && ctx.scaleType.toUpperCase().trim() === 'M-CHAT-R' && ctx.score !== null) {
     hasScore = true

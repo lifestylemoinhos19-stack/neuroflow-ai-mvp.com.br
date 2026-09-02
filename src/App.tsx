@@ -129,6 +129,11 @@ function AppInner() {
         <Route path="/avaliacao/fluencia-semantica" element={<PublicScaleAssessment />} />
         <Route path="/avaliacao/ftdrs" element={<PublicScaleAssessment />} />
         <Route path="/avaliacao/sds" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/wurs25" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/aq10" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/aq50" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/vanderbilt" element={<PublicScaleAssessment />} />
+        <Route path="/avaliacao/scq" element={<PublicScaleAssessment />} />
         <Route path="/avaliacao/:scale" element={<PublicAssessment />} />
         {/* /aplicacao-assistida: acessível tanto para profissional logado quanto para paciente público com guest_id/assignmentId */}
         <Route

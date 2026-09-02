@@ -309,6 +309,21 @@ export const SCALE_DISPLAY_NAMES: Record<string, string> = {
   ASSQ: 'ASSQ (Autismo)',
   'SNAP-IV': 'SNAP-IV (TDAH)',
   'ASRS-18': 'ASRS-18 (TDAH Adulto)',
+  'WURS-25': 'WURS-25 (TDAH Retrospectivo)',
+  WURS: 'WURS-25 (TDAH Retrospectivo)',
+  wurs25: 'WURS-25 (TDAH Retrospectivo)',
+  'AQ-10': 'AQ-10 (Triagem TEA Adultos)',
+  AQ10: 'AQ-10 (Triagem TEA Adultos)',
+  aq10: 'AQ-10 (Triagem TEA Adultos)',
+  'AQ-50': 'AQ-50 (Quociente do Espectro Autista Completo)',
+  AQ: 'AQ (Quociente do Espectro Autista)',
+  aq50: 'AQ-50 (Quociente do Espectro Autista Completo)',
+  VANDERBILT: 'Vanderbilt VADRS (TDAH e Comorbidades)',
+  'VANDERBILT (VADRS)': 'Vanderbilt VADRS (TDAH e Comorbidades)',
+  VADRS: 'Vanderbilt VADRS (TDAH e Comorbidades)',
+  vanderbilt: 'Vanderbilt VADRS (TDAH e Comorbidades)',
+  SCQ: 'SCQ (Questionário de Comunicação Social - TEA)',
+  scq: 'SCQ (Questionário de Comunicação Social - TEA)',
   MoCA: 'MoCA (Cognição)',
   MEEM: 'MEEM (Cognição)',
   'HAM-D': 'HAM-D (Depressão)',
@@ -359,6 +374,30 @@ export function getScaleRoute(scaleType: string): string {
       return '/avaliacao/hamd'
     case 'ASRS-18':
       return '/avaliacao/asrs18'
+    case 'WURS-25':
+    case 'WURS':
+    case 'wurs25':
+    case 'wurs':
+      return '/avaliacao/wurs25'
+    case 'AQ-10':
+    case 'AQ10':
+    case 'aq10':
+      return '/avaliacao/aq10'
+    case 'AQ-50':
+    case 'AQ50':
+    case 'AQ':
+    case 'aq50':
+    case 'aq':
+      return '/avaliacao/aq50'
+    case 'VANDERBILT':
+    case 'VANDERBILT (VADRS)':
+    case 'VADRS':
+    case 'vanderbilt':
+    case 'vadrs':
+      return '/avaliacao/vanderbilt'
+    case 'SCQ':
+    case 'scq':
+      return '/avaliacao/scq'
     case 'MOCA':
       return '/avaliacao/moca'
     case 'MEEM':

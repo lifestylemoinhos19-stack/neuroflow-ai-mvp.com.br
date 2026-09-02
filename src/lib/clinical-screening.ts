@@ -4,6 +4,11 @@ export interface ScaleScores {
   assq: number | null
   snapIv: number | null
   asrs18: number | null
+  wurs25?: number | null
+  aq10?: number | null
+  aq50?: number | null
+  vanderbilt?: number | null
+  scq?: number | null
   moca: number | null
   meem: number | null
   hamd: number | null
@@ -61,6 +66,11 @@ export const semanticFluencyKeys: string[] = [
   'fluencia_animais_words',
   'fluencia_frutas_words',
 ]
+export const wursKeys: string[] = Array.from({ length: 25 }, (_, i) => `wurs_q${i + 1}`)
+export const aq10Keys: string[] = Array.from({ length: 10 }, (_, i) => `aq10_q${i + 1}`)
+export const aq50Keys: string[] = Array.from({ length: 50 }, (_, i) => `aq_q${i + 1}`)
+export const vanderbiltKeys: string[] = Array.from({ length: 55 }, (_, i) => `vadrs_q${i + 1}`)
+export const scqKeys: string[] = Array.from({ length: 40 }, (_, i) => `scq_q${i + 1}`)
 
 export function generateScreening(scores: ScaleScores): ScreeningResult {
   const findings: ScreeningFinding[] = []
@@ -86,10 +96,55 @@ export function generateScreening(scores: ScaleScores): ScreeningResult {
   if (scores.asrs18 !== null && scores.asrs18 >= 36) {
     findings.push({
       category: 'TDAH',
-      suggestion: 'Sinais sugestivos de TDAH',
+      suggestion: 'Sinais sugestivos de TDAH (Adulto)',
       scale: 'ASRS-18',
       score: scores.asrs18,
       threshold: '≥ 36',
+    })
+  }
+  if (scores.wurs25 !== null && scores.wurs25 !== undefined && scores.wurs25 >= 46) {
+    findings.push({
+      category: 'TDAH',
+      suggestion: 'Sinais compatíveis com história de TDAH na infância (WURS-25)',
+      scale: 'WURS-25',
+      score: scores.wurs25,
+      threshold: '≥ 46',
+    })
+  }
+  if (scores.vanderbilt !== null && scores.vanderbilt !== undefined && scores.vanderbilt >= 30) {
+    findings.push({
+      category: 'TDAH / Comportamento',
+      suggestion: 'Sinais indicativos de TDAH e/ou comorbidades comportamentais (Vanderbilt)',
+      scale: 'Vanderbilt (VADRS)',
+      score: scores.vanderbilt,
+      threshold: '≥ 30',
+    })
+  }
+  if (scores.aq10 !== null && scores.aq10 !== undefined && scores.aq10 >= 6) {
+    findings.push({
+      category: 'TEA',
+      suggestion: 'Triagem positiva para traços do espectro autista em adultos (AQ-10)',
+      scale: 'AQ-10',
+      score: scores.aq10,
+      threshold: '≥ 6',
+    })
+  }
+  if (scores.aq50 !== null && scores.aq50 !== undefined && scores.aq50 >= 32) {
+    findings.push({
+      category: 'TEA',
+      suggestion: 'Traços clínicos significativos no espectro autista (AQ-50)',
+      scale: 'AQ-50',
+      score: scores.aq50,
+      threshold: '≥ 32',
+    })
+  }
+  if (scores.scq !== null && scores.scq !== undefined && scores.scq >= 15) {
+    findings.push({
+      category: 'TEA',
+      suggestion: 'Risco clínico para Transtorno do Espectro Autista infantil (SCQ)',
+      scale: 'SCQ',
+      score: scores.scq,
+      threshold: '≥ 15',
     })
   }
   if (scores.moca !== null && scores.moca < 24) {
@@ -311,6 +366,11 @@ export function computeGlobalSeverity(scores: ScaleScores): 'low' | 'moderate' |
     (scores.snapIv !== null && scores.snapIv > 2.0) ||
     (scores.assq !== null && scores.assq >= 22) ||
     (scores.asrs18 !== null && scores.asrs18 >= 48) ||
+    (scores.wurs25 !== null && scores.wurs25 !== undefined && scores.wurs25 >= 55) ||
+    (scores.vanderbilt !== null && scores.vanderbilt !== undefined && scores.vanderbilt >= 50) ||
+    (scores.aq10 !== null && scores.aq10 !== undefined && scores.aq10 >= 8) ||
+    (scores.aq50 !== null && scores.aq50 !== undefined && scores.aq50 >= 35) ||
+    (scores.scq !== null && scores.scq !== undefined && scores.scq >= 22) ||
     (scores.moca !== null && scores.moca < 18) ||
     (scores.meem !== null && scores.meem < 18) ||
     (scores.hamd !== null && scores.hamd >= 20) ||

@@ -34,11 +34,56 @@ export const SCALE_GROUPS: Record<string, ScaleOption[]> = {
     { id: 'hama', label: 'HAM-A', name: 'Escala de Ansiedade de Hamilton', time: '10-15 min' },
   ],
   TDAH: [
-    { id: 'snapiv', label: 'SNAP-IV', name: 'Avaliação de TDAH', time: '10-15 min' },
-    { id: 'asrs18', label: 'ASRS-18', name: 'Auto-Relato de TDAH Adulto', time: '5-10 min' },
+    {
+      id: 'snapiv',
+      label: 'SNAP-IV',
+      name: 'Avaliação de TDAH Infantil e Adolescente',
+      time: '10-15 min',
+    },
+    {
+      id: 'asrs18',
+      label: 'ASRS-18',
+      name: 'Auto-Relato de TDAH Adulto (Sintomas Atuais)',
+      time: '5-10 min',
+    },
+    {
+      id: 'wurs25',
+      label: 'WURS-25',
+      name: 'Wender Utah Rating Scale (TDAH Retrospectivo na Infância)',
+      time: '10-15 min',
+    },
+    {
+      id: 'vanderbilt',
+      label: 'Vanderbilt (VADRS)',
+      name: 'Escala Vanderbilt de TDAH e Comorbidades (Pais/Professores)',
+      time: '15-20 min',
+    },
   ],
   'TEA (Autismo)': [
-    { id: 'assq', label: 'ASSQ', name: 'Questionário de Triagem de Autismo', time: '10-15 min' },
+    {
+      id: 'assq',
+      label: 'ASSQ',
+      name: 'Questionário de Triagem de Autismo (Crianças/Adolescentes)',
+      time: '10-15 min',
+    },
+    {
+      id: 'aq10',
+      label: 'AQ-10',
+      name: 'Quociente do Espectro Autista (Triagem Rápida Adultos)',
+      time: '3-5 min',
+    },
+    {
+      id: 'aq50',
+      label: 'AQ-50',
+      name: 'Quociente do Espectro Autista Completo (Adultos)',
+      time: '10-15 min',
+    },
+    {
+      id: 'scq',
+      label: 'SCQ',
+      name: 'Questionário de Comunicação Social (TEA 4+ anos)',
+      time: '10-15 min',
+    },
   ],
   Neurodesenvolvimento: [
     {

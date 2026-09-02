@@ -10,11 +10,12 @@ import {
 import { assqQuestions, snapQuestions, interpretSnapIV } from '@/lib/assessment-data'
 import {
   generateScreening,
+  computeGlobalSeverity,
   snapKeys as screeningSnapKeys,
   snapLegacyKeys,
-  meemKeys,
-  mocaKeys,
   asrs18Keys,
+  mocaKeys,
+  meemKeys,
   hamdKeys,
   hamaKeys,
   bdiKeys,
@@ -23,8 +24,12 @@ import {
   sdsKeys,
   tmtKeys,
   semanticFluencyKeys,
+  wursKeys,
+  aq10Keys,
+  aq50Keys,
+  vanderbiltKeys,
+  scqKeys,
   type ScreeningFinding,
-  computeGlobalSeverity,
 } from '@/lib/clinical-screening'
 import { getSdsImpairmentLevel } from '@/lib/sds-data'
 
@@ -399,11 +404,24 @@ export async function getSessionInterpretation(
       ? fluenciaAnimaisScore + fluenciaFrutasScore
       : null)
 
+  const wurs25Score = hasAnyKey(raw, wursKeys) ? scoreQuestionnaire(raw, wursKeys) : null
+  const aq10Score = hasAnyKey(raw, aq10Keys) ? scoreQuestionnaire(raw, aq10Keys) : null
+  const aq50Score = hasAnyKey(raw, aq50Keys) ? scoreQuestionnaire(raw, aq50Keys) : null
+  const vanderbiltScore = hasAnyKey(raw, vanderbiltKeys)
+    ? scoreQuestionnaire(raw, vanderbiltKeys)
+    : null
+  const scqScore = hasAnyKey(raw, scqKeys) ? scoreQuestionnaire(raw, scqKeys) : null
+
   let currentPhq9Score = phq9Score
   let currentGad7Score = gad7Score
   let currentAssqScore = assqScore
   let currentSnapIvScore = snapIvScore
   let currentAsrs18Score = asrs18Score
+  let currentWurs25Score = wurs25Score
+  let currentAq10Score = aq10Score
+  let currentAq50Score = aq50Score
+  let currentVanderbiltScore = vanderbiltScore
+  let currentScqScore = scqScore
   let currentMocaScore = mocaScore
   let currentMeemScore = meemScore
   let currentHamdScore = hamdScore
@@ -425,6 +443,11 @@ export async function getSessionInterpretation(
     currentAssqScore,
     currentSnapIvScore,
     currentAsrs18Score,
+    currentWurs25Score,
+    currentAq10Score,
+    currentAq50Score,
+    currentVanderbiltScore,
+    currentScqScore,
     currentMocaScore,
     currentMeemScore,
     currentHamdScore,
@@ -458,6 +481,11 @@ export async function getSessionInterpretation(
     const isMeemPattern = hasAnyKey(raw, meemKeys)
     const isTmtPattern = hasAnyKey(raw, tmtKeys)
     const isSemanticFluencyPattern = hasAnyKey(raw, semanticFluencyKeys)
+    const isWursPattern = hasAnyKey(raw, wursKeys)
+    const isAq10Pattern = hasAnyKey(raw, aq10Keys)
+    const isAq50Pattern = hasAnyKey(raw, aq50Keys)
+    const isVanderbiltPattern = hasAnyKey(raw, vanderbiltKeys)
+    const isScqPattern = hasAnyKey(raw, scqKeys)
 
     const matchesKnownScalePattern =
       isBdiPattern ||
@@ -471,6 +499,11 @@ export async function getSessionInterpretation(
       isAssqPattern ||
       isSnapPattern ||
       isAsrsPattern ||
+      isWursPattern ||
+      isAq10Pattern ||
+      isAq50Pattern ||
+      isVanderbiltPattern ||
+      isScqPattern ||
       isMocaPattern ||
       isMeemPattern ||
       isTmtPattern ||
@@ -525,6 +558,28 @@ export async function getSessionInterpretation(
             currentTmtBScore = validTotalScore
           } else if (rawScaleType.includes('fluencia') || isSemanticFluencyPattern) {
             currentFluenciaSemanticaTotalScore = validTotalScore
+          } else if (rawScaleType.includes('wurs') || isWursPattern) {
+            currentWurs25Score = validTotalScore
+          } else if (
+            rawScaleType.includes('aq10') ||
+            rawScaleType.includes('aq-10') ||
+            isAq10Pattern
+          ) {
+            currentAq10Score = validTotalScore
+          } else if (
+            rawScaleType.includes('aq50') ||
+            rawScaleType.includes('aq-50') ||
+            isAq50Pattern
+          ) {
+            currentAq50Score = validTotalScore
+          } else if (
+            rawScaleType.includes('vanderbilt') ||
+            rawScaleType.includes('vadrs') ||
+            isVanderbiltPattern
+          ) {
+            currentVanderbiltScore = validTotalScore
+          } else if (rawScaleType.includes('scq') || isScqPattern) {
+            currentScqScore = validTotalScore
           }
         }
 
@@ -534,6 +589,11 @@ export async function getSessionInterpretation(
           currentAssqScore,
           currentSnapIvScore,
           currentAsrs18Score,
+          currentWurs25Score,
+          currentAq10Score,
+          currentAq50Score,
+          currentVanderbiltScore,
+          currentScqScore,
           currentMocaScore,
           currentMeemScore,
           currentHamdScore,
@@ -558,6 +618,11 @@ export async function getSessionInterpretation(
     assq: currentAssqScore || null,
     snapIv: currentSnapIvScore || null,
     asrs18: currentAsrs18Score || null,
+    wurs25: currentWurs25Score || null,
+    aq10: currentAq10Score || null,
+    aq50: currentAq50Score || null,
+    vanderbilt: currentVanderbiltScore || null,
+    scq: currentScqScore || null,
     moca: currentMocaScore,
     meem: currentMeemScore,
     hamd: currentHamdScore,
@@ -586,6 +651,11 @@ export async function getSessionInterpretation(
     assqScore: currentAssqScore || null,
     snapIvScore: currentSnapIvScore || null,
     asrs18Score: currentAsrs18Score || null,
+    wurs25Score: currentWurs25Score || null,
+    aq10Score: currentAq10Score || null,
+    aq50Score: currentAq50Score || null,
+    vanderbiltScore: currentVanderbiltScore || null,
+    scqScore: currentScqScore || null,
     mocaScore: currentMocaScore,
     meemScore: currentMeemScore,
     hamdScore: currentHamdScore,
@@ -717,6 +787,11 @@ export async function getSessionInterpretation(
       assq: currentAssqScore || null,
       snapIv: currentSnapIvScore || null,
       asrs18: currentAsrs18Score || null,
+      wurs25: currentWurs25Score || null,
+      aq10: currentAq10Score || null,
+      aq50: currentAq50Score || null,
+      vanderbilt: currentVanderbiltScore || null,
+      scq: currentScqScore || null,
       moca: currentMocaScore,
       meem: currentMeemScore,
       hamd: currentHamdScore,
@@ -767,6 +842,11 @@ interface ScoreBag {
   fluenciaAnimaisScore?: number | null
   fluenciaFrutasScore?: number | null
   fluenciaSemanticaTotalScore?: number | null
+  wurs25Score?: number | null
+  aq10Score?: number | null
+  aq50Score?: number | null
+  vanderbiltScore?: number | null
+  scqScore?: number | null
   cognitiveVrc: number | null
 }
 
@@ -1160,6 +1240,58 @@ function domainNeurodesenvolvimento(s: ScoreBag): {
       sev = 'moderada'
     }
     parts.push(`ASRS-18 ${s.asrs18Score} — compatível com ${faixa} para TDAH adulto.`)
+  }
+  if (s.wurs25Score !== null && s.wurs25Score !== undefined && s.wurs25Score > 0) {
+    let faixa = 'abaixo do corte retrospectivo'
+    if (s.wurs25Score >= 46) {
+      faixa = 'compatível com história de TDAH na infância (corte ≥ 46)'
+      sev = 'alta'
+    } else if (s.wurs25Score >= 36) {
+      faixa = 'faixa limítrofe para história infantil de TDAH (36–45)'
+      sev = sev === 'alta' ? 'alta' : 'moderada'
+    }
+    parts.push(`WURS-25 ${s.wurs25Score}/100 — ${faixa}.`)
+  }
+  if (s.vanderbiltScore !== null && s.vanderbiltScore !== undefined && s.vanderbiltScore > 0) {
+    let faixa = 'dentro do padrão comportamental esperado'
+    if (s.vanderbiltScore >= 50) {
+      faixa = 'sinais elevados de TDAH e comorbidades comportamentais'
+      sev = 'alta'
+    } else if (s.vanderbiltScore >= 30) {
+      faixa = 'sinais moderados de desatenção/hiperatividade/oposição'
+      sev = sev === 'alta' ? 'alta' : 'moderada'
+    }
+    parts.push(`Vanderbilt (VADRS) ${s.vanderbiltScore} — ${faixa}.`)
+  }
+  if (s.aq10Score !== null && s.aq10Score !== undefined && s.aq10Score > 0) {
+    let faixa = 'abaixo do corte de triagem (< 6)'
+    if (s.aq10Score >= 6) {
+      faixa = 'triagem positiva para traços do espectro autista (≥ 6)'
+      sev = 'alta'
+    }
+    parts.push(`AQ-10 ${s.aq10Score}/10 — ${faixa}.`)
+  }
+  if (s.aq50Score !== null && s.aq50Score !== undefined && s.aq50Score > 0) {
+    let faixa = 'dentro do padrão neurotípico (< 26)'
+    if (s.aq50Score >= 32) {
+      faixa = 'pontuação fortemente indicativa de traços de TEA (≥ 32)'
+      sev = 'alta'
+    } else if (s.aq50Score >= 26) {
+      faixa = 'traços moderados no espectro autista (26–31)'
+      sev = sev === 'alta' ? 'alta' : 'moderada'
+    }
+    parts.push(`AQ Completo ${s.aq50Score}/50 — ${faixa}.`)
+  }
+  if (s.scqScore !== null && s.scqScore !== undefined && s.scqScore > 0) {
+    let faixa = 'abaixo do ponto de corte (< 15)'
+    if (s.scqScore >= 15) {
+      faixa = 'risco clínico para Espectro Autista na infância (corte ≥ 15)'
+      sev = 'alta'
+    } else if (s.scqScore >= 11) {
+      faixa = 'risco limítrofe de comunicação social (11–14)'
+      sev = sev === 'alta' ? 'alta' : 'moderada'
+    }
+    parts.push(`SCQ ${s.scqScore}/39 — ${faixa}.`)
   }
   if (parts.length === 0) {
     return { severity: null, descricao: '' }

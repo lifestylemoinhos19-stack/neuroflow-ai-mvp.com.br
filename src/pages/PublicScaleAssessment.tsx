@@ -90,6 +90,31 @@ const SCALE_META: Record<string, { title: string; subtitle: string; time: string
     subtitle: 'Categorias: Animais e Frutas (60s cada)',
     time: '3-5 min',
   },
+  wurs25: {
+    title: 'Wender Utah Rating Scale (WURS-25)',
+    subtitle: 'TDAH Adulto — Avaliação Retrospectiva dos Sintomas na Infância',
+    time: '10-15 min',
+  },
+  aq10: {
+    title: 'Quociente do Espectro Autista (AQ-10)',
+    subtitle: 'Triagem Rápida de Traços do Espectro Autista em Adultos',
+    time: '3-5 min',
+  },
+  aq50: {
+    title: 'Quociente do Espectro Autista (AQ Completo - 50 Itens)',
+    subtitle: 'Avaliação de Traços do Espectro Autista em Adultos',
+    time: '10-15 min',
+  },
+  vanderbilt: {
+    title: 'Escala Vanderbilt de TDAH e Comorbidades (VADRS)',
+    subtitle: 'TDAH Infantil, TOD, Conduta, Ansiedade/Depressão e Desempenho',
+    time: '15-20 min',
+  },
+  scq: {
+    title: 'Questionário de Comunicação Social (SCQ)',
+    subtitle: 'Triagem de TEA em Crianças (4+ anos) — Respondido por Pais/Cuidadores',
+    time: '10-15 min',
+  },
 }
 
 /**
@@ -106,6 +131,11 @@ function normalizeScaleType(raw: string | undefined): string | undefined {
   // Casos especiais: siglas que não colapsam diretamente para a chave do SCALE_META.
   if (lower === 'marcos') return 'marcos-desenvolvimento'
   if (lower === 'cog-triage' || lower === 'cogtriage') return 'cognitive-triage'
+  if (lower === 'wurs' || lower === 'wurs-25' || lower === 'wurs25') return 'wurs25'
+  if (lower === 'aq-10' || lower === 'aq10') return 'aq10'
+  if (lower === 'aq-50' || lower === 'aq50' || lower === 'aq') return 'aq50'
+  if (lower === 'vanderbilt' || lower === 'vadrs') return 'vanderbilt'
+  if (lower === 'scq') return 'scq'
   if (
     lower === 'tmt' ||
     lower === 'tmt a/b' ||
@@ -238,6 +268,11 @@ function ScaleContent({ scaleType }: { scaleType: string }) {
     case 'asrs18':
     case 'meem':
     case 'cognitive-triage':
+    case 'wurs25':
+    case 'aq10':
+    case 'aq50':
+    case 'vanderbilt':
+    case 'scq':
       return <GenericScaleAssessment scale={EXTRA_SCALES[scaleType]} />
     default:
       return null

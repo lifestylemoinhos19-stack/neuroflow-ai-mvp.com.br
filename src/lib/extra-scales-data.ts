@@ -640,6 +640,628 @@ export const BAI_SCALE: ExtraScale = {
   },
 }
 
+/* ----------------------------------------------------------------- */
+/* WURS-25 — Wender Utah Rating Scale (25 itens, 0–100)              */
+/* TDAH no adulto: avaliação retrospectiva de sintomas na infância   */
+/* Pontuação: 0=Nada/Muito pouco, 1=Leve, 2=Moderado, 3=Bastante, 4=Muitíssimo */
+/* Corte clínico: ≥ 46 pontos sugere história de TDAH na infância    */
+/* ----------------------------------------------------------------- */
+const WURS_OPTIONS: ScaleOption[] = [
+  { value: 0, label: '0 - Nada ou muito pouco' },
+  { value: 1, label: '1 - Leve' },
+  { value: 2, label: '2 - Moderado' },
+  { value: 3, label: '3 - Bastante' },
+  { value: 4, label: '4 - Muito / Muitíssimo' },
+]
+
+const WURS_ITEMS: ScaleItem[] = [
+  {
+    key: 'wurs_q1',
+    text: 'Como criança, você era hiperativo(a), inquieto(a), incapaz de ficar parado(a)?',
+  },
+  {
+    key: 'wurs_q2',
+    text: 'Como criança, você tinha problemas de atenção, distraía-se facilmente?',
+  },
+  { key: 'wurs_q3', text: 'Como criança, você era impulsivo(a), agia ou falava sem pensar?' },
+  {
+    key: 'wurs_q4',
+    text: 'Como criança, você tinha explosões de raiva ou perda de controle do temperamento?',
+  },
+  { key: 'wurs_q5', text: 'Como criança, você tinha mudanças bruscas de humor?' },
+  { key: 'wurs_q6', text: 'Como criança, você era ansioso(a) ou preocupado(a)?' },
+  {
+    key: 'wurs_q7',
+    text: 'Como criança, você tinha desorganização ou dificuldade para planejar suas atividades?',
+  },
+  { key: 'wurs_q8', text: 'Como criança, você tendia a sonhar acordado(a) ou desligar-se?' },
+  { key: 'wurs_q9', text: 'Como criança, você era teimoso(a) ou desafiador(a)?' },
+  {
+    key: 'wurs_q10',
+    text: 'Como criança, você tinha problemas com a autoridade (pais, professores)?',
+  },
+  {
+    key: 'wurs_q11',
+    text: 'Como criança, você se frustrava facilmente (baixa tolerância à frustração)?',
+  },
+  {
+    key: 'wurs_q12',
+    text: 'Como criança, você deixava tarefas inacabadas ou desistia antes do fim?',
+  },
+  {
+    key: 'wurs_q13',
+    text: 'Como criança, você tinha notas abaixo do seu potencial ou capacidade?',
+  },
+  {
+    key: 'wurs_q14',
+    text: 'Como criança, você tinha dificuldade de relacionamento com outras crianças?',
+  },
+  { key: 'wurs_q15', text: 'Como criança, você era desastrado(a) ou descoordenado(a)?' },
+  { key: 'wurs_q16', text: 'Como criança, você tinha baixa autoestima ou sensação de fracasso?' },
+  {
+    key: 'wurs_q17',
+    text: 'Como criança, você tinha problemas de conduta ou comportamento na escola?',
+  },
+  { key: 'wurs_q18', text: 'Como criança, você tinha dificuldade em esperar sua vez?' },
+  { key: 'wurs_q19', text: 'Como criança, você falava excessivamente ou interrompia os outros?' },
+  { key: 'wurs_q20', text: 'Como criança, você esquecia recados, deveres ou materiais escolares?' },
+  { key: 'wurs_q21', text: 'Como criança, você perdia objetos pessoais com frequência?' },
+  { key: 'wurs_q22', text: 'Como criança, você buscava sensações perigosas ou imprudentes?' },
+  {
+    key: 'wurs_q23',
+    text: 'Como criança, você tinha dificuldade para se acalmar após ficar excitado(a)?',
+  },
+  { key: 'wurs_q24', text: 'Como criança, você sentia inquietação interna constante?' },
+  {
+    key: 'wurs_q25',
+    text: 'De modo geral, como criança, você sentia que tinha mais dificuldades de atenção/comportamento do que seus colegas?',
+  },
+]
+
+export const WURS_SCALE: ExtraScale = {
+  key: 'wurs25',
+  title: 'WURS-25 (Wender Utah Rating Scale)',
+  subtitle: 'TDAH adulto — Avaliação retrospectiva dos sintomas na infância (corte ≥ 46)',
+  mode: 'likert',
+  items: WURS_ITEMS,
+  options: WURS_OPTIONS,
+  maxTotal: 100,
+  disclaimer: DISCLAIMER,
+  getSeverity: (s) => {
+    if (s >= 46)
+      return { label: 'Sinais compatíveis com história infantil de TDAH (≥ 46)', color: '#ef4444' }
+    if (s >= 36)
+      return { label: 'Pontuação limítrofe para história de TDAH (36–45)', color: '#f97316' }
+    return { label: 'Abaixo do corte clínico para história de TDAH (< 46)', color: '#22c55e' }
+  },
+}
+
+/* ----------------------------------------------------------------- */
+/* AQ-10 — Autism Spectrum Quotient 10 (Triagem Rápida)              */
+/* Adultos (TEA) — 10 itens com pontuação binária padronizada (0–10) */
+/* Itens 1, 7, 8, 10 pontuam se Concordo; 2, 3, 4, 5, 6, 9 se Discordo*/
+/* Corte clínico: ≥ 6 pontos indica necessidade de avaliação diagnóstica*/
+/* ----------------------------------------------------------------- */
+const AQ_OPTIONS: ScaleOption[] = [
+  { value: 0, label: 'Discordo totalmente' },
+  { value: 1, label: 'Discordo parcialmente' },
+  { value: 2, label: 'Concordo parcialmente' },
+  { value: 3, label: 'Concordo totalmente' },
+]
+
+const AQ10_ITEMS: ScaleItem[] = [
+  { key: 'aq10_q1', text: 'Muitas vezes noto pequenos sons quando outros não notam.' },
+  {
+    key: 'aq10_q2',
+    text: 'Geralmente me concentro mais no quadro geral do que nos pequenos detalhes.',
+  },
+  { key: 'aq10_q3', text: 'Acho fácil fazer mais de uma coisa ao mesmo tempo.' },
+  {
+    key: 'aq10_q4',
+    text: 'Se houver uma interrupção, consigo voltar ao que estava fazendo muito rapidamente.',
+  },
+  {
+    key: 'aq10_q5',
+    text: 'Acho fácil "ler nas entrelinhas" quando alguém está conversando comigo.',
+  },
+  { key: 'aq10_q6', text: 'Sei reconhecer se alguém que está me ouvindo está ficando entediado.' },
+  {
+    key: 'aq10_q7',
+    text: 'Quando estou lendo uma história, acho difícil descobrir as intenções dos personagens.',
+  },
+  {
+    key: 'aq10_q8',
+    text: 'Gosto de colecionar informações sobre categorias de coisas (tipos de carros, pássaros, plantas, etc.).',
+  },
+  {
+    key: 'aq10_q9',
+    text: 'Acho fácil descobrir o que alguém está pensando ou sentindo apenas olhando para o rosto da pessoa.',
+  },
+  {
+    key: 'aq10_q10',
+    text: 'Acho difícil descobrir as intenções das outras pessoas em situações sociais.',
+  },
+]
+
+export const AQ10_SCALE: ExtraScale = {
+  key: 'aq10',
+  title: 'AQ-10 (Quociente do Espectro Autista — Triagem Rápida)',
+  subtitle: 'Triagem de traços do espectro autista em adultos (10 itens, corte ≥ 6)',
+  mode: 'likert',
+  items: AQ10_ITEMS,
+  options: AQ_OPTIONS,
+  maxTotal: 10,
+  disclaimer: DISCLAIMER,
+  getSeverity: (s) => {
+    if (s >= 6)
+      return {
+        label: 'Sinais compatíveis com traços de TEA — Encaminhar para avaliação completa (≥ 6)',
+        color: '#ef4444',
+      }
+    return { label: 'Abaixo do corte de triagem (< 6)', color: '#22c55e' }
+  },
+}
+
+/* ----------------------------------------------------------------- */
+/* AQ-50 — Autism Spectrum Quotient Completo (50 itens, 0–50)        */
+/* Baron-Cohen et al. Corte clínico ≥ 32 pontos                      */
+/* ----------------------------------------------------------------- */
+const AQ50_ITEMS: ScaleItem[] = [
+  { key: 'aq_q1', text: 'Prefiro fazer coisas com outras pessoas a fazê-las sozinho.' },
+  { key: 'aq_q2', text: 'Prefiro fazer as coisas sempre do mesmo modo.' },
+  {
+    key: 'aq_q3',
+    text: 'Se tento imaginar algo, acho muito fácil construir uma imagem na minha mente.',
+  },
+  {
+    key: 'aq_q4',
+    text: 'Frequentemente fico tão absorvido em uma coisa que perco a noção de tudo o mais.',
+  },
+  { key: 'aq_q5', text: 'Costumo notar pequenos sons que outras pessoas não percebem.' },
+  {
+    key: 'aq_q6',
+    text: 'Costumo prestar atenção a placas de carros ou sequências de informações semelhantes.',
+  },
+  {
+    key: 'aq_q7',
+    text: 'Outras pessoas frequentemente me dizem que o que eu disse foi indelicado, embora eu ache que foi apenas sincero.',
+  },
+  {
+    key: 'aq_q8',
+    text: 'Quando estou lendo uma história, consigo imaginar facilmente a aparência dos personagens.',
+  },
+  { key: 'aq_q9', text: 'Sou fascinado por datas.' },
+  {
+    key: 'aq_q10',
+    text: 'Em um grupo social, consigo facilmente acompanhar a conversa de diferentes pessoas.',
+  },
+  { key: 'aq_q11', text: 'Acho as situações sociais fáceis.' },
+  { key: 'aq_q12', text: 'Costumo notar detalhes que outras pessoas não percebem.' },
+  { key: 'aq_q13', text: 'Prefiro ir a uma biblioteca do que a uma festa.' },
+  { key: 'aq_q14', text: 'Acho fácil inventar histórias.' },
+  { key: 'aq_q15', text: 'Sinto-me mais atraído por pessoas do que por coisas.' },
+  {
+    key: 'aq_q16',
+    text: 'Costumo ter interesses muito fortes e fico chateado se não posso me dedicar a eles.',
+  },
+  { key: 'aq_q17', text: 'Gosto de conversar socialmente (bater papo informal).' },
+  { key: 'aq_q18', text: 'Quando falo, nem sempre é fácil para os outros terem a vez de falar.' },
+  { key: 'aq_q19', text: 'Sou fascinado por números.' },
+  {
+    key: 'aq_q20',
+    text: 'Quando leio uma história, acho difícil descobrir as intenções dos personagens.',
+  },
+  { key: 'aq_q21', text: 'Não gosto particularmente de ler ficção.' },
+  { key: 'aq_q22', text: 'Acho difícil fazer novos amigos.' },
+  { key: 'aq_q23', text: 'Noto padrões nas coisas o tempo todo.' },
+  { key: 'aq_q24', text: 'Prefiro ir ao cinema do que ao museu.' },
+  { key: 'aq_q25', text: 'Não me incomodo se minha rotina diária for perturbada.' },
+  { key: 'aq_q26', text: 'Frequentemente não sei como manter uma conversa fluindo.' },
+  {
+    key: 'aq_q27',
+    text: 'Acho fácil "ler nas entrelinhas" quando alguém está conversando comigo.',
+  },
+  {
+    key: 'aq_q28',
+    text: 'Costumo me concentrar mais no quadro geral do que nos pequenos detalhes.',
+  },
+  { key: 'aq_q29', text: 'Não sou muito bom em lembrar números de telefone.' },
+  {
+    key: 'aq_q30',
+    text: 'Não costumo notar pequenas mudanças em uma situação ou na aparência de uma pessoa.',
+  },
+  {
+    key: 'aq_q31',
+    text: 'Sei reconhecer quando alguém que está me ouvindo está ficando entediado.',
+  },
+  { key: 'aq_q32', text: 'Acho fácil fazer mais de uma coisa ao mesmo tempo.' },
+  {
+    key: 'aq_q33',
+    text: 'Ao falar ao telefone, não tenho certeza de quando é a minha vez de falar.',
+  },
+  { key: 'aq_q34', text: 'Gosto de fazer coisas espontaneamente.' },
+  { key: 'aq_q35', text: 'Costumo ser o último a entender a graça de uma piada.' },
+  {
+    key: 'aq_q36',
+    text: 'Acho fácil perceber o que alguém está pensando ou sentindo apenas olhando para o rosto dela.',
+  },
+  {
+    key: 'aq_q37',
+    text: 'Se houver uma interrupção, consigo voltar ao que estava fazendo muito rapidamente.',
+  },
+  { key: 'aq_q38', text: 'Sou bom em bate-papo social.' },
+  {
+    key: 'aq_q39',
+    text: 'As pessoas frequentemente me dizem que eu fico falando sobre o mesmo assunto repetidamente.',
+  },
+  {
+    key: 'aq_q40',
+    text: 'Quando era criança, costumava gostar de brincar de faz-de-conta com outras crianças.',
+  },
+  { key: 'aq_q41', text: 'Gosto de colecionar informações sobre categorias de coisas.' },
+  { key: 'aq_q42', text: 'Acho difícil imaginar como seria ser outra pessoa.' },
+  {
+    key: 'aq_q43',
+    text: 'Gosto de planejar cuidadosamente qualquer atividade da qual vou participar.',
+  },
+  { key: 'aq_q44', text: 'Gosto de ocasiões sociais.' },
+  { key: 'aq_q45', text: 'Acho difícil decifrar as intenções das outras pessoas.' },
+  { key: 'aq_q46', text: 'Novas situações me deixam ansioso(a).' },
+  { key: 'aq_q47', text: 'Gosto de conhecer novas pessoas.' },
+  { key: 'aq_q48', text: 'Sou uma pessoa diplomática.' },
+  { key: 'aq_q49', text: 'Não sou muito bom em lembrar as datas de aniversário das pessoas.' },
+  { key: 'aq_q50', text: 'Acho muito fácil brincar de jogos de faz-de-conta com crianças.' },
+]
+
+export const AQ50_SCALE: ExtraScale = {
+  key: 'aq50',
+  title: 'AQ (Quociente do Espectro Autista — Versão Completa 50 Itens)',
+  subtitle: 'Avaliação de traços do espectro autista em adultos (corte ≥ 32)',
+  mode: 'likert',
+  items: AQ50_ITEMS,
+  options: AQ_OPTIONS,
+  maxTotal: 50,
+  disclaimer: DISCLAIMER,
+  getSeverity: (s) => {
+    if (s >= 32)
+      return { label: 'Sinais fortemente compatíveis com TEA no adulto (≥ 32)', color: '#ef4444' }
+    if (s >= 26) return { label: 'Traços moderados no espectro autista (26–31)', color: '#f97316' }
+    return { label: 'Pontuação dentro do padrão neurotípico (< 26)', color: '#22c55e' }
+  },
+}
+
+/* ----------------------------------------------------------------- */
+/* Vanderbilt (VADRS) — Escala de Avaliação de TDAH Infantil         */
+/* Heteroaplicável (Pais / Professores). 55 itens (1-18 DSM TDAH,    */
+/* 19-26 TOD, 27-40 Conduta, 41-47 Ansiedade/Depressão, 48-55 Desempenho)*/
+/* ----------------------------------------------------------------- */
+const VANDERBILT_BEHAVIOR_OPTIONS: ScaleOption[] = [
+  { value: 0, label: '0 - Nunca' },
+  { value: 1, label: '1 - Ocasionalmente' },
+  { value: 2, label: '2 - Frequentemente' },
+  { value: 3, label: '3 - Muito frequentemente' },
+]
+
+const VANDERBILT_PERFORMANCE_OPTIONS: ScaleOption[] = [
+  { value: 1, label: '1 - Excelente' },
+  { value: 2, label: '2 - Acima da média' },
+  { value: 3, label: '3 - Na média' },
+  { value: 4, label: '4 - Abaixo da média / Com problemas' },
+  { value: 5, label: '5 - Muito problemático' },
+]
+
+const VANDERBILT_ITEMS: ScaleItem[] = [
+  // Desatenção (1 a 9)
+  {
+    key: 'vadrs_q1',
+    text: 'Não presta atenção a detalhes ou comete erros por descuido nos trabalhos escolares.',
+  },
+  {
+    key: 'vadrs_q2',
+    text: 'Tem dificuldade de manter a atenção em tarefas ou atividades lúdicas.',
+  },
+  { key: 'vadrs_q3', text: 'Parece não escutar quando se fala diretamente com ela.' },
+  {
+    key: 'vadrs_q4',
+    text: 'Não segue instruções até o fim e não termina deveres escolares ou tarefas.',
+  },
+  { key: 'vadrs_q5', text: 'Tem dificuldade de organizar tarefas e atividades.' },
+  {
+    key: 'vadrs_q6',
+    text: 'Evita, não gosta ou reluta em envolver-se em tarefas que exijam esforço mental constante.',
+  },
+  {
+    key: 'vadrs_q7',
+    text: 'Perde coisas necessárias para tarefas ou atividades (lápis, livros, brinquedos).',
+  },
+  { key: 'vadrs_q8', text: 'Distrai-se facilmente com estímulos alheios à tarefa.' },
+  { key: 'vadrs_q9', text: 'É esquecida nas atividades cotidianas.' },
+  // Hiperatividade / Impulsividade (10 a 18)
+  { key: 'vadrs_q10', text: 'Remexe as mãos ou pés ou se contorce na cadeira.' },
+  {
+    key: 'vadrs_q11',
+    text: 'Levanta-se da cadeira em sala de aula ou em outras situações em que se espera que fique sentada.',
+  },
+  {
+    key: 'vadrs_q12',
+    text: 'Corre ou escala excessivamente em situações em que isso é inapropriado.',
+  },
+  {
+    key: 'vadrs_q13',
+    text: 'Tem dificuldade de brincar ou se envolver silenciosamente em atividades de lazer.',
+  },
+  { key: 'vadrs_q14', text: 'Está "a mil" ou age como se estivesse "a motor".' },
+  { key: 'vadrs_q15', text: 'Fala excessivamente.' },
+  {
+    key: 'vadrs_q16',
+    text: 'Dá respostas precipitadas antes de as perguntas terem sido completadas.',
+  },
+  { key: 'vadrs_q17', text: 'Tem dificuldade de esperar a sua vez.' },
+  { key: 'vadrs_q18', text: 'Interrompe ou se intromete em conversas ou jogos dos outros.' },
+  // TOD - Transtorno Opositor Desafiador (19 a 26)
+  { key: 'vadrs_q19', text: 'Perde a calma / tem acessos de raiva.' },
+  { key: 'vadrs_q20', text: 'Discute com adultos.' },
+  {
+    key: 'vadrs_q21',
+    text: 'Desafia ativamente ou recusa-se a atender a pedidos ou regras de adultos.',
+  },
+  { key: 'vadrs_q22', text: 'Incomoda os outros de forma deliberada.' },
+  { key: 'vadrs_q23', text: 'Culpa os outros por seus próprios erros ou mau comportamento.' },
+  { key: 'vadrs_q24', text: 'É sensível ou facilmente irritável pelos outros.' },
+  { key: 'vadrs_q25', text: 'É raivosa e ressentida.' },
+  { key: 'vadrs_q26', text: 'É rancorosa ou vingativa.' },
+  // Transtorno de Conduta (27 a 40)
+  { key: 'vadrs_q27', text: 'Intimida, ameaça ou amedronta os outros.' },
+  { key: 'vadrs_q28', text: 'Inicia brigas físicas.' },
+  { key: 'vadrs_q29', text: 'Usa armas ou objetos que podem causar dano físico grave.' },
+  { key: 'vadrs_q30', text: 'É fisicamente cruel com pessoas.' },
+  { key: 'vadrs_q31', text: 'É fisicamente cruel com animais.' },
+  { key: 'vadrs_q32', text: 'Rouba em confronto com a vítima.' },
+  { key: 'vadrs_q33', text: 'Força alguém a atividade sexual.' },
+  { key: 'vadrs_q34', text: 'Ateia fogo deliberadamente com a intenção de causar dano.' },
+  { key: 'vadrs_q35', text: 'Destrói deliberadamente a propriedade alheia.' },
+  { key: 'vadrs_q36', text: 'Invade a casa, prédio ou carro de outra pessoa.' },
+  { key: 'vadrs_q37', text: 'Mente para obter ganhos, favores ou evitar obrigações.' },
+  { key: 'vadrs_q38', text: 'Foge de casa à noite pelo menos duas vezes.' },
+  { key: 'vadrs_q39', text: 'Falta à escola antes dos 13 anos de idade.' },
+  { key: 'vadrs_q40', text: 'Permanece na rua à noite sem autorização antes dos 13 anos.' },
+  // Ansiedade / Depressão (41 a 47)
+  { key: 'vadrs_q41', text: 'Tem medo, é receosa ou ansiosa.' },
+  { key: 'vadrs_q42', text: 'Tem medo de tentar coisas novas por receio de errar.' },
+  { key: 'vadrs_q43', text: 'Sente-se sem valor ou inferior aos outros.' },
+  { key: 'vadrs_q44', text: 'Culpa a si mesma pelos problemas ou se sente culpada.' },
+  { key: 'vadrs_q45', text: 'Sente-se solitária, indesejada ou não amada.' },
+  { key: 'vadrs_q46', text: 'É triste, infeliz ou deprimida.' },
+  { key: 'vadrs_q47', text: 'Fica constrangida ou envergonhada com facilidade.' },
+  // Desempenho acadêmico e relacional (48 a 55)
+  {
+    key: 'vadrs_q48',
+    text: 'Desempenho geral na leitura',
+    options: VANDERBILT_PERFORMANCE_OPTIONS,
+  },
+  {
+    key: 'vadrs_q49',
+    text: 'Desempenho geral na matemática',
+    options: VANDERBILT_PERFORMANCE_OPTIONS,
+  },
+  {
+    key: 'vadrs_q50',
+    text: 'Desempenho geral na escrita',
+    options: VANDERBILT_PERFORMANCE_OPTIONS,
+  },
+  {
+    key: 'vadrs_q51',
+    text: 'Relacionamento com os pais / responsáveis',
+    options: VANDERBILT_PERFORMANCE_OPTIONS,
+  },
+  { key: 'vadrs_q52', text: 'Relacionamento com irmãos', options: VANDERBILT_PERFORMANCE_OPTIONS },
+  {
+    key: 'vadrs_q53',
+    text: 'Relacionamento com colegas / amigos',
+    options: VANDERBILT_PERFORMANCE_OPTIONS,
+  },
+  {
+    key: 'vadrs_q54',
+    text: 'Participação em atividades organizadas (jogos, esportes)',
+    options: VANDERBILT_PERFORMANCE_OPTIONS,
+  },
+  {
+    key: 'vadrs_q55',
+    text: 'Comportamento geral em casa / rotina',
+    options: VANDERBILT_PERFORMANCE_OPTIONS,
+  },
+]
+
+export const VANDERBILT_SCALE: ExtraScale = {
+  key: 'vanderbilt',
+  title: 'Vanderbilt (VADRS — Escala de Avaliação de TDAH e Comorbidades)',
+  subtitle: 'TDAH Infantil, TOD, Conduta, Ansiedade/Depressão e Desempenho (55 itens)',
+  mode: 'likert',
+  items: VANDERBILT_ITEMS,
+  options: VANDERBILT_BEHAVIOR_OPTIONS,
+  maxTotal: 181,
+  disclaimer: DISCLAIMER,
+  getSeverity: (s) => {
+    if (s >= 50)
+      return {
+        label: 'Sinais altamente compatíveis com TDAH/Comorbidades em múltiplos domínios',
+        color: '#ef4444',
+      }
+    if (s >= 30)
+      return {
+        label: 'Sinais moderados de desatenção/hiperatividade ou comorbidades',
+        color: '#f97316',
+      }
+    return { label: 'Pontuação dentro do esperado para a faixa etária', color: '#22c55e' }
+  },
+}
+
+/* ----------------------------------------------------------------- */
+/* SCQ — Social Communication Questionnaire (40 itens SIM/NÃO)       */
+/* TEA em crianças de 4+ anos. Respondido por pais/cuidadores        */
+/* Item 1 verifica linguagem verbal (não pontua). Itens 2-40 = 0 ou 1*/
+/* Pontuação máxima: 39. Ponto de corte clínico clássico: ≥ 15       */
+/* ----------------------------------------------------------------- */
+const SCQ_OPTIONS: ScaleOption[] = [
+  { value: 0, label: 'Não' },
+  { value: 1, label: 'Sim' },
+]
+
+const SCQ_ITEMS: ScaleItem[] = [
+  {
+    key: 'scq_q1',
+    text: 'A criança é capaz de conversar usando frases ou sentenças curtas? (Pergunta inicial sobre fala)',
+  },
+  {
+    key: 'scq_q2',
+    text: 'Você consegue manter uma conversa com ela em que ambos alternam a fala de modo natural?',
+  },
+  {
+    key: 'scq_q3',
+    text: 'Ela costuma usar frases estranhas ou dizer as mesmas coisas repetidamente de modo mecânico?',
+  },
+  { key: 'scq_q4', text: 'Ela costuma usar perguntas ou afirmações socialmente inadequadas?' },
+  {
+    key: 'scq_q5',
+    text: 'Ela costuma confundir pronomes (ex.: dizer "você" quando quer dizer "eu")?',
+  },
+  {
+    key: 'scq_q6',
+    text: 'Ela costuma usar palavras inventadas ou frases de formas peculiares que só ela entende?',
+  },
+  {
+    key: 'scq_q7',
+    text: 'Ela costuma repetir coisas que ouviu exatamente da mesma maneira (ecolalia)?',
+  },
+  {
+    key: 'scq_q8',
+    text: 'Ela já teve formas muito rígidas ou rituais ao fazer as coisas (necessidade de rotina estrita)?',
+  },
+  { key: 'scq_q9', text: 'As expressões faciais dela costumam ser apropriadas para a situação?' },
+  {
+    key: 'scq_q10',
+    text: 'Ela já usou a sua mão como ferramenta (ex.: puxar a sua mão para pegar algo sem olhar para você)?',
+  },
+  {
+    key: 'scq_q11',
+    text: 'Ela já teve interesses especiais muito intensos que pareciam estranhos para outras pessoas?',
+  },
+  {
+    key: 'scq_q12',
+    text: 'Ela parece mais interessada em partes de um objeto (ex.: girar as rodas) do que na função do brinquedo?',
+  },
+  {
+    key: 'scq_q13',
+    text: 'Ela tem interesses sensoriais especiais ou incomuns (cheirar, lamber ou tocar excessivamente coisas)?',
+  },
+  { key: 'scq_q14', text: 'Ela reage de modo muito intenso ou adverso a certos sons cotidianos?' },
+  {
+    key: 'scq_q15',
+    text: 'Ela costuma fazer movimentos estranhos com as mãos ou dedos (abanar mãos, estalar dedos perto dos olhos)?',
+  },
+  {
+    key: 'scq_q16',
+    text: 'Ela tem movimentos corporais repetitivos complexos (balançar o tronco, girar sobre si mesma)?',
+  },
+  {
+    key: 'scq_q17',
+    text: 'Ela já se machucou de forma deliberada (bater a cabeça, morder a própria mão)?',
+  },
+  {
+    key: 'scq_q18',
+    text: 'Ela costuma carregar objetos específicos e incomuns para todos os lugares?',
+  },
+  {
+    key: 'scq_q19',
+    text: 'Ela tem algum amigo próximo da mesma idade com quem mantém amizade recíproca?',
+  },
+  {
+    key: 'scq_q20',
+    text: 'Ela costuma conversar com você apenas para compartilhar algo interessante, sem pedir nada em troca?',
+  },
+  {
+    key: 'scq_q21',
+    text: 'Ela costuma imitar espontaneamente o que você faz (gestos, atividades)?',
+  },
+  {
+    key: 'scq_q22',
+    text: 'Ela costuma apontar espontaneamente para coisas para mostrar algo interessante para você?',
+  },
+  {
+    key: 'scq_q23',
+    text: 'Ela costuma usar gestos sociais apropriados (acenar tchau, assentir com a cabeça)?',
+  },
+  { key: 'scq_q24', text: 'Ela acena com a cabeça para dizer "sim"?' },
+  { key: 'scq_q25', text: 'Ela balança a cabeça de um lado para o outro para dizer "não"?' },
+  {
+    key: 'scq_q26',
+    text: 'Ela costuma olhar diretamente nos seus olhos quando conversa ou brinca com você?',
+  },
+  { key: 'scq_q27', text: 'Ela sorri de volta quando você sorri para ela?' },
+  {
+    key: 'scq_q28',
+    text: 'Ela costuma mostrar coisas que gosta para você apenas para compartilhar a alegria?',
+  },
+  {
+    key: 'scq_q29',
+    text: 'Ela costuma oferecer coisas espontaneamente para você (ex.: um pedaço de biscoito)?',
+  },
+  {
+    key: 'scq_q30',
+    text: 'Ela costuma demonstrar quando percebe que você está triste ou machucado(a)?',
+  },
+  { key: 'scq_q31', text: 'Ela costuma procurar conforto quando está triste ou machucada?' },
+  {
+    key: 'scq_q32',
+    text: 'Ela tenta fazer você participar das brincadeiras dela ou olhar para o que ela está fazendo?',
+  },
+  { key: 'scq_q33', text: 'Ela reage socialmente a outras crianças com interesse recíproco?' },
+  {
+    key: 'scq_q34',
+    text: 'Se você olha e aponta para algo longe, ela olha na direção do seu dedo?',
+  },
+  {
+    key: 'scq_q35',
+    text: 'Ela brinca de faz-de-conta ou imaginação (ex.: fingir que alimenta uma boneca)?',
+  },
+  { key: 'scq_q36', text: 'Ela brinca de jogos cooperativos com regras com outras crianças?' },
+  {
+    key: 'scq_q37',
+    text: 'Ela modula o tom de voz de modo natural ao falar (ou fala de modo monótono/cantado)?',
+  },
+  { key: 'scq_q38', text: 'Ela se interessa por brincadeiras em grupo de forma integrada?' },
+  {
+    key: 'scq_q39',
+    text: 'Ela consegue responder ao contato social iniciado por outras pessoas de forma adequada?',
+  },
+  { key: 'scq_q40', text: 'Ela demonstra flexibilidade quando há mudanças planejadas na rotina?' },
+]
+
+export const SCQ_SCALE: ExtraScale = {
+  key: 'scq',
+  title: 'SCQ (Social Communication Questionnaire)',
+  subtitle: 'TEA infantil (4+ anos) — Questionário de Comunicação Social (40 itens, corte ≥ 15)',
+  mode: 'likert',
+  items: SCQ_ITEMS,
+  options: SCQ_OPTIONS,
+  maxTotal: 39,
+  disclaimer: DISCLAIMER,
+  getSeverity: (s) => {
+    if (s >= 15)
+      return {
+        label:
+          'Sinais compatíveis com risco para Espectro Autista (≥ 15) — Recomenda-se avaliação completa (ex: ADOS/ADI-R)',
+        color: '#ef4444',
+      }
+    if (s >= 11)
+      return {
+        label: 'Risco limítrofe para alterações na comunicação social (11–14)',
+        color: '#f97316',
+      }
+    return { label: 'Abaixo do corte de risco para TEA (< 15)', color: '#22c55e' }
+  },
+}
+
 export const EXTRA_SCALES: Record<string, ExtraScale> = {
   hamd: HAMD_SCALE,
   hama: HAMA_SCALE,
@@ -648,4 +1270,12 @@ export const EXTRA_SCALES: Record<string, ExtraScale> = {
   asrs18: ASRS_SCALE,
   meem: MEEM_SCALE,
   'cognitive-triage': COGNITIVE_TRIAGE_SCALE,
+  wurs25: WURS_SCALE,
+  wurs: WURS_SCALE,
+  aq10: AQ10_SCALE,
+  aq50: AQ50_SCALE,
+  aq: AQ50_SCALE,
+  vanderbilt: VANDERBILT_SCALE,
+  vadrs: VANDERBILT_SCALE,
+  scq: SCQ_SCALE,
 }
