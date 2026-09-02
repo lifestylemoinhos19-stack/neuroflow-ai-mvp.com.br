@@ -50,23 +50,70 @@ export function FasAssessment() {
     listening,
   } = useSpeech({ lang: 'pt-BR' })
 
+  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const phaseStartTimeRef = useRef<number>(0)
+  const listeningRef = useRef(listening)
+  listeningRef.current = listening
+
+  // Início e transição de contagem por timestamp absoluto (à prova de throttling/touch/teclado no mobile)
   useEffect(() => {
-    if (phase === 'intro' || phase === 'result') return
-    if (timeLeft <= 0) {
-      if (phase === 'F') {
-        setPhase('A')
-        setTimeLeft(FAS_TIME_PER_LETTER)
-      } else if (phase === 'A') {
-        setPhase('S')
-        setTimeLeft(FAS_TIME_PER_LETTER)
-      } else if (phase === 'S') {
-        setPhase('result')
+    if (phase === 'intro' || phase === 'result') {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current)
+        timerIntervalRef.current = null
       }
       return
     }
-    const timer = setTimeout(() => setTimeLeft((t) => t - 1), 1000)
-    return () => clearTimeout(timer)
-  }, [phase, timeLeft])
+
+    // Inicializa timestamp da fase
+    phaseStartTimeRef.current = Date.now()
+    setTimeLeft(FAS_TIME_PER_LETTER)
+
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current)
+
+    timerIntervalRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - phaseStartTimeRef.current) / 1000)
+      const remaining = Math.max(0, FAS_TIME_PER_LETTER - elapsed)
+      setTimeLeft(remaining)
+
+      if (remaining <= 0) {
+        if (timerIntervalRef.current) {
+          clearInterval(timerIntervalRef.current)
+          timerIntervalRef.current = null
+        }
+        if (listeningRef.current) {
+          stopListening()
+        }
+
+        setPhase((currentPhase) => {
+          if (currentPhase === 'F') {
+            phaseStartTimeRef.current = Date.now()
+            speak(
+              'Tempo esgotado para a letra F. Atenção para a letra A: diga ou digite palavras com a letra A.',
+            )
+            return 'A'
+          } else if (currentPhase === 'A') {
+            phaseStartTimeRef.current = Date.now()
+            speak(
+              'Tempo esgotado para a letra A. Atenção para a letra S: diga ou digite palavras com a letra S.',
+            )
+            return 'S'
+          } else if (currentPhase === 'S') {
+            speak('Teste de fluência FAS concluído com sucesso. Veja o seu resultado consolidado.')
+            return 'result'
+          }
+          return currentPhase
+        })
+      }
+    }, 250)
+
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current)
+        timerIntervalRef.current = null
+      }
+    }
+  }, [phase, speak, stopListening])
 
   const result = phase === 'result' ? calculateFasResult(words) : null
 
@@ -215,10 +262,16 @@ export function FasAssessment() {
         <Button
           onClick={handleSubmit}
           disabled={saving}
-          className="w-full bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-medium"
+          className="w-full bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-semibold"
         >
           {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           Salvar Resultados
+        </Button>
+        <Button
+          onClick={() => returnToMinhasEscalas(guestId)}
+          className="w-full bg-white/10 hover:bg-white/20 text-white font-medium border border-white/20"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para Minhas Escalas
         </Button>
         <Button
           onClick={handleReset}

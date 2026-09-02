@@ -12,6 +12,8 @@ import {
   Sparkles,
   CheckCircle2,
   PenTool,
+  Timer,
+  Play,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -96,6 +98,10 @@ export function MocaAssessment() {
   const [saving, setSaving] = useState(false)
   const [speakingItem, setSpeakingItem] = useState<string | null>(null)
   const [activeListeningItem, setActiveListeningItem] = useState<string | null>(null)
+  const [fluencyTimerRunning, setFluencyTimerRunning] = useState(false)
+  const [fluencyTimeLeft, setFluencyTimeLeft] = useState(60)
+  const fluencyTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const fluencyStartTimeRef = useRef<number>(0)
   const topRef = useRef<HTMLDivElement>(null)
 
   const {
@@ -110,6 +116,58 @@ export function MocaAssessment() {
   } = useSpeech({
     lang: 'pt-BR',
   })
+
+  const listeningRef = useRef(listening)
+  listeningRef.current = listening
+
+  // Cronômetro de 60s do item de Fluência Verbal (moca_fluency)
+  useEffect(() => {
+    if (!fluencyTimerRunning) {
+      if (fluencyTimerRef.current) {
+        clearInterval(fluencyTimerRef.current)
+        fluencyTimerRef.current = null
+      }
+      return
+    }
+
+    fluencyStartTimeRef.current = Date.now()
+    setFluencyTimeLeft(60)
+
+    fluencyTimerRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - fluencyStartTimeRef.current) / 1000)
+      const remaining = Math.max(0, 60 - elapsed)
+      setFluencyTimeLeft(remaining)
+
+      if (remaining <= 0) {
+        if (fluencyTimerRef.current) {
+          clearInterval(fluencyTimerRef.current)
+          fluencyTimerRef.current = null
+        }
+        setFluencyTimerRunning(false)
+        if (listeningRef.current && activeListeningItem === 'moca_fluency') {
+          stopListening()
+          setActiveListeningItem(null)
+        }
+        speak('Tempo de 60 segundos esgotado para o teste de fluência com a letra F.')
+        toast.info('Tempo de 60s encerrado no teste de fluência da letra F!')
+      }
+    }, 250)
+
+    return () => {
+      if (fluencyTimerRef.current) {
+        clearInterval(fluencyTimerRef.current)
+        fluencyTimerRef.current = null
+      }
+    }
+  }, [fluencyTimerRunning, activeListeningItem, speak, stopListening])
+
+  const handleStartFluencyTimer = () => {
+    setFluencyTimerRunning(true)
+    setFluencyTimeLeft(60)
+    speak(
+      'Cronômetro iniciado. Diga ou digite o maior número de palavras que começam com a letra F em 60 segundos.',
+    )
+  }
 
   const handleToggleSpeakItem = (itemKey: string, text: string) => {
     if (speaking && speakingItem === itemKey) {
@@ -527,18 +585,110 @@ export function MocaAssessment() {
                     </div>
                   )}
 
-                  {/* Entrada de texto padrão para outros itens verbais/recordação */}
-                  {!isTrail && !isCube && !isClock && !isNaming && !isSerial7 && (
-                    <div className="space-y-1">
-                      <Input
-                        placeholder="Resposta do paciente (digite ou use o microfone)..."
+                  {/* 6) Fluência Verbal Letra F com Cronômetro Integrado de 60 segundos */}
+                  {item.key === 'moca_fluency' && (
+                    <div className="p-3.5 rounded-xl border border-[#00FFFF]/30 bg-[#00FFFF]/5 space-y-3">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <Timer className="h-4 w-4 text-[#00FFFF]" />
+                          <span className="text-xs font-bold text-white">
+                            Cronômetro de 60 segundos para letra F:
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xl font-bold text-[#00FFFF] bg-[#0A192F] px-3 py-0.5 rounded-lg border border-[#00FFFF]/40">
+                            {fluencyTimeLeft}s
+                          </span>
+                          {!fluencyTimerRunning ? (
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={handleStartFluencyTimer}
+                              className="bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 text-xs font-bold h-8"
+                            >
+                              <Play className="h-3.5 w-3.5 mr-1" />
+                              {fluencyTimeLeft === 0 ? 'Reiniciar 60s' : 'Iniciar 60s'}
+                            </Button>
+                          ) : (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setFluencyTimerRunning(false)}
+                              className="border-white/20 text-white text-xs h-8 hover:bg-white/10"
+                            >
+                              Pausar
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      <Textarea
+                        placeholder="Digite ou fale as palavras com F (ex.: faca, feijão, foca, folha...)"
                         value={patientAnswers[item.key] || ''}
-                        onChange={(e) => handleAnswerChange(item.key, e.target.value)}
-                        className="bg-slate-900/60 border-white/10 text-white text-xs"
+                        onChange={(e) => {
+                          const text = e.target.value
+                          handleAnswerChange(item.key, text)
+                          // Contagem estimada de palavras únicas
+                          const words = text
+                            .toLowerCase()
+                            .split(/[\n,;.\s]+/)
+                            .filter((w) => w.startsWith('f') && w.length > 1)
+                          const count = new Set(words).size
+                          if (count >= 11) {
+                            handleScore(item.key, 1)
+                          }
+                        }}
+                        className="bg-slate-900 border-white/20 text-white text-xs min-h-[90px]"
                       />
+
+                      {(() => {
+                        const raw = patientAnswers[item.key] || ''
+                        const words = raw
+                          .toLowerCase()
+                          .split(/[\n,;.\s]+/)
+                          .filter((w) => w.startsWith('f') && w.length > 1)
+                        const uniqueCount = new Set(words).size
+                        return (
+                          <div className="flex items-center justify-between text-[11px] text-white/70">
+                            <span>
+                              Palavras com F identificadas:{' '}
+                              <strong
+                                className={
+                                  uniqueCount >= 11 ? 'text-emerald-400' : 'text-[#00FFFF]'
+                                }
+                              >
+                                {uniqueCount}
+                              </strong>{' '}
+                              (Critério MoCA: &ge; 11 palavras = 1 ponto)
+                            </span>
+                            {uniqueCount >= 11 && (
+                              <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                                <CheckCircle2 className="h-3 w-3" /> 1 ponto qualificado
+                              </span>
+                            )}
+                          </div>
+                        )
+                      })()}
                     </div>
                   )}
 
+                  {/* Entrada de texto padrão para outros itens verbais/recordação */}
+                  {!isTrail &&
+                    !isCube &&
+                    !isClock &&
+                    !isNaming &&
+                    !isSerial7 &&
+                    item.key !== 'moca_fluency' && (
+                      <div className="space-y-1">
+                        <Input
+                          placeholder="Resposta do paciente (digite ou use o microfone)..."
+                          value={patientAnswers[item.key] || ''}
+                          onChange={(e) => handleAnswerChange(item.key, e.target.value)}
+                          className="bg-slate-900/60 border-white/10 text-white text-xs"
+                        />
+                      </div>
+                    )}
                   <div className="pt-1">
                     <ScoreInput
                       max={item.maxScore}

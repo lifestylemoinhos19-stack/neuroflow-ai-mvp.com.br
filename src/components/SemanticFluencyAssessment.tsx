@@ -5,6 +5,7 @@ import {
   Play,
   Timer,
   FileText,
+  ArrowLeft,
   Volume2,
   VolumeX,
   Mic,
@@ -19,6 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useSpeech } from '@/hooks/use-speech'
 import { useGuestScale } from '@/contexts/guest-scale-context'
+import { returnToMinhasEscalas } from '@/lib/assessment-redirect'
 import { saveDementiaAssessment } from '@/services/dementia-assessments'
 import {
   calculateSemanticFluencyResult,
@@ -30,14 +32,7 @@ import {
 const CARD_BG = { backgroundColor: 'rgba(17, 34, 64, 0.85)' }
 const TIME_PER_CATEGORY = 60
 
-type Phase =
-  | 'intro'
-  | 'animais_ready'
-  | 'animais_running'
-  | 'animais_done'
-  | 'frutas_ready'
-  | 'frutas_running'
-  | 'result'
+type Phase = 'intro' | 'animais_running' | 'animais_done' | 'frutas_running' | 'result'
 
 export function SemanticFluencyAssessment() {
   const guestId = useGuestScale()
@@ -48,6 +43,9 @@ export function SemanticFluencyAssessment() {
   const [frutasWords, setFrutasWords] = useState('')
   const [saving, setSaving] = useState(false)
   const topRef = useRef<HTMLDivElement>(null)
+
+  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const phaseStartTimeRef = useRef<number>(0)
 
   const {
     speak,
@@ -60,23 +58,58 @@ export function SemanticFluencyAssessment() {
     listening,
   } = useSpeech({ lang: 'pt-BR' })
 
-  // Cronômetro 60s
+  const listeningRef = useRef(listening)
+  listeningRef.current = listening
+
+  // Cronômetro 60s absoluto por timestamp (inicia automaticamente e não trava no mobile)
   useEffect(() => {
-    if (phase !== 'animais_running' && phase !== 'frutas_running') return
-    if (timeLeft <= 0) {
-      if (phase === 'animais_running') {
-        setPhase('animais_done')
-        speak('Tempo esgotado para animais. Prepare-se para a categoria frutas.')
-      } else if (phase === 'frutas_running') {
-        setPhase('result')
-        speak('Tempo esgotado. Teste de fluência semântica concluído.')
+    if (phase !== 'animais_running' && phase !== 'frutas_running') {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current)
+        timerIntervalRef.current = null
       }
       return
     }
 
-    const timer = setTimeout(() => setTimeLeft((t) => t - 1), 1000)
-    return () => clearTimeout(timer)
-  }, [phase, timeLeft])
+    phaseStartTimeRef.current = Date.now()
+    setTimeLeft(TIME_PER_CATEGORY)
+
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current)
+
+    timerIntervalRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - phaseStartTimeRef.current) / 1000)
+      const remaining = Math.max(0, TIME_PER_CATEGORY - elapsed)
+      setTimeLeft(remaining)
+
+      if (remaining <= 0) {
+        if (timerIntervalRef.current) {
+          clearInterval(timerIntervalRef.current)
+          timerIntervalRef.current = null
+        }
+        if (listeningRef.current) {
+          stopListening()
+        }
+
+        setPhase((currentPhase) => {
+          if (currentPhase === 'animais_running') {
+            speak('Tempo esgotado para a categoria Animais. Prepare-se para a categoria Frutas.')
+            return 'animais_done'
+          } else if (currentPhase === 'frutas_running') {
+            speak('Tempo esgotado. Teste de fluência semântica concluído.')
+            return 'result'
+          }
+          return currentPhase
+        })
+      }
+    }, 250)
+
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current)
+        timerIntervalRef.current = null
+      }
+    }
+  }, [phase, speak, stopListening])
 
   const computedResult: SemanticFluencyResult | null =
     phase === 'result' ? calculateSemanticFluencyResult(animaisWords, frutasWords) : null
@@ -247,21 +280,29 @@ export function SemanticFluencyAssessment() {
         </div>
 
         <Button
-          onClick={() => setPhase('animais_ready')}
+          onClick={handleStartAnimais}
           size="lg"
-          className="w-full bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-semibold"
+          className="w-full bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-bold"
         >
-          <Play className="h-4 w-4 mr-2" /> Iniciar Teste (Categoria 1: Animais)
+          <Play className="h-4 w-4 mr-2" /> Iniciar Teste (Categoria 1: Animais - 60s)
         </Button>
       </div>
     )
   }
 
-  /* ---- ANIMAIS: PRONTO OU RODANDO ---- */
-  if (phase === 'animais_ready' || phase === 'animais_running') {
+  /* ---- ANIMAIS: RODANDO COM CRONÔMETRO AUTOMÁTICO ---- */
+  if (phase === 'animais_running') {
     return (
       <div ref={topRef} className="space-y-4 animate-fade-in-up">
-        <div className="text-center py-6 rounded-xl border border-white/10" style={CARD_BG}>
+        <div
+          className="text-center py-6 rounded-xl border border-white/10 relative overflow-hidden"
+          style={CARD_BG}
+        >
+          <div className="absolute top-2 right-3">
+            <span className="text-[11px] font-mono font-bold text-[#00FFFF] bg-[#00FFFF]/10 px-2.5 py-1 rounded-full border border-[#00FFFF]/30">
+              60s regressivos
+            </span>
+          </div>
           <Badge className="bg-[#00FFFF]/20 text-[#00FFFF] border border-[#00FFFF]/40 mb-2">
             Etapa 1 de 2: Categoria Semântica
           </Badge>
@@ -272,31 +313,23 @@ export function SemanticFluencyAssessment() {
 
           <div className="my-4">
             <span className="text-6xl font-mono font-bold text-white">{timeLeft}s</span>
-            <p className="text-xs text-white/50 mt-1">Tempo restante</p>
+            <p className="text-xs text-white/50 mt-1">
+              Tempo restante (transição automática em 0s)
+            </p>
           </div>
 
-          {phase === 'animais_ready' ? (
-            <Button
-              onClick={handleStartAnimais}
-              size="lg"
-              className="mt-2 bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-bold"
-            >
-              <Play className="h-4 w-4 mr-2" /> Iniciar Cronômetro (60s)
-            </Button>
-          ) : (
-            <Button
-              onClick={handleFinishAnimais}
-              variant="outline"
-              size="sm"
-              className="mt-2 border-white/20 text-white hover:bg-white/10"
-            >
-              Concluir Etapa Antes do Tempo
-            </Button>
-          )}
+          <Button
+            onClick={handleFinishAnimais}
+            variant="outline"
+            size="sm"
+            className="mt-2 border-white/20 text-white hover:bg-white/10"
+          >
+            Avançar para Frutas Antes do Tempo
+          </Button>
         </div>
 
         <div className="space-y-2">
-          {sttSupported && phase === 'animais_running' && (
+          {sttSupported && (
             <div className="flex justify-end">
               <Button
                 type="button"
@@ -323,7 +356,7 @@ export function SemanticFluencyAssessment() {
             value={animaisWords}
             onChange={(e) => setAnimaisWords(e.target.value)}
             placeholder="Exemplo:\ncachorro\ngato\nelefante\nleão\n..."
-            disabled={phase === 'animais_ready'}
+            autoFocus
             className="min-h-[180px] bg-[rgba(17,34,64,0.85)] border-white/10 text-white font-medium"
           />
         </div>
@@ -339,30 +372,35 @@ export function SemanticFluencyAssessment() {
           <CheckCircle2 className="h-10 w-10 text-emerald-400 mx-auto mb-2" />
           <h2 className="text-white font-bold text-lg mb-1">Categoria Animais Concluída!</h2>
           <p className="text-xs text-white/70 mb-6">
-            Prepare-se para a segunda etapa. Na próxima etapa você terá 60 segundos para citar nomes
-            de FRUTAS.
+            Prepare-se para a segunda etapa. Você terá 60 segundos para citar nomes de FRUTAS com
+            cronometragem automática.
           </p>
 
           <Button
-            onClick={() => {
-              setPhase('frutas_ready')
-              setTimeLeft(TIME_PER_CATEGORY)
-            }}
+            onClick={handleStartFrutas}
             size="lg"
             className="w-full bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-bold"
           >
-            <Play className="h-4 w-4 mr-2" /> Prosseguir para Categoria FRUTAS
+            <Play className="h-4 w-4 mr-2" /> Iniciar Categoria FRUTAS (60s)
           </Button>
         </div>
       </div>
     )
   }
 
-  /* ---- FRUTAS: PRONTO OU RODANDO ---- */
-  if (phase === 'frutas_ready' || phase === 'frutas_running') {
+  /* ---- FRUTAS: RODANDO COM CRONÔMETRO AUTOMÁTICO ---- */
+  if (phase === 'frutas_running') {
     return (
       <div ref={topRef} className="space-y-4 animate-fade-in-up">
-        <div className="text-center py-6 rounded-xl border border-white/10" style={CARD_BG}>
+        <div
+          className="text-center py-6 rounded-xl border border-white/10 relative overflow-hidden"
+          style={CARD_BG}
+        >
+          <div className="absolute top-2 right-3">
+            <span className="text-[11px] font-mono font-bold text-[#00FFFF] bg-[#00FFFF]/10 px-2.5 py-1 rounded-full border border-[#00FFFF]/30">
+              60s regressivos
+            </span>
+          </div>
           <Badge className="bg-[#00FFFF]/20 text-[#00FFFF] border border-[#00FFFF]/40 mb-2">
             Etapa 2 de 2: Categoria Semântica
           </Badge>
@@ -373,31 +411,23 @@ export function SemanticFluencyAssessment() {
 
           <div className="my-4">
             <span className="text-6xl font-mono font-bold text-white">{timeLeft}s</span>
-            <p className="text-xs text-white/50 mt-1">Tempo restante</p>
+            <p className="text-xs text-white/50 mt-1">
+              Tempo restante (encerramento automático em 0s)
+            </p>
           </div>
 
-          {phase === 'frutas_ready' ? (
-            <Button
-              onClick={handleStartFrutas}
-              size="lg"
-              className="mt-2 bg-[#00FFFF] text-[#0A192F] hover:bg-[#00FFFF]/80 font-bold"
-            >
-              <Play className="h-4 w-4 mr-2" /> Iniciar Cronômetro (60s)
-            </Button>
-          ) : (
-            <Button
-              onClick={handleFinishFrutas}
-              variant="outline"
-              size="sm"
-              className="mt-2 border-white/20 text-white hover:bg-white/10"
-            >
-              Concluir e Ver Resultados
-            </Button>
-          )}
+          <Button
+            onClick={handleFinishFrutas}
+            variant="outline"
+            size="sm"
+            className="mt-2 border-white/20 text-white hover:bg-white/10"
+          >
+            Concluir e Ver Resultados
+          </Button>
         </div>
 
         <div className="space-y-2">
-          {sttSupported && phase === 'frutas_running' && (
+          {sttSupported && (
             <div className="flex justify-end">
               <Button
                 type="button"
@@ -424,7 +454,7 @@ export function SemanticFluencyAssessment() {
             value={frutasWords}
             onChange={(e) => setFrutasWords(e.target.value)}
             placeholder="Exemplo:\nmaçã\nbanana\nuva\nabacaxi\n..."
-            disabled={phase === 'frutas_ready'}
+            autoFocus
             className="min-h-[180px] bg-[rgba(17,34,64,0.85)] border-white/10 text-white font-medium"
           />
         </div>
@@ -502,6 +532,13 @@ export function SemanticFluencyAssessment() {
         >
           {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           Salvar Resultados da Fluência Semântica
+        </Button>
+
+        <Button
+          onClick={() => returnToMinhasEscalas(guestId)}
+          className="w-full bg-white/10 hover:bg-white/20 text-white font-medium border border-white/20"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para Minhas Escalas
         </Button>
 
         <Button

@@ -118,8 +118,12 @@ export function InteractiveTrail({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
+  const startTimeRef = useRef<number | null>(null)
+
   // Iniciar cronômetro
   const startTrail = useCallback(() => {
+    const now = Date.now()
+    startTimeRef.current = now
     setCurrentIndex(0)
     setVisitedIds([])
     setErrors(0)
@@ -127,20 +131,30 @@ export function InteractiveTrail({
     setElapsedSeconds(0)
     setIsCompleted(false)
     setIsRunning(true)
-    setStartTime(Date.now())
+    setStartTime(now)
   }, [])
 
-  // Timer ticker
+  // Timer ticker absoluto (à prova de drift e touch no mobile)
   useEffect(() => {
     if (isRunning && !isCompleted) {
+      if (!startTimeRef.current) {
+        startTimeRef.current = Date.now()
+      }
       timerRef.current = setInterval(() => {
-        setElapsedSeconds((prev) => prev + 1)
-      }, 1000)
+        if (startTimeRef.current) {
+          const secs = Math.max(0, Math.floor((Date.now() - startTimeRef.current) / 1000))
+          setElapsedSeconds(secs)
+        }
+      }, 250)
     } else if (timerRef.current) {
       clearInterval(timerRef.current)
+      timerRef.current = null
     }
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
     }
   }, [isRunning, isCompleted])
 
@@ -156,8 +170,10 @@ export function InteractiveTrail({
 
     // Se ainda não começou, inicia com o primeiro clique
     if (!isRunning) {
+      const now = Date.now()
+      startTimeRef.current = now
       setIsRunning(true)
-      setStartTime(Date.now())
+      setStartTime(now)
     }
 
     const expectedNode = nodes[currentIndex]
@@ -178,7 +194,15 @@ export function InteractiveTrail({
       if (nextIndex >= nodes.length) {
         setIsCompleted(true)
         setIsRunning(false)
-        const totalTime = elapsedSeconds || 1
+        if (timerRef.current) {
+          clearInterval(timerRef.current)
+          timerRef.current = null
+        }
+        const now = Date.now()
+        const totalTime = startTimeRef.current
+          ? Math.max(1, Math.round((now - startTimeRef.current) / 1000))
+          : Math.max(1, elapsedSeconds)
+        setElapsedSeconds(totalTime)
         if (onComplete) {
           onComplete({
             timeSeconds: totalTime,
@@ -206,6 +230,7 @@ export function InteractiveTrail({
 
   const handleReset = () => {
     if (timerRef.current) clearInterval(timerRef.current)
+    startTimeRef.current = null
     setCurrentIndex(0)
     setVisitedIds([])
     setErrors(0)

@@ -5,6 +5,7 @@ import {
   Play,
   Timer,
   FileText,
+  ArrowLeft,
   Volume2,
   VolumeX,
   Plus,
@@ -20,6 +21,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useSpeech } from '@/hooks/use-speech'
 import { useGuestScale } from '@/contexts/guest-scale-context'
+import { returnToMinhasEscalas } from '@/lib/assessment-redirect'
 import { saveDementiaAssessment } from '@/services/dementia-assessments'
 import { calculateTmtResult, TMT_DISCLAIMER, TMT_KEYS, type TmtResult } from '@/lib/tmt-data'
 import { InteractiveTrail } from '@/components/InteractiveTrail'
@@ -59,21 +61,32 @@ export function TmtAssessment() {
 
   const { speak, cancelSpeak, speaking, ttsSupported } = useSpeech({ lang: 'pt-BR' })
 
-  // Cronômetro ativo
+  const timerStartTimestampRef = useRef<number>(0)
+
+  // Cronômetro ativo com timestamp absoluto
   useEffect(() => {
     if (timerRunning) {
+      timerStartTimestampRef.current = Date.now()
       timerRef.current = setInterval(() => {
+        const elapsed = Math.max(
+          0,
+          Math.floor((Date.now() - timerStartTimestampRef.current) / 1000),
+        )
         if (phase === 'partA_running') {
-          setTimeA((t) => t + 1)
+          setTimeA(elapsed)
         } else if (phase === 'partB_running') {
-          setTimeB((t) => t + 1)
+          setTimeB(elapsed)
         }
-      }, 1000)
+      }, 250)
     } else if (timerRef.current) {
       clearInterval(timerRef.current)
+      timerRef.current = null
     }
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
     }
   }, [timerRunning, phase])
 
@@ -625,6 +638,13 @@ export function TmtAssessment() {
         >
           {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           Salvar Resultados do TMT
+        </Button>
+
+        <Button
+          onClick={() => returnToMinhasEscalas(guestId)}
+          className="w-full bg-white/10 hover:bg-white/20 text-white font-medium border border-white/20"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para Minhas Escalas
         </Button>
 
         <Button
