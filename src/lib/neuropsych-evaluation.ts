@@ -583,6 +583,22 @@ function assessCognicao(ctx: NeuropsychContext): DomainAssessment {
         classificacao: faixa,
       })
     }
+    if (ai.fas !== null && ai.fas !== undefined) {
+      hasScore = true
+      const s = ai.fas
+      let faixa = 'dentro do esperado'
+      if (s < 15) {
+        faixa = 'possível comprometimento (abaixo de 15)'
+        severity = severity === 'alta' ? 'alta' : 'moderada'
+      }
+      parts.push(`FAS: pontuação informada ${s} palavras, compatível com ${faixa}.`)
+      instruments.push({
+        nome: 'Fluência Verbal Fonêmica (FAS)',
+        data: dataStr,
+        pontuacao: `${s} palavras`,
+        classificacao: faixa,
+      })
+    }
   }
 
   // VRC (performance cognitiva em sessão de foco)

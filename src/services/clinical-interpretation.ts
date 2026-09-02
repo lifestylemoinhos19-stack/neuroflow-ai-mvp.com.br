@@ -25,6 +25,7 @@ import {
   tmtKeys,
   semanticFluencyKeys,
   ftdrsKeys,
+  fasKeys,
   wursKeys,
   aq10Keys,
   aq50Keys,
@@ -34,6 +35,7 @@ import {
 } from '@/lib/clinical-screening'
 import { getSdsImpairmentLevel } from '@/lib/sds-data'
 import { getFtdrsSeverity } from '@/lib/ftdrs-data'
+import { calculateFasResult, parseWords } from '@/lib/fas-data'
 
 /**
  * Análise por domínio (humor, ansiedade, cognição, comportamento,
@@ -121,6 +123,8 @@ export interface InterpretationResult {
   fluenciaSemanticaTotalScore?: number | null
   ftdrs?: number | null
   ftdrsSeverity?: string | null
+  fas?: number | null
+  fasTotal?: number | null
   findings: ScreeningFinding[]
   comorbidities: string[]
   /** Análise por domínio com severidade estimada (linguagem cautelosa). */
@@ -157,6 +161,39 @@ function hasAnyKey(responses: RawResponse[], keys: string[]): boolean {
 function getSingleScore(responses: RawResponse[], key: string): number | null {
   const r = responses.find((resp) => resp.question_key === key)
   return r ? parseValue(r.response_value) : null
+}
+
+/**
+ * Calcula o escore total do FAS (F + A + S) a partir das respostas brutas
+ * (chaves fas_f_words / fas_a_words / fas_s_words, com valores salvos como
+ * JSON string ou array de palavras). Retorna null quando nenhuma das chaves
+ * está presente.
+ */
+function getFasScoreFromRaw(responses: RawResponse[]): number | null {
+  const wordInputs: Record<string, string> = {}
+  for (const key of fasKeys) {
+    const r = responses.find((resp) => resp.question_key === key)
+    if (!r) continue
+    const val = r.response_value
+    let words: string[] = []
+    if (Array.isArray(val)) {
+      words = val.map((w) => String(w))
+    } else if (typeof val === 'string') {
+      try {
+        const parsed: unknown = JSON.parse(val)
+        words = Array.isArray(parsed) ? parsed.map((w) => String(w)) : parseWords(val)
+      } catch {
+        words = parseWords(val)
+      }
+    }
+    const letter = key
+      .replace(/^fas_/, '')
+      .replace(/_words$/, '')
+      .toUpperCase()
+    wordInputs[letter] = words.join('\n')
+  }
+  if (Object.keys(wordInputs).length === 0) return null
+  return calculateFasResult(wordInputs).totalUnique
 }
 
 const ANAMNESIS_KEYS = [
@@ -398,6 +435,7 @@ export async function getSessionInterpretation(
     ? scoreQuestionnaire(raw, ftdrsKeys)
     : getSingleScore(raw, 'ftdrs_total')
   const ftdrsSeverity = ftdrsScore !== null ? getFtdrsSeverity(ftdrsScore).label : null
+  const fasScore = getFasScoreFromRaw(raw) ?? getSingleScore(raw, 'fas_total')
 
   const tmtAScore = getSingleScore(raw, 'tmt_a_time')
   const tmtBScore = getSingleScore(raw, 'tmt_b_time')
@@ -445,6 +483,7 @@ export async function getSessionInterpretation(
   let currentFluenciaFrutasScore = fluenciaFrutasScore
   let currentFluenciaSemanticaTotalScore = fluenciaSemanticaTotalScore
   let currentFtdrsScore = ftdrsScore
+  let currentFasScore = fasScore
 
   const allScores = [
     currentPhq9Score,
@@ -470,6 +509,7 @@ export async function getSessionInterpretation(
     currentFluenciaAnimaisScore,
     currentFluenciaFrutasScore,
     currentFtdrsScore,
+    currentFasScore,
   ]
   let hasScaleData = allScores.some((s) => s !== null && s !== 0)
 
@@ -497,6 +537,7 @@ export async function getSessionInterpretation(
     const isVanderbiltPattern = hasAnyKey(raw, vanderbiltKeys)
     const isScqPattern = hasAnyKey(raw, scqKeys)
     const isFtdrsPattern = hasAnyKey(raw, ftdrsKeys)
+    const isFasPattern = hasAnyKey(raw, fasKeys)
 
     const matchesKnownScalePattern =
       isBdiPattern ||
@@ -519,7 +560,8 @@ export async function getSessionInterpretation(
       isMeemPattern ||
       isTmtPattern ||
       isSemanticFluencyPattern ||
-      isFtdrsPattern
+      isFtdrsPattern ||
+      isFasPattern
 
     if (matchesKnownScalePattern) {
       const { data: sessionRow } = await supabase
@@ -594,6 +636,8 @@ export async function getSessionInterpretation(
             currentScqScore = validTotalScore
           } else if (rawScaleType.includes('ftdrs') || isFtdrsPattern) {
             currentFtdrsScore = validTotalScore
+          } else if (rawScaleType.includes('fas') || isFasPattern) {
+            currentFasScore = validTotalScore
           }
         }
 
@@ -621,6 +665,7 @@ export async function getSessionInterpretation(
           currentFluenciaAnimaisScore,
           currentFluenciaFrutasScore,
           currentFtdrsScore,
+          currentFasScore,
         ]
         hasScaleData = fallbackScores.some((s) => s !== null && s !== 0)
       }
@@ -652,6 +697,7 @@ export async function getSessionInterpretation(
     fluenciaAnimais: currentFluenciaAnimaisScore,
     fluenciaFrutas: currentFluenciaFrutasScore,
     fluenciaSemanticaTotal: currentFluenciaSemanticaTotalScore,
+    fas: currentFasScore,
   })
 
   let suggestion = screening.fullSuggestion
@@ -686,6 +732,7 @@ export async function getSessionInterpretation(
     fluenciaFrutasScore: currentFluenciaFrutasScore,
     fluenciaSemanticaTotalScore: currentFluenciaSemanticaTotalScore,
     ftdrs: currentFtdrsScore,
+    fas: currentFasScore,
     cognitiveVrc,
   })
   const hypotheses = buildHypotheses(screening.findings)
@@ -760,6 +807,8 @@ export async function getSessionInterpretation(
       fluenciaSemanticaTotalScore: null,
       ftdrs: null,
       ftdrsSeverity: null,
+      fas: null,
+      fasTotal: null,
       snapIvInattention: null,
       snapIvHyperactivity: null,
       globalSeverity: 'low',
@@ -800,6 +849,8 @@ export async function getSessionInterpretation(
     fluenciaSemanticaTotalScore: currentFluenciaSemanticaTotalScore,
     ftdrs: currentFtdrsScore,
     ftdrsSeverity,
+    fas: currentFasScore,
+    fasTotal: currentFasScore,
     snapIvInattention: snapResult.inattentionAvg || null,
     snapIvHyperactivity: snapResult.hyperactivityAvg || null,
     globalSeverity: computeGlobalSeverity({
@@ -828,6 +879,7 @@ export async function getSessionInterpretation(
       fluenciaFrutas: currentFluenciaFrutasScore,
       fluenciaSemanticaTotal: currentFluenciaSemanticaTotalScore,
       ftdrs: currentFtdrsScore,
+      fas: currentFasScore,
     }),
     findings: screening.findings,
     comorbidities: screening.comorbidities,
@@ -865,6 +917,7 @@ interface ScoreBag {
   fluenciaFrutasScore?: number | null
   fluenciaSemanticaTotalScore?: number | null
   ftdrs?: number | null
+  fas?: number | null
   wurs25Score?: number | null
   aq10Score?: number | null
   aq50Score?: number | null
@@ -1054,6 +1107,14 @@ function domainCognicao(s: ScoreBag): { severity: Sev; descricao: string } {
       sev = sev === 'alta' ? 'alta' : 'moderada'
     }
     parts.push(`FTDRS ${s.ftdrs}/45 — compatível com ${faixa}.`)
+  }
+  if (s.fas !== null && s.fas !== undefined) {
+    let faixa = 'dentro do esperado'
+    if (s.fas < 15) {
+      faixa = 'possível comprometimento (abaixo de 15)'
+      sev = sev === 'alta' ? 'alta' : 'moderada'
+    }
+    parts.push(`FAS ${s.fas} — compatível com ${faixa}.`)
   }
   if (s.cognitiveVrc !== null && s.cognitiveVrc < 0.5) {
     parts.push(`VRC ${s.cognitiveVrc.toFixed(2)} — abaixo do esperado.`)
