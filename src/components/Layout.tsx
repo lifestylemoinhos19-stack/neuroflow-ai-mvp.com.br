@@ -103,32 +103,68 @@ export default function Layout() {
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 border-r bg-white">
-        <div className="h-16 flex items-center px-6 border-b border-slate-100">
-          <img
-            src="/logo.svg"
-            alt="NeuroFlow AI"
-            className="h-8 w-8 mr-2.5 rounded-md object-contain"
-          />
-          <span className="font-display font-bold text-lg text-slate-800">NeuroFlow AI</span>
+        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100">
+          <div className="flex items-center">
+            <img
+              src="/logo.svg"
+              alt="NeuroFlow AI"
+              className="h-8 w-8 mr-2.5 rounded-md object-contain"
+            />
+            <div>
+              <span className="font-display font-bold text-base text-slate-900 block leading-tight">
+                NeuroFlow AI
+              </span>
+              <span className="text-[10px] text-[#7B5B3A] font-semibold block leading-tight">
+                Casa Branca Saúde
+              </span>
+            </div>
+          </div>
         </div>
-        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path
+            const isDashboard = item.path === '/dashboard'
+
             return (
               <Link
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  'flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                  'flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
+                  isDashboard
+                    ? isActive
+                      ? 'bg-gradient-to-r from-[#7B5B3A] to-[#6D5D4B] text-white shadow-md font-semibold'
+                      : 'bg-[#FAF5EB] text-[#7B5B3A] border border-[#C4A35A]/35 hover:bg-[#FAF5EB]/80 hover:border-[#C4A35A] font-semibold shadow-xs'
+                    : isActive
+                      ? 'bg-primary/10 text-primary font-semibold'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
                 )}
               >
-                <item.icon
-                  className={cn('h-5 w-5 mr-3', isActive ? 'text-primary' : 'text-slate-400')}
-                />
-                {item.label}
+                <div className="flex items-center min-w-0">
+                  <item.icon
+                    className={cn(
+                      'h-5 w-5 mr-3 shrink-0',
+                      isDashboard
+                        ? isActive
+                          ? 'text-[#C4A35A]'
+                          : 'text-[#7B5B3A]'
+                        : isActive
+                          ? 'text-primary'
+                          : 'text-slate-400',
+                    )}
+                  />
+                  <span className="truncate">{item.label}</span>
+                </div>
+                {isDashboard && (
+                  <span
+                    className={cn(
+                      'text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-full ml-1.5 shrink-0',
+                      isActive ? 'bg-[#C4A35A] text-slate-950' : 'bg-[#7B5B3A]/15 text-[#7B5B3A]',
+                    )}
+                  >
+                    Clínico
+                  </span>
+                )}
               </Link>
             )
           })}
@@ -166,7 +202,20 @@ export default function Layout() {
               />
             </div>
           </div>
-          <div className="flex items-center space-x-3 sm:space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            {/* Atalho de destaque para o Dashboard Clínico */}
+            {location.pathname !== '/dashboard' && (isAdmin || isDoctor) && (
+              <Button
+                asChild
+                size="sm"
+                className="hidden lg:flex bg-[#FAF5EB] hover:bg-[#FAF5EB]/90 text-[#7B5B3A] border border-[#C4A35A]/50 rounded-full h-8 px-3 font-semibold text-xs shadow-xs"
+              >
+                <Link to="/dashboard">
+                  <LayoutDashboard className="h-3.5 w-3.5 mr-1.5 text-[#C4A35A]" />
+                  Dashboard Clínico
+                </Link>
+              </Button>
+            )}
             <div className="hidden sm:flex items-center bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-medium border border-emerald-100">
               <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
               MFA Ativo
@@ -175,7 +224,7 @@ export default function Layout() {
               <Bell className="h-5 w-5" />
               <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
             </Button>
-            <div className="h-8 w-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
+            <div className="h-8 w-8 rounded-full bg-[#FAF5EB] border border-[#C4A35A]/40 text-[#7B5B3A] flex items-center justify-center font-bold text-sm">
               {user?.name.charAt(0) || 'U'}
             </div>
           </div>
@@ -219,19 +268,36 @@ export default function Layout() {
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around pb-safe z-50">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path
+          const isDashboard = item.path === '/dashboard'
+
           return (
             <Link
               key={item.path}
               to={item.path}
               className={cn(
-                'flex flex-col items-center py-3 px-2 w-full',
-                isActive ? 'text-primary' : 'text-slate-500',
+                'flex flex-col items-center py-2.5 px-1.5 w-full transition-colors',
+                isDashboard
+                  ? isActive
+                    ? 'text-[#7B5B3A] font-bold'
+                    : 'text-[#7B5B3A]/80 font-semibold'
+                  : isActive
+                    ? 'text-primary font-medium'
+                    : 'text-slate-500',
               )}
             >
               <item.icon
-                className={cn('h-5 w-5 mb-1', isActive ? 'text-primary' : 'text-slate-400')}
+                className={cn(
+                  'h-5 w-5 mb-1',
+                  isDashboard
+                    ? isActive
+                      ? 'text-[#C4A35A] stroke-[2.5]'
+                      : 'text-[#7B5B3A]'
+                    : isActive
+                      ? 'text-primary'
+                      : 'text-slate-400',
+                )}
               />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="text-[10px] truncate max-w-[64px] text-center">{item.label}</span>
             </Link>
           )
         })}

@@ -65,7 +65,8 @@ export function AdminToolbar() {
   if (!isAdmin) return null
 
   const navButtons = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+    { icon: LayoutDashboard, label: 'Dashboard Clínico', path: '/dashboard', highlight: true },
+    { icon: Shield, label: 'Painel Admin', path: '/admin/painel' },
     { icon: ClipboardList, label: 'Escalas', path: '/scales' },
     { icon: Brain, label: 'Anamnese', path: '/anamnesis' },
     { icon: FileText, label: 'Documentos', path: '/documentos' },
@@ -95,12 +96,16 @@ export function AdminToolbar() {
                 <Button
                   key={btn.path}
                   size="sm"
-                  variant="outline"
+                  variant={btn.highlight ? 'default' : 'outline'}
                   onClick={() => {
                     navigate(btn.path)
                     setOpen(false)
                   }}
-                  className="border-[#00FFFF]/30 text-[#00FFFF] hover:bg-[#00FFFF]/10"
+                  className={cn(
+                    btn.highlight
+                      ? 'bg-[#C4A35A] hover:bg-[#b09045] text-slate-950 font-bold border-none shadow-md'
+                      : 'border-[#00FFFF]/30 text-[#00FFFF] hover:bg-[#00FFFF]/10',
+                  )}
                 >
                   <btn.icon className="h-3 w-3 mr-1" /> {btn.label}
                 </Button>
