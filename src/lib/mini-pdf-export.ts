@@ -129,60 +129,75 @@ export async function exportMiniPdf(report: MiniReportData): Promise<void> {
     if (y + needed > pageHeight - 24) {
       doc.addPage()
       y = 18
+      return true
     }
+    return false
   }
   const writeSectionHeader = (index: number, text: string) => {
-    ensureSpace(10)
+    ensureSpace(18)
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(12)
+    doc.setFontSize(11)
     doc.setTextColor(primary[0], primary[1], primary[2])
     doc.text(`${index}. ${sanitizePdfText(text)}`, marginX, y)
     doc.setDrawColor(secondary[0], secondary[1], secondary[2])
     doc.setLineWidth(0.3)
     doc.line(marginX, y + 2, pageWidth - marginX, y + 2)
-    y += 7
+    y += 6.5
     doc.setFont('helvetica', 'normal')
-    doc.setFontSize(10)
+    doc.setFontSize(8.5)
     doc.setTextColor(dark[0], dark[1], dark[2])
   }
-  const writeParagraph = (text: string, gap = 4) => {
+  const writeParagraph = (text: string, gap = 3) => {
     const clean = sanitizePdfText(text)
-    const lines = doc.splitTextToSize(clean, pageWidth - marginX * 2)
-    ensureSpace(lines.length * 5 + 2)
-    doc.text(lines, marginX, y)
-    y += lines.length * 5 + gap
+    const paragraphs = clean.split(/\n\s*\n/).filter((p) => p.trim().length > 0)
+    if (paragraphs.length === 0) return
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8.5)
+    doc.setTextColor(dark[0], dark[1], dark[2])
+    for (let i = 0; i < paragraphs.length; i++) {
+      const p = paragraphs[i]
+      const lines = doc.splitTextToSize(p, pageWidth - marginX * 2)
+      ensureSpace(lines.length * 4 + 2)
+      doc.text(lines, marginX, y)
+      y += lines.length * 4 + (i < paragraphs.length - 1 ? 3 : gap)
+    }
   }
   const writeBullet = (text: string) => {
     const clean = sanitizePdfText(text)
     const indent = marginX + 4
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8.5)
+    doc.setTextColor(dark[0], dark[1], dark[2])
     const lines = doc.splitTextToSize(clean, pageWidth - marginX * 2 - 6)
-    ensureSpace(lines.length * 5 + 1)
+    ensureSpace(lines.length * 4 + 1)
     doc.text('•', marginX, y)
     doc.text(lines, indent, y)
-    y += lines.length * 5 + 1
+    y += lines.length * 4 + 1
   }
   const writeLabel = (label: string, value: string, valueIndent = 42) => {
-    ensureSpace(6)
+    ensureSpace(5.5)
     doc.setFont('helvetica', 'bold')
+    doc.setFontSize(8.5)
     doc.text(sanitizePdfText(label), marginX, y)
     doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8.5)
     const maxValW = pageWidth - marginX * 2 - valueIndent
     const valLines = doc.splitTextToSize(sanitizePdfText(value), maxValW)
     doc.text(valLines, marginX + valueIndent, y)
-    y += Math.max(6, valLines.length * 4.5 + 1.5)
+    y += Math.max(5.5, valLines.length * 3.8 + 1.2)
   }
   const writeVisualSeparator = (label: string) => {
-    ensureSpace(10)
+    ensureSpace(22)
     doc.setFillColor(accent[0], accent[1], accent[2])
     doc.setDrawColor(secondary[0], secondary[1], secondary[2])
-    doc.roundedRect(marginX, y, pageWidth - marginX * 2, 8, 1, 1, 'S')
+    doc.roundedRect(marginX, y, pageWidth - marginX * 2, 7, 1, 1, 'S')
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(8)
+    doc.setFontSize(7.5)
     doc.setTextColor(primary[0], primary[1], primary[2])
-    doc.text(sanitizePdfText(label), marginX + 3, y + 5.5)
-    y += 12
+    doc.text(sanitizePdfText(label), marginX + 3, y + 4.8)
+    y += 10
     doc.setFont('helvetica', 'normal')
-    doc.setFontSize(10)
+    doc.setFontSize(8.5)
     doc.setTextColor(dark[0], dark[1], dark[2])
   }
 
@@ -286,32 +301,51 @@ export async function exportMiniPdf(report: MiniReportData): Promise<void> {
 
   // --- Seção 5: Tabela de módulos (resultado detalhado do MINI) ---
   writeSectionHeader(5, 'INSTRUMENTOS APLICADOS (MÓDULOS MINI 5.0.0)')
-  const colX = [marginX, marginX + 14, marginX + 65, marginX + 105, pageWidth - marginX]
-  const rowH = 6.5
-  const drawTableRow = (cells: string[], isHeader = false) => {
-    ensureSpace(rowH + 1)
-    if (isHeader) {
-      doc.setFillColor(accent[0], accent[1], accent[2])
-      doc.rect(marginX, y, pageWidth - marginX * 2, rowH, 'F')
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(8.5)
-      doc.setTextColor(primary[0], primary[1], primary[2])
-    } else {
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(8)
-      doc.setTextColor(dark[0], dark[1], dark[2])
-    }
-    cells.forEach((cell, i) => {
-      const maxW = colX[i + 1] - colX[i] - 2
-      const lines = doc.splitTextToSize(sanitizePdfText(cell), maxW)
-      doc.text(lines.slice(0, 2), colX[i] + 1.5, y + 4.2)
+  const colX = [marginX, marginX + 12, marginX + 76, marginX + 102, pageWidth - marginX]
+  const tableHeaders = ['Mód', 'Descrição', 'Resultado', 'Detalhes / Critérios']
+
+  const renderTableHeader = () => {
+    const headerH = 6.5
+    doc.setFillColor(accent[0], accent[1], accent[2])
+    doc.rect(marginX, y, pageWidth - marginX * 2, headerH, 'F')
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(8)
+    doc.setTextColor(primary[0], primary[1], primary[2])
+    tableHeaders.forEach((cell, i) => {
+      doc.text(cell, colX[i] + 1.5, y + 4.2)
     })
     doc.setDrawColor(secondary[0], secondary[1], secondary[2])
-    doc.setLineWidth(isHeader ? 0.3 : 0.1)
-    doc.line(marginX, y + rowH, pageWidth - marginX, y + rowH)
-    y += rowH
+    doc.setLineWidth(0.3)
+    doc.line(marginX, y + headerH, pageWidth - marginX, y + headerH)
+    y += headerH
   }
-  drawTableRow(['Mód', 'Descrição', 'Resultado', 'Detalhes / Critérios'], true)
+
+  const drawTableRow = (cells: string[]) => {
+    const wrappedCells = cells.map((cell, i) => {
+      const maxW = colX[i + 1] - colX[i] - 2.5
+      return doc.splitTextToSize(sanitizePdfText(cell), maxW)
+    })
+    const maxLinesInRow = Math.max(1, ...wrappedCells.map((lines) => lines.length))
+    const rowHeight = Math.max(6.5, maxLinesInRow * 3.8 + 2.5)
+
+    if (ensureSpace(rowHeight + 1)) {
+      renderTableHeader()
+    }
+
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8)
+    doc.setTextColor(dark[0], dark[1], dark[2])
+
+    wrappedCells.forEach((lines, i) => {
+      doc.text(lines, colX[i] + 1.5, y + 4.0)
+    })
+    doc.setDrawColor(secondary[0], secondary[1], secondary[2])
+    doc.setLineWidth(0.1)
+    doc.line(marginX, y + rowHeight, pageWidth - marginX, y + rowHeight)
+    y += rowHeight
+  }
+
+  renderTableHeader()
   for (const r of report.moduleResults) {
     drawTableRow([r.letter, r.title, r.label, r.details || '—'])
   }
@@ -335,47 +369,54 @@ export async function exportMiniPdf(report: MiniReportData): Promise<void> {
   // --- LACUNAS E ENCAMINHAMENTOS ---
   writeVisualSeparator('LACUNAS, ITENS A CONFIRMAR E ENCAMINHAMENTOS')
 
-  // Seções 8 e 9
-  for (let i = 7; i < 9; i++) {
-    const section = neuropsych.sections[i]
-    writeSectionHeader(section.index, section.title)
-    for (const line of section.lines) writeBullet(line)
-    y += 2
-  }
+  // Seção 8: LACUNAS E ITENS A CONFIRMAR
+  const sec8 = neuropsych.sections[7]
+  writeSectionHeader(sec8.index, sec8.title)
+  for (const line of sec8.lines) writeBullet(line)
+  y += 2
 
-  // --- Alerta de risco iminente (se houver) ---
+  // --- Bloco de Risco Iminente (inserido com destaque próprio antes da Seção 9) ---
   if (neuropsych.riscoIminente) {
-    ensureSpace(16)
-    doc.setFillColor(0xfd, 0xe6, 0xe6)
-    doc.setDrawColor(0xdc, 0x26, 0x26)
-    doc.roundedRect(marginX, y, pageWidth - marginX * 2, 14, 2, 2, 'S')
+    const alertText = sanitizePdfText(neuropsych.riscoIminente)
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(8)
-    doc.setTextColor(0xb9, 0x1c, 0x1c)
     const alertLines = doc.splitTextToSize(
-      sanitizePdfText(neuropsych.riscoIminente),
-      pageWidth - marginX * 2 - 6,
+      `ALERTA DE RISCO IMINENTE: ${alertText}`,
+      pageWidth - marginX * 2 - 8,
     )
-    doc.text(alertLines, marginX + 3, y + 5)
-    y += 18
+    const alertBoxH = Math.max(14, alertLines.length * 3.8 + 6)
+    ensureSpace(alertBoxH + 4)
+    doc.setFillColor(0xfd, 0xe6, 0xe6)
+    doc.setDrawColor(0xdc, 0x26, 0x26)
+    doc.setLineWidth(0.4)
+    doc.roundedRect(marginX, y, pageWidth - marginX * 2, alertBoxH, 1.5, 1.5, 'FD')
+    doc.setTextColor(0xb9, 0x1c, 0x1c)
+    doc.text(alertLines, marginX + 4, y + 4.8)
+    y += alertBoxH + 3
   }
+
+  // Seção 9: ENCAMINHAMENTOS SUGERIDOS
+  const sec9 = neuropsych.sections[8]
+  writeSectionHeader(sec9.index, sec9.title)
+  for (const line of sec9.lines) writeBullet(line)
+  y += 2
 
   // --- Seção 10: LIMITAÇÕES ---
   const sec10 = neuropsych.sections[9]
   writeSectionHeader(sec10.index, sec10.title)
-  ensureSpace(16)
+  ensureSpace(14)
   doc.setFillColor(accent[0], accent[1], accent[2])
   doc.setDrawColor(secondary[0], secondary[1], secondary[2])
-  doc.roundedRect(marginX, y, pageWidth - marginX * 2, 14, 2, 2, 'S')
+  doc.roundedRect(marginX, y, pageWidth - marginX * 2, 12, 1.5, 1.5, 'S')
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(8)
+  doc.setFontSize(7.5)
   doc.setTextColor(primary[0], primary[1], primary[2])
   const finalDisclaimerLines = doc.splitTextToSize(
     sanitizePdfText(NEUROPSYCH_DISCLAIMER),
     pageWidth - marginX * 2 - 6,
   )
-  doc.text(finalDisclaimerLines, marginX + 3, y + 5)
-  y += 18
+  doc.text(finalDisclaimerLines, marginX + 3, y + 4.5)
+  y += 15
 
   // --- Assinatura + QR Code ---
   ensureSpace(40)
