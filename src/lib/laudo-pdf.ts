@@ -220,10 +220,18 @@ async function loadLaudoContext(guestId: string | null, testId: string): Promise
     )
   }
 
+  const hasRawResponses = (aiInterpretation.rawCount ?? 0) > 0
   if (!aiInterpretation.hasScaleData && !interpretation.trim()) {
-    throw new Error(
-      `Não foi possível gerar o laudo: ${aiInterpretation.suggestion || 'Nenhum dado válido de escala encontrado nesta sessão.'}`,
-    )
+    if (!hasRawResponses) {
+      throw new Error(
+        `Não foi possível gerar o laudo: ${aiInterpretation.suggestion || 'Nenhum dado de escala encontrado nesta sessão.'}`,
+      )
+    }
+    // Quando existem respostas brutas mas o escore não pôde ser calculado automaticamente,
+    // degrada graciosamente permitindo a emissão com nota de revisão clínica pendente.
+    interpretation =
+      aiInterpretation.suggestion ||
+      'Instrumento aplicado com respostas registradas; escore não calculável automaticamente / pendente de revisão clínica.'
   }
 
   if (aiInterpretation.hasScaleData) {
@@ -355,14 +363,16 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
 
   // Escores reais das escalas (FTDRS, WURS-25, FAS etc.) propagados para o PDF.
   // Vazio/null → não propagate (o campo simplesmente não aparece no laudo).
+  // Nota: zero (0) é um escore válido e não deve ser descartado.
   const toFiniteScore = (v: unknown): number | null =>
-    typeof v === 'number' && isFinite(v) && v > 0 ? v : null
+    typeof v === 'number' && isFinite(v) && v >= 0 ? v : null
 
   const realScaleType = aiInterpretation?.scaleType || null
   const realScore =
     toFiniteScore(aiInterpretation?.ftdrs) ??
     toFiniteScore((aiInterpretation as any)?.wurs25Score) ??
     toFiniteScore(aiInterpretation?.fas) ??
+    toFiniteScore(aiInterpretation?.fasTotal) ??
     toFiniteScore(input.score) ??
     null
 
@@ -743,14 +753,16 @@ export async function generateLaudoJSON(
     anamnesis?.developmentalHistory || (interpretation.trim() ? interpretation.trim() : null)
 
   // Mesmo padrão do generateLaudoPDF: propaga os escores reais das escalas.
+  // Nota: zero (0) é um escore válido e não deve ser descartado.
   const toFiniteScore = (v: unknown): number | null =>
-    typeof v === 'number' && isFinite(v) && v > 0 ? v : null
+    typeof v === 'number' && isFinite(v) && v >= 0 ? v : null
 
   const realScaleType = aiInterpretation?.scaleType || null
   const realScore =
     toFiniteScore(aiInterpretation?.ftdrs) ??
     toFiniteScore((aiInterpretation as any)?.wurs25Score) ??
     toFiniteScore(aiInterpretation?.fas) ??
+    toFiniteScore(aiInterpretation?.fasTotal) ??
     toFiniteScore(input.score) ??
     null
 

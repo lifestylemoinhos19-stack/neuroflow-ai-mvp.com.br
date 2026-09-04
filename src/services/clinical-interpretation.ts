@@ -94,6 +94,7 @@ export interface InterpretationResult {
   scaleName?: string
   severity?: string
   interpretation?: string
+  rawCount?: number
   anamnesisData?: AnamnesisData | null
   phq9Score: number
   gad7Score: number
@@ -199,6 +200,56 @@ function getWurs25ScoreFromRaw(responses: RawResponse[]): number | null {
 }
 
 /**
+ * Desempacota recursivamente valores serializados em JSON (lida com double-JSON
+ * ou strings escapadas como "\"[\"faca\",\"forca\"]\"").
+ */
+function unwrapJsonValue(val: unknown): unknown {
+  let current: unknown = val
+  let iterations = 0
+  while (typeof current === 'string' && iterations < 5) {
+    const trimmed = current.trim()
+    if (
+      (trimmed.startsWith('[') && trimmed.endsWith(']')) ||
+      (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+      (trimmed.startsWith('"') && trimmed.endsWith('"'))
+    ) {
+      try {
+        current = JSON.parse(trimmed)
+        iterations++
+      } catch {
+        break
+      }
+    } else {
+      break
+    }
+  }
+  return current
+}
+
+/**
+ * Normaliza e limpa palavras extraídas de respostas brutas, removendo
+ * caracteres de escape ou formatação JSON residuais (como [, ], ", ', barras invertidas).
+ */
+function sanitizeExtractedWords(words: string[]): string[] {
+  return words.map((w) => w.replace(/[[\]"'\\]/g, '').trim()).filter((w) => w.length > 0)
+}
+
+/**
+ * Extrai lista de palavras de valores brutos armazenados (array, string simples
+ * ou JSON/double-JSON escapado).
+ */
+function extractWordsFromRawValue(val: unknown): string[] {
+  const unwrapped = unwrapJsonValue(val)
+  if (Array.isArray(unwrapped)) {
+    return sanitizeExtractedWords(unwrapped.map((item) => String(item)))
+  }
+  if (typeof unwrapped === 'string') {
+    return sanitizeExtractedWords(parseWords(unwrapped))
+  }
+  return []
+}
+
+/**
  * Calcula o escore total do FAS (F + A + S) a partir das respostas brutas
  * (chaves fas_f_words / fas_a_words / fas_s_words, com valores salvos como
  * JSON string ou array de palavras). Retorna null quando nenhuma das chaves
@@ -209,18 +260,7 @@ function getFasScoreFromRaw(responses: RawResponse[]): number | null {
   for (const key of fasKeys) {
     const r = responses.find((resp) => resp.question_key === key)
     if (!r) continue
-    const val = r.response_value
-    let words: string[] = []
-    if (Array.isArray(val)) {
-      words = val.map((w) => String(w))
-    } else if (typeof val === 'string') {
-      try {
-        const parsed: unknown = JSON.parse(val)
-        words = Array.isArray(parsed) ? parsed.map((w) => String(w)) : parseWords(val)
-      } catch {
-        words = parseWords(val)
-      }
-    }
+    const words = extractWordsFromRawValue(r.response_value)
     const letter = key
       .replace(/^fas_/, '')
       .replace(/_words$/, '')
@@ -361,10 +401,17 @@ export function getAnamnesisInterpretation(
     },
   }
 
+  const anamnesisRawCount = Array.isArray(raw)
+    ? raw.length
+    : raw && typeof raw === 'object'
+      ? Object.keys(raw).length
+      : 0
+
   return {
     scaleType: 'anamnesis',
     scaleName: 'Anamnese Clínica',
     hasScaleData: true,
+    rawCount: anamnesisRawCount,
     anamnesisData,
     severity: 'Qualitativa',
     interpretation: 'Avaliação clínica qualitativa — consulte os dados da anamnese abaixo.',
@@ -523,6 +570,56 @@ export async function getSessionInterpretation(
   let currentFtdrsSeverity = ftdrsSeverity
   let currentFasScore = fasScore
 
+  const isYbocsPattern = hasAnyKey(raw, ybocsKeys)
+  const isBdiPattern = hasAnyKey(raw, bdiKeys)
+  const isBaiPattern = hasAnyKey(raw, baiKeys)
+  const isHamdPattern = hasAnyKey(raw, hamdKeys)
+  const isHamaPattern = hasAnyKey(raw, hamaKeys)
+  const isSdsPattern = hasAnyKey(raw, sdsKeys)
+  const isPhq9Pattern = hasAnyKey(raw, phq9Keys)
+  const isGad7Pattern = hasAnyKey(raw, gad7Keys)
+  const isAssqPattern = hasAnyKey(raw, assqKeys)
+  const isSnapPattern = hasSnapData
+  const isAsrsPattern = hasAnyKey(raw, asrs18Keys)
+  const isMocaPattern =
+    hasAnyKey(raw, mocaKeys) ||
+    hasAnyKey(raw, mocaTotalKeys) ||
+    raw.some((r) => r.question_key?.startsWith('moca_')) === true
+  const isMeemPattern = hasAnyKey(raw, meemKeys)
+  const isTmtPattern = hasAnyKey(raw, tmtKeys)
+  const isSemanticFluencyPattern = hasAnyKey(raw, semanticFluencyKeys)
+  const isWursPattern = hasAnyKey(raw, wursKeys)
+  const isAq10Pattern = hasAnyKey(raw, aq10Keys)
+  const isAq50Pattern = hasAnyKey(raw, aq50Keys)
+  const isVanderbiltPattern = hasAnyKey(raw, vanderbiltKeys)
+  const isScqPattern = hasAnyKey(raw, scqKeys)
+  const isFtdrsPattern = hasAnyKey(raw, ftdrsKeys)
+  const isFasPattern = hasAnyKey(raw, fasKeys)
+
+  const matchesKnownScalePattern =
+    isBdiPattern ||
+    isBaiPattern ||
+    isYbocsPattern ||
+    isHamdPattern ||
+    isHamaPattern ||
+    isSdsPattern ||
+    isPhq9Pattern ||
+    isGad7Pattern ||
+    isAssqPattern ||
+    isSnapPattern ||
+    isAsrsPattern ||
+    isWursPattern ||
+    isAq10Pattern ||
+    isAq50Pattern ||
+    isVanderbiltPattern ||
+    isScqPattern ||
+    isMocaPattern ||
+    isMeemPattern ||
+    isTmtPattern ||
+    isSemanticFluencyPattern ||
+    isFtdrsPattern ||
+    isFasPattern
+
   const allScores = [
     currentPhq9Score,
     currentGad7Score,
@@ -549,172 +646,124 @@ export async function getSessionInterpretation(
     currentFtdrsScore,
     currentFasScore,
   ]
-  let hasScaleData = allScores.some((s) => s !== null && s !== 0)
 
-  // Fallback para quando a descriptografia falha (ex: parseValue retorna NaN -> 0)
-  // mas as chaves batem com uma escala conhecida e o metadata da sessão tem scores pré-calculados
-  if (!hasScaleData && raw.length > 0) {
-    const isYbocsPattern = hasAnyKey(raw, ybocsKeys)
-    const isBdiPattern = hasAnyKey(raw, bdiKeys)
-    const isBaiPattern = hasAnyKey(raw, baiKeys)
-    const isHamdPattern = hasAnyKey(raw, hamdKeys)
-    const isHamaPattern = hasAnyKey(raw, hamaKeys)
-    const isSdsPattern = hasAnyKey(raw, sdsKeys)
-    const isPhq9Pattern = hasAnyKey(raw, phq9Keys)
-    const isGad7Pattern = hasAnyKey(raw, gad7Keys)
-    const isAssqPattern = hasAnyKey(raw, assqKeys)
-    const isSnapPattern = hasSnapData
-    const isAsrsPattern = hasAnyKey(raw, asrs18Keys)
-    const isMocaPattern =
-      hasAnyKey(raw, mocaKeys) ||
-      hasAnyKey(raw, mocaTotalKeys) ||
-      raw.some((r) => r.question_key?.startsWith('moca_')) === true
-    const isMeemPattern = hasAnyKey(raw, meemKeys)
-    const isTmtPattern = hasAnyKey(raw, tmtKeys)
-    const isSemanticFluencyPattern = hasAnyKey(raw, semanticFluencyKeys)
-    const isWursPattern = hasAnyKey(raw, wursKeys)
-    const isAq10Pattern = hasAnyKey(raw, aq10Keys)
-    const isAq50Pattern = hasAnyKey(raw, aq50Keys)
-    const isVanderbiltPattern = hasAnyKey(raw, vanderbiltKeys)
-    const isScqPattern = hasAnyKey(raw, scqKeys)
-    const isFtdrsPattern = hasAnyKey(raw, ftdrsKeys)
-    const isFasPattern = hasAnyKey(raw, fasKeys)
+  // Se houver qualquer chave de escala reconhecida nas respostas brutas,
+  // ou se algum escore foi calculado (inclusive 0 legítimo), consideramos hasScaleData = true.
+  let hasScaleData =
+    matchesKnownScalePattern || allScores.some((s) => s !== null && s !== undefined)
 
-    const matchesKnownScalePattern =
-      isBdiPattern ||
-      isBaiPattern ||
-      isYbocsPattern ||
-      isHamdPattern ||
-      isHamaPattern ||
-      isSdsPattern ||
-      isPhq9Pattern ||
-      isGad7Pattern ||
-      isAssqPattern ||
-      isSnapPattern ||
-      isAsrsPattern ||
-      isWursPattern ||
-      isAq10Pattern ||
-      isAq50Pattern ||
-      isVanderbiltPattern ||
-      isScqPattern ||
-      isMocaPattern ||
-      isMeemPattern ||
-      isTmtPattern ||
-      isSemanticFluencyPattern ||
-      isFtdrsPattern ||
-      isFasPattern
+  // Fallback para quando o metadata da sessão tem scores pré-calculados
+  if (raw.length > 0 && matchesKnownScalePattern) {
+    const { data: sessionRow } = await supabase
+      .from('anamnesis_sessions')
+      .select('metadata')
+      .eq('id', sessionId)
+      .single()
 
-    if (matchesKnownScalePattern) {
-      const { data: sessionRow } = await supabase
-        .from('anamnesis_sessions')
-        .select('metadata')
-        .eq('id', sessionId)
-        .single()
+    const meta = sessionRow?.metadata as Record<string, unknown> | null
+    if (meta) {
+      const rawScore = meta.totalScore ?? meta.total_score ?? meta.score
+      const metaScore =
+        rawScore !== undefined && rawScore !== null && rawScore !== '' ? Number(rawScore) : NaN
+      const validTotalScore = !isNaN(metaScore) ? metaScore : null
 
-      const meta = sessionRow?.metadata as Record<string, unknown> | null
-      if (meta) {
-        const rawScore = meta.totalScore ?? meta.total_score ?? meta.score
-        const metaScore =
-          rawScore !== undefined && rawScore !== null && rawScore !== '' ? Number(rawScore) : NaN
-        const validTotalScore = !isNaN(metaScore) ? metaScore : null
+      const rawScaleType = ((meta.scaleType ?? meta.scale_type ?? meta.type ?? '') as string)
+        .toLowerCase()
+        .trim()
 
-        const rawScaleType = ((meta.scaleType ?? meta.scale_type ?? meta.type ?? '') as string)
-          .toLowerCase()
-          .trim()
-
-        if (validTotalScore !== null) {
-          if (rawScaleType.includes('bdi') || isBdiPattern) {
-            currentBdiScore = validTotalScore
-          } else if (rawScaleType.includes('bai') || isBaiPattern) {
-            currentBaiScore = validTotalScore
-          } else if (rawScaleType.includes('ybocs') || isYbocsPattern) {
-            currentYbocsScore = validTotalScore
-          } else if (rawScaleType.includes('hamd') || isHamdPattern) {
-            currentHamdScore = validTotalScore
-          } else if (rawScaleType.includes('hama') || isHamaPattern) {
-            currentHamaScore = validTotalScore
-          } else if (rawScaleType.includes('sds') || isSdsPattern) {
-            currentSdsScore = validTotalScore
-          } else if (rawScaleType.includes('phq') || isPhq9Pattern) {
-            currentPhq9Score = validTotalScore
-          } else if (rawScaleType.includes('gad') || isGad7Pattern) {
-            currentGad7Score = validTotalScore
-          } else if (rawScaleType.includes('assq') || isAssqPattern) {
-            currentAssqScore = validTotalScore
-          } else if (rawScaleType.includes('snap') || isSnapPattern) {
-            currentSnapIvScore = validTotalScore
-          } else if (rawScaleType.includes('asrs') || isAsrsPattern) {
-            currentAsrs18Score = validTotalScore
-          } else if (
-            rawScaleType.includes('moca') ||
-            rawScaleType.includes('montreal') ||
-            isMocaPattern
-          ) {
-            currentMocaScore = validTotalScore
-          } else if (rawScaleType.includes('meem') || isMeemPattern) {
-            currentMeemScore = validTotalScore
-          } else if (rawScaleType.includes('tmt') || isTmtPattern) {
-            currentTmtBScore = validTotalScore
-          } else if (rawScaleType.includes('fluencia') || isSemanticFluencyPattern) {
-            currentFluenciaSemanticaTotalScore = validTotalScore
-          } else if (rawScaleType.includes('wurs') || isWursPattern) {
-            currentWurs25Score = validTotalScore
-          } else if (
-            rawScaleType.includes('aq10') ||
-            rawScaleType.includes('aq-10') ||
-            isAq10Pattern
-          ) {
-            currentAq10Score = validTotalScore
-          } else if (
-            rawScaleType.includes('aq50') ||
-            rawScaleType.includes('aq-50') ||
-            isAq50Pattern
-          ) {
-            currentAq50Score = validTotalScore
-          } else if (
-            rawScaleType.includes('vanderbilt') ||
-            rawScaleType.includes('vadrs') ||
-            isVanderbiltPattern
-          ) {
-            currentVanderbiltScore = validTotalScore
-          } else if (rawScaleType.includes('scq') || isScqPattern) {
-            currentScqScore = validTotalScore
-          } else if (rawScaleType.includes('ftdrs') || isFtdrsPattern) {
-            currentFtdrsScore = validTotalScore
-            currentFtdrsSeverity = getFtdrsSeverity(validTotalScore).label
-          } else if (rawScaleType.includes('fas') || isFasPattern) {
-            currentFasScore = validTotalScore
-          }
+      if (validTotalScore !== null) {
+        if (rawScaleType.includes('bdi') || isBdiPattern) {
+          currentBdiScore = validTotalScore
+        } else if (rawScaleType.includes('bai') || isBaiPattern) {
+          currentBaiScore = validTotalScore
+        } else if (rawScaleType.includes('ybocs') || isYbocsPattern) {
+          currentYbocsScore = validTotalScore
+        } else if (rawScaleType.includes('hamd') || isHamdPattern) {
+          currentHamdScore = validTotalScore
+        } else if (rawScaleType.includes('hama') || isHamaPattern) {
+          currentHamaScore = validTotalScore
+        } else if (rawScaleType.includes('sds') || isSdsPattern) {
+          currentSdsScore = validTotalScore
+        } else if (rawScaleType.includes('phq') || isPhq9Pattern) {
+          currentPhq9Score = validTotalScore
+        } else if (rawScaleType.includes('gad') || isGad7Pattern) {
+          currentGad7Score = validTotalScore
+        } else if (rawScaleType.includes('assq') || isAssqPattern) {
+          currentAssqScore = validTotalScore
+        } else if (rawScaleType.includes('snap') || isSnapPattern) {
+          currentSnapIvScore = validTotalScore
+        } else if (rawScaleType.includes('asrs') || isAsrsPattern) {
+          currentAsrs18Score = validTotalScore
+        } else if (
+          rawScaleType.includes('moca') ||
+          rawScaleType.includes('montreal') ||
+          isMocaPattern
+        ) {
+          currentMocaScore = validTotalScore
+        } else if (rawScaleType.includes('meem') || isMeemPattern) {
+          currentMeemScore = validTotalScore
+        } else if (rawScaleType.includes('tmt') || isTmtPattern) {
+          currentTmtBScore = validTotalScore
+        } else if (rawScaleType.includes('fluencia') || isSemanticFluencyPattern) {
+          currentFluenciaSemanticaTotalScore = validTotalScore
+        } else if (rawScaleType.includes('wurs') || isWursPattern) {
+          currentWurs25Score = validTotalScore
+        } else if (
+          rawScaleType.includes('aq10') ||
+          rawScaleType.includes('aq-10') ||
+          isAq10Pattern
+        ) {
+          currentAq10Score = validTotalScore
+        } else if (
+          rawScaleType.includes('aq50') ||
+          rawScaleType.includes('aq-50') ||
+          isAq50Pattern
+        ) {
+          currentAq50Score = validTotalScore
+        } else if (
+          rawScaleType.includes('vanderbilt') ||
+          rawScaleType.includes('vadrs') ||
+          isVanderbiltPattern
+        ) {
+          currentVanderbiltScore = validTotalScore
+        } else if (rawScaleType.includes('scq') || isScqPattern) {
+          currentScqScore = validTotalScore
+        } else if (rawScaleType.includes('ftdrs') || isFtdrsPattern) {
+          currentFtdrsScore = validTotalScore
+          currentFtdrsSeverity = getFtdrsSeverity(validTotalScore).label
+        } else if (rawScaleType.includes('fas') || isFasPattern) {
+          currentFasScore = validTotalScore
         }
-
-        const fallbackScores = [
-          currentPhq9Score,
-          currentGad7Score,
-          currentAssqScore,
-          currentSnapIvScore,
-          currentAsrs18Score,
-          currentWurs25Score,
-          currentAq10Score,
-          currentAq50Score,
-          currentVanderbiltScore,
-          currentScqScore,
-          currentMocaScore,
-          currentMeemScore,
-          currentHamdScore,
-          currentHamaScore,
-          currentBdiScore,
-          currentBaiScore,
-          currentYbocsScore,
-          currentSdsScore,
-          currentTmtAScore,
-          currentTmtBScore,
-          currentFluenciaAnimaisScore,
-          currentFluenciaFrutasScore,
-          currentFtdrsScore,
-          currentFasScore,
-        ]
-        hasScaleData = fallbackScores.some((s) => s !== null && s !== 0)
       }
+
+      const fallbackScores = [
+        currentPhq9Score,
+        currentGad7Score,
+        currentAssqScore,
+        currentSnapIvScore,
+        currentAsrs18Score,
+        currentWurs25Score,
+        currentAq10Score,
+        currentAq50Score,
+        currentVanderbiltScore,
+        currentScqScore,
+        currentMocaScore,
+        currentMeemScore,
+        currentHamdScore,
+        currentHamaScore,
+        currentBdiScore,
+        currentBaiScore,
+        currentYbocsScore,
+        currentSdsScore,
+        currentTmtAScore,
+        currentTmtBScore,
+        currentFluenciaAnimaisScore,
+        currentFluenciaFrutasScore,
+        currentFtdrsScore,
+        currentFasScore,
+      ]
+      hasScaleData =
+        matchesKnownScalePattern || fallbackScores.some((s) => s !== null && s !== undefined)
     }
   }
 
@@ -826,6 +875,7 @@ export async function getSessionInterpretation(
     }
 
     return {
+      rawCount,
       phq9Score: 0,
       gad7Score: 0,
       phq9Severity: getPhq9Severity(0),
@@ -868,7 +918,30 @@ export async function getSessionInterpretation(
     }
   }
 
+  // Determina a escala predominante se houver padrão único identificado
+  let detectedScaleType: string | undefined = undefined
+  let detectedScaleName: string | undefined = undefined
+  if (isFasPattern) {
+    detectedScaleType = 'fas'
+    detectedScaleName = 'FAS (Fluência Verbal Fonêmica)'
+  } else if (isFtdrsPattern) {
+    detectedScaleType = 'ftdrs'
+    detectedScaleName = 'FTDRS (Frontotemporal Dementia Rating Scale)'
+  } else if (isMocaPattern) {
+    detectedScaleType = 'moca'
+    detectedScaleName = 'MoCA (Montreal Cognitive Assessment)'
+  } else if (isWursPattern) {
+    detectedScaleType = 'wurs25'
+    detectedScaleName = 'WURS-25 (Wender Utah Rating Scale)'
+  } else if (isSemanticFluencyPattern) {
+    detectedScaleType = 'fluencia_semantica'
+    detectedScaleName = 'Fluência Verbal Semântica'
+  }
+
   return {
+    scaleType: detectedScaleType,
+    scaleName: detectedScaleName,
+    rawCount: raw.length,
     phq9Score: currentPhq9Score,
     gad7Score: currentGad7Score,
     phq9Severity: getPhq9Severity(currentPhq9Score),
