@@ -37,6 +37,7 @@ import {
 import { TELEMEDICINE_DISCLAIMER } from '@/lib/clinical-references'
 import { CLINIC_BRANDING } from '@/lib/clinic-branding'
 import { ClinicalFeedbackDialog } from '@/components/ClinicalFeedbackDialog'
+import { PatientHistoryDialog } from '@/components/PatientHistoryDialog'
 import { exportReport } from '@/lib/pdf-export'
 import { FocusAnalytics } from '@/components/FocusAnalytics'
 import { cn } from '@/lib/utils'
@@ -69,6 +70,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
   const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null)
+  const [selectedPatientForHistory, setSelectedPatientForHistory] = useState<{
+    guestId: string
+    patientName: string
+  } | null>(null)
   const [searchFilter, setSearchFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'in_progress' | 'pending'>(
     'all',
@@ -659,10 +664,33 @@ export default function Dashboard() {
                 <TableBody>
                   {filteredSessions.map((s) => {
                     const isUnidentified =
-                      s.is_orphan || s.patient_name === UNIDENTIFIED_PATIENT_LABEL
+                      s.is_orphan || s.patient_name === UNIDENTIFIED_PATIENT_LABEL || !s.guest_id
+
+                    const handleRowClick = () => {
+                      if (!isUnidentified && s.guest_id) {
+                        setSelectedPatientForHistory({
+                          guestId: s.guest_id,
+                          patientName: s.patient_name,
+                        })
+                      }
+                    }
 
                     return (
-                      <TableRow key={s.id} className="hover:bg-slate-50/80 transition-colors">
+                      <TableRow
+                        key={s.id}
+                        onClick={handleRowClick}
+                        className={cn(
+                          'transition-colors',
+                          isUnidentified
+                            ? 'hover:bg-slate-50/40 cursor-default'
+                            : 'hover:bg-[#FAF5EB]/60 cursor-pointer group',
+                        )}
+                        title={
+                          isUnidentified
+                            ? 'Registro sem vínculo a paciente cadastrado'
+                            : `Clique para abrir o histórico completo de ${s.patient_name}`
+                        }
+                      >
                         {/* 1. Nome do Paciente (Identificado ou Badge não identificado) */}
                         <TableCell>
                           {isUnidentified ? (
@@ -674,12 +702,15 @@ export default function Dashboard() {
                             </Badge>
                           ) : (
                             <div className="flex items-center gap-2.5">
-                              <div className="h-8 w-8 rounded-full bg-[#FAF5EB] border border-[#C4A35A]/50 text-[#7B5B3A] flex items-center justify-center shrink-0 font-bold text-xs shadow-xs">
+                              <div className="h-8 w-8 rounded-full bg-[#FAF5EB] group-hover:bg-[#C4A35A]/20 border border-[#C4A35A]/50 text-[#7B5B3A] flex items-center justify-center shrink-0 font-bold text-xs shadow-xs transition-colors">
                                 <User className="h-4 w-4" />
                               </div>
                               <div className="min-w-0">
-                                <p className="font-semibold text-slate-900 text-sm truncate">
+                                <p className="font-semibold text-slate-900 group-hover:text-[#7B5B3A] text-sm truncate transition-colors flex items-center gap-1.5">
                                   {s.patient_name}
+                                  <span className="text-[10px] font-normal text-[#C4A35A] opacity-0 group-hover:opacity-100 transition-opacity">
+                                    &bull; Ver histórico
+                                  </span>
                                 </p>
                                 {s.guest_id && (
                                   <p className="text-[10px] text-slate-400 font-mono">
@@ -748,8 +779,28 @@ export default function Dashboard() {
                         </TableCell>
 
                         {/* 7. Ações Clínicas */}
-                        <TableCell className="text-right whitespace-nowrap">
+                        <TableCell
+                          className="text-right whitespace-nowrap"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <div className="flex items-center justify-end gap-1.5">
+                            {!isUnidentified && s.guest_id && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-xs border-[#C4A35A]/50 text-[#7B5B3A] bg-[#FAF5EB]/50 hover:bg-[#FAF5EB]"
+                                onClick={() =>
+                                  setSelectedPatientForHistory({
+                                    guestId: s.guest_id!,
+                                    patientName: s.patient_name,
+                                  })
+                                }
+                                title="Abrir Histórico Completo do Paciente"
+                              >
+                                <Users className="h-3.5 w-3.5 mr-1" />
+                                Histórico
+                              </Button>
+                            )}
                             {s.source === 'session' && (
                               <Button
                                 variant="outline"
@@ -802,6 +853,16 @@ export default function Dashboard() {
             setFeedbackSessionId(null)
             loadDashboard()
           }
+        }}
+      />
+
+      {/* Modal de Histórico Completo do Paciente */}
+      <PatientHistoryDialog
+        guestId={selectedPatientForHistory?.guestId || null}
+        patientNameFallback={selectedPatientForHistory?.patientName}
+        open={!!selectedPatientForHistory}
+        onOpenChange={(open) => {
+          if (!open) setSelectedPatientForHistory(null)
         }}
       />
     </div>
