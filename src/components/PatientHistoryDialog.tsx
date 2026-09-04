@@ -48,6 +48,7 @@ import {
   type PatientReportItem,
 } from '@/services/patient-full-history'
 import { generateLaudoPDF } from '@/lib/laudo-pdf'
+import { generateConsolidatedPatientPdf } from '@/lib/laudo-consolidado-pdf'
 import { formatCPF } from '@/services/guest-patient'
 
 interface PatientHistoryDialogProps {
@@ -67,6 +68,7 @@ export function PatientHistoryDialog({
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'evaluations' | 'reports' | 'overview'>('evaluations')
   const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null)
+  const [generatingConsolidatedPdf, setGeneratingConsolidatedPdf] = useState(false)
   const [filterScale, setFilterScale] = useState('')
 
   useEffect(() => {
@@ -94,6 +96,24 @@ export function PatientHistoryDialog({
       isMounted = false
     }
   }, [open, guestId])
+
+  const handleGenerateConsolidatedPdf = async () => {
+    if (!data) return
+    setGeneratingConsolidatedPdf(true)
+    try {
+      await generateConsolidatedPatientPdf({
+        identification: data.identification,
+        evaluations: data.evaluations,
+        fullHistory: data,
+      })
+      toast.success('Laudo Consolidado do Paciente emitido com sucesso!')
+    } catch (err: any) {
+      const msg = err?.message || 'Falha ao emitir Laudo Consolidado.'
+      toast.error(msg)
+    } finally {
+      setGeneratingConsolidatedPdf(false)
+    }
+  }
 
   const handleGeneratePdf = async (item: PatientEvaluationItem) => {
     if (!guestId) return
@@ -222,7 +242,24 @@ export function PatientHistoryDialog({
             </div>
 
             {data && (
-              <div className="flex items-center gap-2 self-start sm:self-center">
+              <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleGenerateConsolidatedPdf}
+                  disabled={generatingConsolidatedPdf}
+                  className="bg-[#C4A35A] hover:bg-[#b39247] text-[#3E2723] font-bold rounded-full h-8 text-xs shadow-md border border-white/20"
+                  title="Gerar Laudo Único Consolidado de todos os testes do paciente"
+                >
+                  <FileDown
+                    className={cn(
+                      'h-3.5 w-3.5 mr-1.5',
+                      generatingConsolidatedPdf && 'animate-spin',
+                    )}
+                  />
+                  {generatingConsolidatedPdf ? 'Gerando Laudo...' : 'Gerar Laudo Consolidado (PDF)'}
+                </Button>
+
                 <Button
                   variant="outline"
                   size="sm"
@@ -573,7 +610,25 @@ export function PatientHistoryDialog({
                     intermodais, acesse a tela de Evolução Temporal.
                   </p>
 
-                  <div className="pt-2">
+                  <div className="pt-2 flex flex-wrap items-center gap-2">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={handleGenerateConsolidatedPdf}
+                      disabled={generatingConsolidatedPdf}
+                      className="bg-[#7B5B3A] hover:bg-[#6D5D4B] text-white text-xs h-8 font-semibold shadow-xs"
+                    >
+                      <FileDown
+                        className={cn(
+                          'h-3.5 w-3.5 mr-1.5',
+                          generatingConsolidatedPdf && 'animate-spin',
+                        )}
+                      />
+                      {generatingConsolidatedPdf
+                        ? 'Gerando Laudo...'
+                        : 'Gerar Laudo Consolidado (PDF)'}
+                    </Button>
+
                     <Button
                       asChild
                       variant="outline"

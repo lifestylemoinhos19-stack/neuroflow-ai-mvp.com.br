@@ -48,7 +48,9 @@ import {
   ClipboardList,
   CheckCircle2,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { generateLaudoPDF } from '@/lib/laudo-pdf'
+import { generateConsolidatedPatientPdf } from '@/lib/laudo-consolidado-pdf'
 import { normalizeAssistedScaleType } from '@/lib/assisted-scales-data'
 import { Link } from 'react-router-dom'
 import CalmExplorerQRCard from '@/components/CalmExplorerQRCard'
@@ -174,6 +176,22 @@ export default function AdminPainel() {
 
   // PDF laudo generation
   const [laudoGenerating, setLaudoGenerating] = useState<string | null>(null)
+  const [consolidatedGenerating, setConsolidatedGenerating] = useState(false)
+
+  const handleGenerateConsolidated = async () => {
+    if (!selectedPatient) return
+    setConsolidatedGenerating(true)
+    try {
+      await generateConsolidatedPatientPdf(selectedPatient.id)
+      toast.success('Laudo Consolidado do Paciente gerado com sucesso!')
+    } catch (err: any) {
+      const msg = err?.message || 'Falha ao emitir Laudo Consolidado.'
+      toast.error(msg)
+      console.error('Erro ao gerar laudo consolidado no admin:', err)
+    } finally {
+      setConsolidatedGenerating(false)
+    }
+  }
 
   const handleGenerateLaudo = async (t: AdminTest) => {
     setLaudoGenerating(t.id)
@@ -624,6 +642,20 @@ export default function AdminPainel() {
                     onClick={() => setPatientDialog({ open: true, patient: selectedPatient })}
                   >
                     <Pencil className="h-3.5 w-3.5 mr-1" /> Editar Paciente
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={handleGenerateConsolidated}
+                    disabled={consolidatedGenerating}
+                    className="bg-[#C4A35A] hover:bg-[#b39247] text-[#3E2723] font-bold shadow-md"
+                    title="Emitir Laudo Consolidado com todos os testes do paciente"
+                  >
+                    <FileDown
+                      className={cn('h-3.5 w-3.5 mr-1.5', consolidatedGenerating && 'animate-spin')}
+                    />
+                    {consolidatedGenerating ? 'Gerando Laudo...' : 'Laudo Consolidado do Paciente'}
                   </Button>
                 </div>
 

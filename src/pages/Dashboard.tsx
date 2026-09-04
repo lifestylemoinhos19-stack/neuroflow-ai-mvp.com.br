@@ -39,7 +39,9 @@ import { CLINIC_BRANDING } from '@/lib/clinic-branding'
 import { ClinicalFeedbackDialog } from '@/components/ClinicalFeedbackDialog'
 import { PatientHistoryDialog } from '@/components/PatientHistoryDialog'
 import { exportReport } from '@/lib/pdf-export'
+import { generateConsolidatedPatientPdf } from '@/lib/laudo-consolidado-pdf'
 import { FocusAnalytics } from '@/components/FocusAnalytics'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/auth-context'
 import {
@@ -74,6 +76,7 @@ export default function Dashboard() {
     guestId: string
     patientName: string
   } | null>(null)
+  const [generatingConsolidatedId, setGeneratingConsolidatedId] = useState<string | null>(null)
   const [searchFilter, setSearchFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'in_progress' | 'pending'>(
     'all',
@@ -799,6 +802,40 @@ export default function Dashboard() {
                               >
                                 <Users className="h-3.5 w-3.5 mr-1" />
                                 Histórico
+                              </Button>
+                            )}
+                            {!isUnidentified && s.guest_id && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-xs border-[#C4A35A] text-[#7B5B3A] bg-white hover:bg-[#FAF5EB] font-medium"
+                                disabled={generatingConsolidatedId === s.guest_id}
+                                onClick={async () => {
+                                  if (!s.guest_id) return
+                                  setGeneratingConsolidatedId(s.guest_id)
+                                  try {
+                                    await generateConsolidatedPatientPdf(s.guest_id)
+                                    toast.success(
+                                      `Laudo Consolidado de ${s.patient_name} gerado com sucesso!`,
+                                    )
+                                  } catch (err: any) {
+                                    const msg = err?.message || 'Falha ao emitir Laudo Consolidado.'
+                                    toast.error(msg)
+                                  } finally {
+                                    setGeneratingConsolidatedId(null)
+                                  }
+                                }}
+                                title="Gerar Laudo Único Consolidado de todos os testes deste paciente"
+                              >
+                                <FileDown
+                                  className={cn(
+                                    'h-3.5 w-3.5 mr-1 text-[#C4A35A]',
+                                    generatingConsolidatedId === s.guest_id && 'animate-spin',
+                                  )}
+                                />
+                                {generatingConsolidatedId === s.guest_id
+                                  ? 'Gerando...'
+                                  : 'Laudo Consolidado'}
                               </Button>
                             )}
                             {s.source === 'session' && (
