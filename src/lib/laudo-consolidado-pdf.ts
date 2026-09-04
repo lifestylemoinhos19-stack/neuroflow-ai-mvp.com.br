@@ -78,6 +78,161 @@ async function fetchQrCodePng(codeId: string): Promise<string | null> {
 }
 
 /**
+ * Normaliza o identificador/tipo de escala para agrupamento temporal.
+ */
+function normalizeScaleKey(scaleType: string): string {
+  const norm = (scaleType || '').toLowerCase().trim()
+  if (norm.includes('moca')) return 'moca'
+  if (norm.includes('meem')) return 'meem'
+  if (norm.includes('phq') || norm === 'phq9' || norm === 'phq-9') return 'phq9'
+  if (norm.includes('gad') || norm === 'gad7' || norm === 'gad-7') return 'gad7'
+  if (norm.includes('ham-d') || norm.includes('hamd')) return 'hamd'
+  if (norm.includes('ham-a') || norm.includes('hama')) return 'hama'
+  if (norm.includes('bdi')) return 'bdi'
+  if (norm.includes('bai')) return 'bai'
+  if (norm.includes('ftdrs')) return 'ftdrs'
+  if (norm.includes('fas') && !norm.includes('fluencia_semantica')) return 'fas'
+  if (norm.includes('tmt') || norm.includes('trail')) {
+    if (norm.includes(' b') || norm.endsWith('b') || norm.includes('parte b')) return 'tmt_b'
+    if (norm.includes(' a') || norm.endsWith('a') || norm.includes('parte a')) return 'tmt_a'
+    return 'tmt'
+  }
+  if (norm.includes('fluencia') || norm.includes('semantica')) {
+    if (norm.includes('fruta')) return 'fluencia_frutas'
+    if (norm.includes('anim')) return 'fluencia_animais'
+    return 'fluencia_semantica'
+  }
+  if (norm.includes('snap')) return 'snap4'
+  if (norm.includes('asrs')) return 'asrs18'
+  if (norm.includes('wurs')) return 'wurs25'
+  if (norm.includes('assq')) return 'assq'
+  if (norm.includes('aq10') || norm.includes('aq-10')) return 'aq10'
+  if (norm.includes('aq50') || norm.includes('aq-50')) return 'aq50'
+  if (norm.includes('scq')) return 'scq'
+  if (norm.includes('vanderbilt') || norm.includes('vadrs')) return 'vanderbilt'
+  if (norm.includes('ybocs') || norm.includes('y-bocs')) return 'ybocs'
+  if (norm.includes('sds')) return 'sds'
+  if (norm.includes('mchat') || norm.includes('m-chat')) return 'mchat'
+  return norm.replace(/\s+/g, '_')
+}
+
+/**
+ * Metadados canônicos para apresentação e cálculo de direção clínica do instrumento.
+ */
+function getInstrumentMetadata(scaleType: string): {
+  name: string
+  direction: 'higher_is_better' | 'lower_is_better'
+  maxScore?: number
+} {
+  const norm = (scaleType || '').toLowerCase().trim()
+
+  if (norm.includes('moca')) {
+    return {
+      name: 'MoCA (Montreal Cognitive Assessment)',
+      direction: 'higher_is_better',
+      maxScore: 30,
+    }
+  }
+  if (norm.includes('meem')) {
+    return {
+      name: 'MEEM (Mini-Exame do Estado Mental)',
+      direction: 'higher_is_better',
+      maxScore: 30,
+    }
+  }
+  if (norm.includes('fas') && !norm.includes('fluencia_semantica')) {
+    return { name: 'FAS (Fluência Verbal Fonêmica)', direction: 'higher_is_better' }
+  }
+  if (norm.includes('fluencia') || norm.includes('semantica')) {
+    if (norm.includes('fruta')) {
+      return { name: 'Fluência Verbal Semântica (Frutas)', direction: 'higher_is_better' }
+    }
+    return { name: 'Fluência Verbal Semântica (Animais)', direction: 'higher_is_better' }
+  }
+  if (norm.includes('tmt') || norm.includes('trail')) {
+    if (norm.includes(' b') || norm.endsWith('b') || norm.includes('parte b')) {
+      return { name: 'TMT Parte B (Flexibilidade e Alternância)', direction: 'lower_is_better' }
+    }
+    if (norm.includes(' a') || norm.endsWith('a') || norm.includes('parte a')) {
+      return { name: 'TMT Parte A (Velocidade e Rastreamento)', direction: 'lower_is_better' }
+    }
+    return { name: 'Trail Making Test (TMT A/B)', direction: 'lower_is_better' }
+  }
+  if (norm.includes('phq') || norm === 'phq9' || norm === 'phq-9') {
+    return { name: 'PHQ-9 (Depressão)', direction: 'lower_is_better', maxScore: 27 }
+  }
+  if (norm.includes('gad') || norm === 'gad7' || norm === 'gad-7') {
+    return { name: 'GAD-7 (Ansiedade)', direction: 'lower_is_better', maxScore: 21 }
+  }
+  if (norm.includes('ham-d') || norm.includes('hamd')) {
+    return { name: 'HAM-D (Hamilton Depressão)', direction: 'lower_is_better' }
+  }
+  if (norm.includes('ham-a') || norm.includes('hama')) {
+    return { name: 'HAM-A (Hamilton Ansiedade)', direction: 'lower_is_better' }
+  }
+  if (norm.includes('bdi')) {
+    return {
+      name: 'BDI-II (Inventário de Depressão de Beck)',
+      direction: 'lower_is_better',
+      maxScore: 63,
+    }
+  }
+  if (norm.includes('bai')) {
+    return {
+      name: 'BAI (Inventário de Ansiedade de Beck)',
+      direction: 'lower_is_better',
+      maxScore: 63,
+    }
+  }
+  if (norm.includes('ftdrs')) {
+    return {
+      name: 'FTDRS (Frontotemporal Dementia Rating Scale)',
+      direction: 'lower_is_better',
+      maxScore: 45,
+    }
+  }
+  if (norm.includes('wurs')) {
+    return { name: 'WURS-25 (TDAH Retrospectivo)', direction: 'lower_is_better', maxScore: 100 }
+  }
+  if (norm.includes('snap')) {
+    return { name: 'SNAP-IV (TDAH Infantil)', direction: 'lower_is_better' }
+  }
+  if (norm.includes('asrs')) {
+    return { name: 'ASRS-18 (TDAH Adulto)', direction: 'lower_is_better' }
+  }
+  if (norm.includes('assq')) {
+    return { name: 'ASSQ (Espectro Autista)', direction: 'lower_is_better' }
+  }
+  if (norm.includes('aq10') || norm.includes('aq-10')) {
+    return { name: 'AQ-10 (Autismo Rastreio)', direction: 'lower_is_better', maxScore: 10 }
+  }
+  if (norm.includes('aq50') || norm.includes('aq-50')) {
+    return { name: 'AQ-50 (Autismo Adulto)', direction: 'lower_is_better', maxScore: 50 }
+  }
+  if (norm.includes('scq')) {
+    return { name: 'SCQ (Comunicação Social)', direction: 'lower_is_better' }
+  }
+  if (norm.includes('vanderbilt') || norm.includes('vadrs')) {
+    return { name: 'Vanderbilt / VADRS', direction: 'lower_is_better' }
+  }
+  if (norm.includes('ybocs') || norm.includes('y-bocs')) {
+    return { name: 'Y-BOCS (Obsessões / Compulsões)', direction: 'lower_is_better', maxScore: 40 }
+  }
+  if (norm.includes('sds')) {
+    return {
+      name: 'SDS (Incapacidade Funcional de Sheehan)',
+      direction: 'lower_is_better',
+      maxScore: 30,
+    }
+  }
+  if (norm.includes('mchat') || norm.includes('m-chat')) {
+    return { name: 'M-CHAT-R (Rastreio Autismo Precoce)', direction: 'lower_is_better' }
+  }
+
+  return { name: scaleType || 'Instrumento Clínico', direction: 'lower_is_better' }
+}
+
+/**
  * Classifica a gravidade do escore por tipo de instrumento de forma robusta e estandardizada.
  */
 function classifyScaleScore(
@@ -1163,8 +1318,214 @@ export async function generateConsolidatedPatientPdf(
   }
   y += 4
 
-  // ================= SEÇÃO 4: SÍNTESE POR DOMÍNIOS NEUROPSIQUIÁTRICOS =================
-  writeVisualSeparator('4. SÍNTESE CLÍNICA POR DOMÍNIOS (DSM-5-TR / CID-11)')
+  // ================= SEÇÃO 4: EVOLUÇÃO TEMPORAL DOS ESCORES =================
+  // Agrupa avaliações por tipo de instrumento normalizado
+  type TimelineItem = {
+    date: Date
+    dateStr: string
+    score: number | null
+    scoreDisplay: string
+    label: string
+    isPending: boolean
+    rawScore: number | null
+  }
+
+  const evaluationsByInstrument = new Map<
+    string,
+    {
+      canonicalName: string
+      direction: 'higher_is_better' | 'lower_is_better'
+      maxScore?: number
+      items: TimelineItem[]
+    }
+  >()
+
+  for (const ev of evaluations) {
+    const rawType = ev.scale_type || 'Escala'
+    const normKey = normalizeScaleKey(rawType)
+    if (!normKey) continue
+
+    const interp = ev.session_id ? interpretationMap.get(ev.session_id) : null
+    const classified = classifyScaleScore(
+      ev.scale_type,
+      ev.score,
+      interp,
+      ev.interpretation || ev.system_suggestion,
+    )
+
+    const dateObj = ev.started_at ? new Date(ev.started_at) : new Date(0)
+    const dateStr = ev.started_at
+      ? new Date(ev.started_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+      : '—'
+
+    const hasRealScore =
+      ev.score !== null && ev.score !== undefined && !isNaN(ev.score) && !classified.isPending
+
+    const canonical = getInstrumentMetadata(ev.scale_type)
+
+    if (!evaluationsByInstrument.has(normKey)) {
+      evaluationsByInstrument.set(normKey, {
+        canonicalName: canonical.name,
+        direction: canonical.direction,
+        maxScore: canonical.maxScore,
+        items: [],
+      })
+    }
+
+    evaluationsByInstrument.get(normKey)!.items.push({
+      date: dateObj,
+      dateStr,
+      score: hasRealScore ? ev.score : null,
+      scoreDisplay: hasRealScore
+        ? canonical.maxScore
+          ? `${ev.score}/${canonical.maxScore}`
+          : `${ev.score}`
+        : '—',
+      label: classified.label,
+      isPending: classified.isPending || !hasRealScore,
+      rawScore: hasRealScore ? ev.score : null,
+    })
+  }
+
+  // Filtra apenas instrumentos com MAIS DE UMA aplicação (repetidos)
+  const repeatedInstruments = Array.from(evaluationsByInstrument.entries())
+    .map(([key, data]) => {
+      // Ordena cronologicamente (mais antigo primeiro)
+      const sortedItems = [...data.items].sort((a, b) => a.date.getTime() - b.date.getTime())
+      return {
+        key,
+        canonicalName: data.canonicalName,
+        direction: data.direction,
+        maxScore: data.maxScore,
+        items: sortedItems,
+      }
+    })
+    .filter((inst) => inst.items.length > 1)
+
+  if (repeatedInstruments.length > 0) {
+    writeVisualSeparator('4. EVOLUÇÃO TEMPORAL DOS ESCORES (LONGITUDINAL)')
+
+    ensureSpace(12)
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8)
+    doc.setTextColor(medium[0], medium[1], medium[2])
+    doc.text(
+      sanitizePdfText(
+        'Acompanhamento comparativo de instrumentos aplicados mais de uma vez ao paciente, com linha do tempo e cálculo de variação longitudinal.',
+      ),
+      marginX,
+      y,
+    )
+    y += 5
+
+    for (const inst of repeatedInstruments) {
+      ensureSpace(18)
+
+      // Monta a linha do tempo textual: ex. "12/09 -> 21/30 (Leve) ; 25/09 -> 24/30 (Normal)"
+      const timelineSegments = inst.items.map((it) => {
+        if (it.isPending || it.score === null) {
+          return `${it.dateStr} -> pendente de revisão clínica`
+        }
+        return `${it.dateStr} -> ${it.scoreDisplay} (${it.label})`
+      })
+
+      // Calcula a variação entre primeira e última aplicação com escore real
+      const scoredItems = inst.items.filter((it) => it.score !== null && !it.isPending)
+
+      let deltaText = ''
+      let trendText = ''
+      let trendColor: [number, number, number] = [dark[0], dark[1], dark[2]]
+
+      if (scoredItems.length >= 2) {
+        const first = scoredItems[0]
+        const last = scoredItems[scoredItems.length - 1]
+        const diff = Number((last.score! - first.score!).toFixed(2))
+
+        const diffStr = diff > 0 ? `+${diff}` : `${diff}`
+        const pointsWord = Math.abs(diff) === 1 ? 'ponto' : 'pontos'
+
+        // Avalia tendência de acordo com a direção do instrumento
+        // higher_is_better (ex. MoCA, MEEM, FAS, Fluência): +diff é melhora, -diff é piora
+        // lower_is_better (ex. PHQ-9, GAD-7, TMT, HAM-D, BDI, FTDRS, Y-BOCS, SDS): -diff é melhora, +diff é piora
+        let trendStatus: 'melhora' | 'estabilidade' | 'piora' = 'estabilidade'
+
+        if (inst.direction === 'higher_is_better') {
+          if (diff > 0) trendStatus = 'melhora'
+          else if (diff < 0) trendStatus = 'piora'
+          else trendStatus = 'estabilidade'
+        } else {
+          if (diff < 0) trendStatus = 'melhora'
+          else if (diff > 0) trendStatus = 'piora'
+          else trendStatus = 'estabilidade'
+        }
+
+        if (trendStatus === 'melhora') {
+          trendColor = [4, 120, 87] // esmeralda
+          trendText = `Tendência clínica: Melhora longitudinal (${diffStr} ${pointsWord} em relação à linha de base)`
+        } else if (trendStatus === 'piora') {
+          trendColor = [185, 28, 28] // vermelho
+          trendText = `Tendência clínica: Piora ou acentuação de sintomas (${diffStr} ${pointsWord} em relação à linha de base)`
+        } else {
+          trendColor = [180, 83, 9] // âmbar
+          trendText = `Tendência clínica: Estabilidade clínica mantida (variação 0 ${pointsWord})`
+        }
+
+        deltaText = `${trendStatus} de ${diffStr} ${pointsWord}`
+      } else if (scoredItems.length === 1) {
+        trendText =
+          'Apenas uma aplicação possui escore quantitativo consolidado; demais aplicações aguardam revisão clínica para cálculo do delta.'
+        trendColor = [180, 83, 9]
+      } else {
+        trendText =
+          'Aplicações registradas aguardam validação médica dos escores numéricos para cálculo longitudinal.'
+        trendColor = [180, 83, 9]
+      }
+
+      // Caixa visual de destaque para o instrumento repetido
+      const fullTimelineStr = timelineSegments.join('  ;  ')
+      const summaryHeader = deltaText
+        ? `${inst.canonicalName}: ${fullTimelineStr} — ${deltaText}`
+        : `${inst.canonicalName}: ${fullTimelineStr}`
+
+      const wrappedHeaderLines = doc.splitTextToSize(
+        sanitizePdfText(summaryHeader),
+        pageWidth - marginX * 2 - 8,
+      )
+      const wrappedTrendLines = doc.splitTextToSize(
+        sanitizePdfText(trendText),
+        pageWidth - marginX * 2 - 8,
+      )
+
+      const boxHeight = (wrappedHeaderLines.length + wrappedTrendLines.length) * 4.2 + 8
+      ensureSpace(boxHeight + 2)
+
+      // Fundo e borda institucional Casa Branca Saúde
+      doc.setFillColor(accent[0], accent[1], accent[2])
+      doc.setDrawColor(secondary[0], secondary[1], secondary[2])
+      doc.setLineWidth(0.3)
+      doc.roundedRect(marginX, y, pageWidth - marginX * 2, boxHeight, 1.2, 1.2, 'FD')
+
+      // Linha 1: Trajetória dos Escores
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(8.5)
+      doc.setTextColor(primary[0], primary[1], primary[2])
+      doc.text(wrappedHeaderLines, marginX + 4, y + 5)
+
+      // Linha 2: Frase-síntese de tendência clínica
+      const trendY = y + 5 + wrappedHeaderLines.length * 4.2
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8)
+      doc.setTextColor(trendColor[0], trendColor[1], trendColor[2])
+      doc.text(wrappedTrendLines, marginX + 4, trendY)
+
+      y += boxHeight + 3
+    }
+
+    y += 2
+  }
+
+  // ================= SEÇÃO 5: SÍNTESE POR DOMÍNIOS NEUROPSIQUIÁTRICOS =================
+  writeVisualSeparator('5. SÍNTESE CLÍNICA POR DOMÍNIOS (DSM-5-TR / CID-11)')
 
   // 4.1 Humor e Afeto
   ensureSpace(12)
@@ -1315,8 +1676,8 @@ export async function generateConsolidatedPatientPdf(
   }
   y += 3
 
-  // ================= SEÇÃO 5: ENCAMINHAMENTOS E CONDUTA SUGERIDA =================
-  writeVisualSeparator('5. CONDUTA SUGERIDA, ENCAMINHAMENTOS E RESSALVA CLÍNICA')
+  // ================= SEÇÃO 6: ENCAMINHAMENTOS E CONDUTA SUGERIDA =================
+  writeVisualSeparator('6. CONDUTA SUGERIDA, ENCAMINHAMENTOS E RESSALVA CLÍNICA')
 
   writeBullet(
     'Validação presencial obrigatória: Este laudo sintetiza dados quantitativos de escalas e biofeedback para suporte à decisão médica, não constituindo diagnóstico fechado isoladamente.',
@@ -1336,7 +1697,7 @@ export async function generateConsolidatedPatientPdf(
   }
   y += 4
 
-  // ================= SEÇÃO 6: ASSINATURA DA MÉDICA COM QR CODE =================
+  // ================= SEÇÃO 7: ASSINATURA DA MÉDICA COM QR CODE =================
   ensureSpace(42)
   y += 4
 
