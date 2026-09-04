@@ -14,6 +14,32 @@ import {
   NEUROPSYCH_DISCLAIMER,
 } from '@/lib/neuropsych-evaluation'
 
+/**
+ * Remove emojis, caracteres fora da faixa Latin-1 estendida (WinAnsi) e
+ * normaliza quebras de linha para evitar corrupção de fonte no jsPDF.
+ */
+export function sanitizePdfText(str?: string | null): string {
+  if (!str) return ''
+  return (
+    str
+      // Remove variação de seletores e marcas de junção (ZWJ, variation selectors)
+      .replace(/[\uFE00-\uFE0F\u200D\u200B-\u200F]/g, '')
+      // Remove emojis e símbolos suplementares (SMP U+10000 - U+10FFFF)
+      .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '')
+      // Remove símbolos específicos que o WinAnsi/Latin-1 padrão não suporta
+      .replace(/[⚠️⚠❌✅ℹ️💡🔍🩺📌⭐]/g, '')
+      // Converte aspas curvas e traços especiais para padrão ASCII/Latin-1
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/[\u2013\u2014]/g, '-')
+      .replace(/\u2026/g, '...')
+      // Remove qualquer caractere com código > 255 (não-Latin1) mantendo legibilidade
+      .replace(/[^\u0020-\u007E\u00A0-\u00FF\n\t]/g, '') // Normaliza quebras de linha Windows/Mac para Unix simples
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+  )
+}
+
 interface LaudoInput {
   // AdminTest
   testId: string
@@ -356,10 +382,11 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   const anamnesis = aiInterpretation?.anamnesisData
   const scaleName = aiInterpretation?.scaleName || input.type || 'Avaliação'
   const queixa =
-    anamnesis?.chiefComplaint ||
-    (interpretation.trim() ? interpretation.trim() : `Avaliação aplicada: ${scaleName}.`)
+    anamnesis?.chiefComplaint?.trim() ||
+    `Aplicação do instrumento ${scaleName} para rastreio clínico e monitoramento neuropsicológico.`
   const historia =
-    anamnesis?.developmentalHistory || (interpretation.trim() ? interpretation.trim() : null)
+    anamnesis?.developmentalHistory?.trim() ||
+    'Sem histórico prévio adicional informado no momento da aplicação do instrumento.'
 
   // Escores reais das escalas (FTDRS, WURS-25, FAS etc.) propagados para o PDF.
   // Vazio/null → não propagate (o campo simplesmente não aparece no laudo).
@@ -432,7 +459,11 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(10)
   doc.setTextColor(medium[0], medium[1], medium[2])
-  doc.text('Laudo de Avaliação Neuropsiquiátrica e Neurodesenvolvimento', marginX + 28, y + 12)
+  doc.text(
+    sanitizePdfText('Laudo de Avaliação Neuropsiquiátrica e Neurodesenvolvimento'),
+    marginX + 28,
+    y + 12,
+  )
 
   doc.setDrawColor(secondary[0], secondary[1], secondary[2])
   doc.setLineWidth(0.5)
@@ -451,7 +482,7 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(12)
     doc.setTextColor(primary[0], primary[1], primary[2])
-    doc.text(`${index}. ${text}`, marginX, y)
+    doc.text(`${index}. ${sanitizePdfText(text)}`, marginX, y)
     doc.setDrawColor(secondary[0], secondary[1], secondary[2])
     doc.setLineWidth(0.3)
     doc.line(marginX, y + 2, pageWidth - marginX, y + 2)
@@ -462,15 +493,17 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   }
 
   const writeParagraph = (text: string, gap = 4) => {
-    const lines = doc.splitTextToSize(text, pageWidth - marginX * 2)
+    const clean = sanitizePdfText(text)
+    const lines = doc.splitTextToSize(clean, pageWidth - marginX * 2)
     ensureSpace(lines.length * 5 + 2)
     doc.text(lines, marginX, y)
     y += lines.length * 5 + gap
   }
 
   const writeBullet = (text: string) => {
+    const clean = sanitizePdfText(text)
     const indent = marginX + 4
-    const lines = doc.splitTextToSize(text, pageWidth - marginX * 2 - 6)
+    const lines = doc.splitTextToSize(clean, pageWidth - marginX * 2 - 6)
     ensureSpace(lines.length * 5 + 1)
     doc.text('•', marginX, y)
     doc.text(lines, indent, y)
@@ -480,10 +513,10 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   const writeLabel = (label: string, value: string, valueIndent = 42) => {
     ensureSpace(6)
     doc.setFont('helvetica', 'bold')
-    doc.text(label, marginX, y)
+    doc.text(sanitizePdfText(label), marginX, y)
     doc.setFont('helvetica', 'normal')
     const maxValW = pageWidth - marginX * 2 - valueIndent
-    const valLines = doc.splitTextToSize(value, maxValW)
+    const valLines = doc.splitTextToSize(sanitizePdfText(value), maxValW)
     doc.text(valLines, marginX + valueIndent, y)
     y += Math.max(6, valLines.length * 4.5 + 1.5)
   }
@@ -496,7 +529,10 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
   doc.setTextColor(primary[0], primary[1], primary[2])
-  const introLines = doc.splitTextToSize(NEUROPSYCH_DISCLAIMER, pageWidth - marginX * 2 - 6)
+  const introLines = doc.splitTextToSize(
+    sanitizePdfText(NEUROPSYCH_DISCLAIMER),
+    pageWidth - marginX * 2 - 6,
+  )
   doc.text(introLines, marginX + 3, y + 5)
   y += 18
 
@@ -506,13 +542,15 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   // Seção 1: IDENTIFICAÇÃO
   const sec1 = report.sections[0]
   writeSectionHeader(sec1.index, sec1.title)
-  writeLabel('Paciente (iniciais):', iniciais, 46)
+  writeLabel('Paciente (iniciais):', sanitizePdfText(iniciais), 46)
   if (idade !== null) writeLabel('Idade:', `${idade} anos`, 46)
-  writeLabel('Protocolo / Registro:', input.testId, 46)
+  writeLabel('Protocolo / Registro:', sanitizePdfText(input.testId), 46)
   writeLabel('Data da avaliação:', new Date(input.startedAt).toLocaleDateString('pt-BR'), 46)
   writeLabel(
     'Profissional responsável:',
-    `${CLINICIAN_CREDENTIALS.name} — ${CLINICIAN_CREDENTIALS.crm} / ${CLINICIAN_CREDENTIALS.rqe}`,
+    sanitizePdfText(
+      `${CLINICIAN_CREDENTIALS.name} — ${CLINICIAN_CREDENTIALS.crm} / ${CLINICIAN_CREDENTIALS.rqe}`,
+    ),
     46,
   )
   y += 2
@@ -548,7 +586,7 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
       }
       cells.forEach((cell, idx) => {
         const maxW = colX[idx + 1] - colX[idx] - 2
-        const lines = doc.splitTextToSize(cell, maxW)
+        const lines = doc.splitTextToSize(sanitizePdfText(cell), maxW)
         doc.text(lines.slice(0, 2), colX[idx] + 2, y + 4.5)
       })
       doc.setDrawColor(secondary[0], secondary[1], secondary[2])
@@ -604,7 +642,10 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(8)
     doc.setTextColor(0xb9, 0x1c, 0x1c)
-    const alertLines = doc.splitTextToSize(report.riscoIminente, pageWidth - marginX * 2 - 6)
+    const alertLines = doc.splitTextToSize(
+      sanitizePdfText(report.riscoIminente),
+      pageWidth - marginX * 2 - 6,
+    )
     doc.text(alertLines, marginX + 3, y + 5)
     y += 18
   }
@@ -620,7 +661,7 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   doc.setFontSize(8)
   doc.setTextColor(primary[0], primary[1], primary[2])
   const finalDisclaimerLines = doc.splitTextToSize(
-    NEUROPSYCH_DISCLAIMER,
+    sanitizePdfText(NEUROPSYCH_DISCLAIMER),
     pageWidth - marginX * 2 - 6,
   )
   doc.text(finalDisclaimerLines, marginX + 3, y + 5)
@@ -684,12 +725,16 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
   doc.setFontSize(7)
   doc.setTextColor(medium[0], medium[1], medium[2])
   doc.text(
-    `${CLINIC_BRANDING.name} — ${CLINIC_BRANDING.address} | WhatsApp: ${CLINIC_BRANDING.whatsapp}`,
+    sanitizePdfText(
+      `${CLINIC_BRANDING.name} — ${CLINIC_BRANDING.address} | WhatsApp: ${CLINIC_BRANDING.whatsapp}`,
+    ),
     marginX,
     footerY + 4,
   )
   doc.text(
-    `Emitido em ${new Date().toLocaleString('pt-BR')} · Documento em conformidade com a LGPD (Lei nº 13.709/2018). Paciente identificado apenas por iniciais.`,
+    sanitizePdfText(
+      `Emitido em ${new Date().toLocaleString('pt-BR')} · Documento em conformidade com a LGPD (Lei nº 13.709/2018). Paciente identificado apenas por iniciais.`,
+    ),
     marginX,
     footerY + 8,
   )
@@ -705,7 +750,7 @@ export async function generateLaudoPDF(input: LaudoInput): Promise<void> {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(8)
     doc.setTextColor(primary[0], primary[1], primary[2])
-    doc.text(label, marginX + 3, y + 5.5)
+    doc.text(sanitizePdfText(label), marginX + 3, y + 5.5)
     y += 12
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(10)
@@ -747,10 +792,11 @@ export async function generateLaudoJSON(
   const anamnesis = aiInterpretation?.anamnesisData
   const scaleName = aiInterpretation?.scaleName || input.type || 'Avaliação'
   const queixa =
-    anamnesis?.chiefComplaint ||
-    (interpretation.trim() ? interpretation.trim() : `Avaliação aplicada: ${scaleName}.`)
+    anamnesis?.chiefComplaint?.trim() ||
+    `Aplicação do instrumento ${scaleName} para rastreio clínico e monitoramento neuropsicológico.`
   const historia =
-    anamnesis?.developmentalHistory || (interpretation.trim() ? interpretation.trim() : null)
+    anamnesis?.developmentalHistory?.trim() ||
+    'Sem histórico prévio adicional informado no momento da aplicação do instrumento.'
 
   // Mesmo padrão do generateLaudoPDF: propaga os escores reais das escalas.
   // Nota: zero (0) é um escore válido e não deve ser descartado.

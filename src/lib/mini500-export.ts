@@ -9,6 +9,7 @@ import {
   type NeuropsychContext,
   NEUROPSYCH_DISCLAIMER,
 } from '@/lib/neuropsych-evaluation'
+import { sanitizePdfText } from '@/lib/laudo-pdf'
 
 export interface Mini500ExportData {
   patientInfo: Mini500PatientInfo
@@ -168,7 +169,7 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(12)
     doc.setTextColor(primary[0], primary[1], primary[2])
-    doc.text(`${index}. ${text}`, marginX, y)
+    doc.text(`${index}. ${sanitizePdfText(text)}`, marginX, y)
     doc.setDrawColor(secondary[0], secondary[1], secondary[2])
     doc.setLineWidth(0.3)
     doc.line(marginX, y + 2, pageWidth - marginX, y + 2)
@@ -178,14 +179,16 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
     doc.setTextColor(dark[0], dark[1], dark[2])
   }
   const writeParagraph = (text: string, gap = 4) => {
-    const lines = doc.splitTextToSize(text, pageWidth - marginX * 2)
+    const clean = sanitizePdfText(text)
+    const lines = doc.splitTextToSize(clean, pageWidth - marginX * 2)
     ensureSpace(lines.length * 5 + 2)
     doc.text(lines, marginX, y)
     y += lines.length * 5 + gap
   }
   const writeBullet = (text: string) => {
+    const clean = sanitizePdfText(text)
     const indent = marginX + 4
-    const lines = doc.splitTextToSize(text, pageWidth - marginX * 2 - 6)
+    const lines = doc.splitTextToSize(clean, pageWidth - marginX * 2 - 6)
     ensureSpace(lines.length * 5 + 1)
     doc.text('•', marginX, y)
     doc.text(lines, indent, y)
@@ -194,10 +197,10 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
   const writeLabel = (label: string, value: string, valueIndent = 42) => {
     ensureSpace(6)
     doc.setFont('helvetica', 'bold')
-    doc.text(label, marginX, y)
+    doc.text(sanitizePdfText(label), marginX, y)
     doc.setFont('helvetica', 'normal')
     const maxValW = pageWidth - marginX * 2 - valueIndent
-    const valLines = doc.splitTextToSize(value, maxValW)
+    const valLines = doc.splitTextToSize(sanitizePdfText(value), maxValW)
     doc.text(valLines, marginX + valueIndent, y)
     y += Math.max(6, valLines.length * 4.5 + 1.5)
   }
@@ -209,7 +212,7 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(8)
     doc.setTextColor(primary[0], primary[1], primary[2])
-    doc.text(label, marginX + 3, y + 5.5)
+    doc.text(sanitizePdfText(label), marginX + 3, y + 5.5)
     y += 12
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(10)
@@ -226,7 +229,10 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
   doc.setTextColor(primary[0], primary[1], primary[2])
-  const introLines = doc.splitTextToSize(NEUROPSYCH_DISCLAIMER, pageWidth - marginX * 2 - 6)
+  const introLines = doc.splitTextToSize(
+    sanitizePdfText(NEUROPSYCH_DISCLAIMER),
+    pageWidth - marginX * 2 - 6,
+  )
   doc.text(introLines, marginX + 3, y + 5)
   y += 18
 
@@ -288,7 +294,7 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
     }
     cells.forEach((cell, i) => {
       const maxW = colX[i + 1] - colX[i] - 2
-      const lines = doc.splitTextToSize(cell, maxW)
+      const lines = doc.splitTextToSize(sanitizePdfText(cell), maxW)
       doc.text(lines.slice(0, 2), colX[i] + 1.5, y + 4.2)
     })
     doc.setDrawColor(secondary[0], secondary[1], secondary[2])
@@ -337,7 +343,10 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(8)
     doc.setTextColor(0xb9, 0x1c, 0x1c)
-    const alertLines = doc.splitTextToSize(neuropsych.riscoIminente, pageWidth - marginX * 2 - 6)
+    const alertLines = doc.splitTextToSize(
+      sanitizePdfText(neuropsych.riscoIminente),
+      pageWidth - marginX * 2 - 6,
+    )
     doc.text(alertLines, marginX + 3, y + 5)
     y += 18
   }
@@ -353,7 +362,7 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
   doc.setFontSize(8)
   doc.setTextColor(primary[0], primary[1], primary[2])
   const finalDisclaimerLines = doc.splitTextToSize(
-    NEUROPSYCH_DISCLAIMER,
+    sanitizePdfText(NEUROPSYCH_DISCLAIMER),
     pageWidth - marginX * 2 - 6,
   )
   doc.text(finalDisclaimerLines, marginX + 3, y + 5)
@@ -418,12 +427,16 @@ export async function exportMini500Pdf(data: Mini500ExportData): Promise<void> {
   doc.setFontSize(7)
   doc.setTextColor(medium[0], medium[1], medium[2])
   doc.text(
-    `${CLINIC_BRANDING.name} — ${CLINIC_BRANDING.address} | WhatsApp: ${CLINIC_BRANDING.whatsapp}`,
+    sanitizePdfText(
+      `${CLINIC_BRANDING.name} — ${CLINIC_BRANDING.address} | WhatsApp: ${CLINIC_BRANDING.whatsapp}`,
+    ),
     marginX,
     footerY + 4,
   )
   doc.text(
-    `Emitido em ${new Date().toLocaleString('pt-BR')} · Documento em conformidade com a LGPD (Lei nº 13.709/2018). Paciente identificado apenas por iniciais.`,
+    sanitizePdfText(
+      `Emitido em ${new Date().toLocaleString('pt-BR')} · Documento em conformidade com a LGPD (Lei nº 13.709/2018). Paciente identificado apenas por iniciais.`,
+    ),
     marginX,
     footerY + 8,
   )

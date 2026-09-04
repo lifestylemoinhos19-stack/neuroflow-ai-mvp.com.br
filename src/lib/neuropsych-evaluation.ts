@@ -23,7 +23,7 @@ import type { InterpretationResult } from '@/services/clinical-interpretation'
 
 /** Disclaimer obrigatório do playbook (texto canônico). */
 export const NEUROPSYCH_DISCLAIMER =
-  '⚠️ Este laudo é um instrumento de apoio à decisão clínica gerado por inteligência artificial com base exclusivamente nas informações fornecidas pelo profissional responsável. Não substitui avaliação presencial, não constitui diagnóstico e não substitui o julgamento clínico do profissional habilitado. Resultados e conclusões devem ser revisados, validados e assinados pelo profissional responsável antes de qualquer uso.'
+  'Este laudo é um instrumento de apoio à decisão clínica gerado por inteligência artificial com base exclusivamente nas informações fornecidas pelo profissional responsável. Não substitui avaliação presencial, não constitui diagnóstico e não substitui o julgamento clínico do profissional habilitado. Resultados e conclusões devem ser revisados, validados e assinados pelo profissional responsável antes de qualquer uso.'
 
 /** Status possível para cada domínio avaliado. */
 export type DomainStatus = 'presente' | 'ausente' | 'nao_informado'
@@ -1148,7 +1148,7 @@ function detectImminentRisk(ctx: NeuropsychContext): string | null {
 
   if (alerts.length === 0) return null
   return (
-    '⚠️ RISCO IMINENTE: ' +
+    'RISCO IMINENTE: ' +
     alerts.join(' ') +
     ' Encaminhamento imediato a serviço de urgência/emergência em saúde mental é obrigatório. Remover meios de autolesão. Acompanhamento contínuo até estabilização.'
   )
@@ -1167,7 +1167,7 @@ function buildSintese(
 
   if (riscoIminente) {
     lines.push(
-      '⚠️ Sinais compatíveis com risco iminente identificados — encaminhamento de urgência prioritário.',
+      'Sinais compatíveis com risco iminente identificados — encaminhamento de urgência prioritário.',
     )
   }
 
