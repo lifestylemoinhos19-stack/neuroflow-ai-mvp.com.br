@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { User } from 'lucide-react'
 import type { AdminReport } from '@/services/admin-reports'
 
 interface ReportViewDialogProps {
@@ -20,12 +21,21 @@ export function ReportViewDialog({ open, onOpenChange, report }: ReportViewDialo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh]">
         <DialogHeader>
-          <DialogTitle className="text-lg text-white">
-            {report?.session_type ?? 'Laudo'}
+          <DialogTitle className="text-lg text-white flex items-center justify-between pr-6">
+            <span>{report?.session_type ?? 'Laudo'}</span>
           </DialogTitle>
         </DialogHeader>
         <ScrollArea className="max-h-[55vh] pr-4">
           <div className="space-y-4">
+            <div>
+              <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">
+                Paciente
+              </p>
+              <p className="text-sm font-semibold text-white flex items-center gap-1.5 mt-0.5">
+                <User className="h-4 w-4 text-primary" />
+                {report?.patient_name || 'Paciente não identificado'}
+              </p>
+            </div>
             {report?.session_date && (
               <div>
                 <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">Data</p>{' '}

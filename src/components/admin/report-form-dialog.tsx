@@ -84,7 +84,20 @@ export function ReportFormDialog({
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
-          {!report && (
+          {report ? (
+            <div className="bg-slate-900/60 border border-slate-800 rounded p-3 text-xs space-y-1">
+              <div>
+                <span className="text-slate-400">Paciente:</span>{' '}
+                <span className="font-semibold text-white">
+                  {report.patient_name || 'Paciente não identificado'}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-400">Instrumento:</span>{' '}
+                <span className="text-slate-200">{report.session_type}</span>
+              </div>
+            </div>
+          ) : (
             <div className="space-y-1">
               <Label className="text-sm text-slate-100">Sessão *</Label>
               <Select value={sessionId} onValueChange={setSessionId}>
@@ -94,7 +107,7 @@ export function ReportFormDialog({
                 <SelectContent>
                   {sessions.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
-                      {s.type} — {s.patient_name} (
+                      {s.patient_name} — {s.type} (
                       {new Date(s.started_at).toLocaleDateString('pt-BR')})
                     </SelectItem>
                   ))}

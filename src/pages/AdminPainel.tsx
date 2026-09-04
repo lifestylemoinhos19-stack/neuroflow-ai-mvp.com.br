@@ -1060,7 +1060,15 @@ export default function AdminPainel() {
         <TabsContent value="reports">
           <Card className="border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-base font-bold text-white">Laudos e Relatórios</CardTitle>
+              <div>
+                <CardTitle className="text-base font-bold text-white">
+                  Laudos e Relatórios
+                </CardTitle>
+                <CardDescription className="text-white/70 text-xs mt-1">
+                  Listagem completa de laudos clínicos emitidos com identificação direta do
+                  paciente.
+                </CardDescription>
+              </div>
               <Button size="sm" onClick={() => setReportDialog({ open: true, report: null })}>
                 <Plus className="h-4 w-4 mr-1" /> Novo
               </Button>
@@ -1073,52 +1081,80 @@ export default function AdminPainel() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-white font-semibold">Tipo</TableHead>
+                        <TableHead className="text-white font-semibold min-w-[200px]">
+                          Paciente
+                        </TableHead>
+                        <TableHead className="text-white font-semibold">
+                          Tipo / Instrumento
+                        </TableHead>
                         <TableHead className="text-white font-semibold">Data</TableHead>
                         <TableHead className="text-white font-semibold min-w-[300px]">
-                          Interpretação
+                          Interpretação Clínica
                         </TableHead>
                         <TableHead className="text-white font-semibold text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {reports.map((r) => (
-                        <TableRow key={r.id}>
-                          <TableCell className="text-sm font-bold text-white">
-                            {r.session_type}
-                          </TableCell>
-                          <TableCell className="text-sm text-white/80">
-                            {r.session_date
-                              ? new Date(r.session_date).toLocaleDateString('pt-BR')
-                              : '-'}
-                          </TableCell>
-                          <TableCell className="text-sm text-white/80 max-w-xl whitespace-normal break-words">
-                            {r.admin_edited_interpretation || r.comments || '-'}
-                          </TableCell>
-                          <TableCell>
-                            <ActionButtons
-                              onEdit={() => setReportDialog({ open: true, report: r })}
-                              onDelete={() =>
-                                setDeleteTarget({
-                                  type: 'report',
-                                  id: r.id,
-                                  name: r.session_type,
-                                })
-                              }
-                              extra={
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-950"
-                                  onClick={() => setReportView(r)}
+                      {reports.map((r) => {
+                        const isOrphan =
+                          !r.patient_name || r.patient_name === 'Paciente não identificado'
+
+                        return (
+                          <TableRow key={r.id}>
+                            <TableCell className="text-sm">
+                              {isOrphan ? (
+                                <Badge
+                                  variant="outline"
+                                  className="border-amber-700/60 bg-amber-950/40 text-amber-300 font-normal"
                                 >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              }
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                                  Paciente não identificado
+                                </Badge>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <div className="h-7 w-7 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0">
+                                    <User className="h-3.5 w-3.5" />
+                                  </div>
+                                  <span className="font-semibold text-white">{r.patient_name}</span>
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-sm font-bold text-white">
+                              {r.session_type}
+                            </TableCell>
+                            <TableCell className="text-sm text-white/80 whitespace-nowrap">
+                              {r.session_date
+                                ? new Date(r.session_date).toLocaleDateString('pt-BR')
+                                : '-'}
+                            </TableCell>
+                            <TableCell className="text-sm text-white/80 max-w-xl whitespace-normal break-words">
+                              {r.admin_edited_interpretation || r.comments || '-'}
+                            </TableCell>
+                            <TableCell>
+                              <ActionButtons
+                                onEdit={() => setReportDialog({ open: true, report: r })}
+                                onDelete={() =>
+                                  setDeleteTarget({
+                                    type: 'report',
+                                    id: r.id,
+                                    name: `${r.session_type} — ${r.patient_name}`,
+                                  })
+                                }
+                                extra={
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-950"
+                                    onClick={() => setReportView(r)}
+                                    title="Visualizar laudo"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                }
+                              />
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
                     </TableBody>
                   </Table>
                 </div>
